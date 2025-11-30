@@ -13,7 +13,7 @@
       "~domain-services/*": ["domain/services/*"],
 
       "~models/*": ["infrastructure/databases/mongo/models/*"],
-      "~mongo-connection/*": ["infrastructure/databases/mongo/*"],
+      "~connect-db/*": ["infrastructure/databases/mongo/*"],
       "~logger/*": ["infrastructure/logger/*"],
       "~infrastructure-repositories/*": ["infrastructure/repositories/*"],
       "~infrastructure-mappers/*": ["infrastructure/mappers/*"],
