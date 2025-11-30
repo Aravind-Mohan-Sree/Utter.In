@@ -1,9 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { connectDB } from '~connect-db/connection';
-import { errorHandler } from '~middlewares/ErrorHandler';
+import { errorHandler } from '~middlewares/errorHandler';
 import { env } from '~config/env';
-import { requestLogger } from '~middlewares/RequestLogger';
+import { requestLogger } from '~middlewares/requestLogger';
 import { logger } from '~logger/logger';
 import morgan from 'morgan';
 import cors from 'cors';
