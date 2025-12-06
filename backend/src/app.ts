@@ -14,6 +14,7 @@ dotenv.config();
 async function startServer() {
   const app = express();
   app.use(express.json());
+  app.use(express.static('public'));
 
   try {
     await connectDB();
@@ -23,18 +24,20 @@ async function startServer() {
     process.exit(1);
   }
 
-  app.use(cors({
-    origin: 'http://localhost:4000',
-    methods: [ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ],
-  }));
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    }),
+  );
 
   app.use(requestLogger);
-  
+
   app.use('/api/user', userRouter);
-  
+
   app.use(errorHandler);
   app.use(morgan('dev'));
-  
+
   const port = env.PORT;
 
   app.listen(port, () => {
