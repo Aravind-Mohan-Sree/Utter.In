@@ -3,5 +3,9 @@ dotenv.config();
 
 export const env = {
   PORT: process.env.PORT || 5000,
-  MONGO_CONNECTION_URI: process.env.MONGO_CONNECTION_URI || 'mongodb://localhost:27017/utter_web_app',
+  MONGO_CONNECTION_URI:
+    process.env.MONGO_CONNECTION_URI ||
+    'mongodb://localhost:27017/utter_web_app',
+  APP_EMAIL: process.env.APP_EMAIL || '',
+  GOOGLE_APP_PASSWORD: process.env.GOOGLE_APP_PASSWORD || '',
 };
