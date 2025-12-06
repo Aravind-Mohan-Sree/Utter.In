@@ -40,7 +40,6 @@ export default [
     rules: {
       semi: ["error", "always"],
       indent: ["error", 2],
-      quotes: ["error", "single"],
       "comma-dangle": ["error", "always-multiline"],
       eqeqeq: ["error", "always"],
       "no-console": ["warn", { allow: ["warn", "error"] }],
