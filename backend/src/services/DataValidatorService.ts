@@ -39,8 +39,11 @@ export class DataValidatorService implements IValidateDataService {
         .string()
         .trim()
         .nonempty('Email is required.')
-        .regex(/^\S*$/, "Email can't include space."),
-      // .regex(/^[a-zA-Z0-9._%+-]+@gmail\.com$/, 'Invalid email format.'),
+        .regex(/^\S*$/, "Email can't include space.")
+        .regex(
+          /^(?![0-9]+@)([a-z0-9]+)@([a-z]+)\.com$/,
+          'Invalid email format',
+        ),
     });
 
     return toValidatedData(emailSchema.safeParse({ email }));
