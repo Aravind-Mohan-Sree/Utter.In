@@ -28,7 +28,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
       if (timeDifferenceMs < coolDownMs)
         throw new BadRequestError('Please wait 60 sec before resend');
     }
-    
+
     otp = this.otpService.createOtp();
 
     const updated = await this.pendingUserRepo.updateOtp(email, otp);
