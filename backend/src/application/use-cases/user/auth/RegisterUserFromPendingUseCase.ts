@@ -1,4 +1,5 @@
 import { IRegisterUserFromPendingUseCase } from '~application-interfaces/use-cases/IUserUseCase';
+import { UserMapper } from '~application-mappers/UserMapper';
 import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
 import { IUserRepository } from '~domain-repositories/IUserRepository';
 import { User } from '~entities/User';
@@ -11,25 +12,26 @@ export class RegisterUserFromPendingUseCase implements IRegisterUserFromPendingU
   ) {}
 
   async execute(email: string): Promise<Partial<User>> {
-    const pendingUser = await this.pendingUserRepo.findPendingUser(email);
+    const pendingUser = await this.pendingUserRepo.findOneByField({ email });
 
     if (!pendingUser) throw new NotFoundError('User not found');
 
     const user = new User(
-      pendingUser.name,
+      pendingUser.name!,
       pendingUser.email,
-      pendingUser.knownLanguages,
-      pendingUser.password,
-      new Date(),
-      new Date(),
+      pendingUser.knownLanguages!,
+      'I am a Philologist!',
+      pendingUser.password!,
       null,
       { lastActive: null, currentStreak: 0, highestStreak: 0 },
+      'user',
+      false,
     );
 
     const newUser = await this.userRepo.create(user);
 
     if (!newUser) throw new InternalServerError('Something went wrong');
 
-    return { name: newUser.name, email: newUser.email };
+    return UserMapper.toResponse(newUser);
   }
 }
