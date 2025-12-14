@@ -100,7 +100,7 @@ export const LanguagesInput: React.FC<LanguagesInputProps> = ({
           onKeyDown={handleInputKeyDown}
           onFocus={() => setShowSuggestions(true)}
           placeholder="Type a language (e.g., English, Spanish, French...)"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition-all duration-300 bg-transparent text-gray-700"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-transparent text-gray-700"
           disabled={languages.length >= maxLanguages}
         />
         {showSuggestions && filteredSuggestions.length > 0 && (
