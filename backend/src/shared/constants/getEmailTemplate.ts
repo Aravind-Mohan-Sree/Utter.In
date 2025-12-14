@@ -107,7 +107,7 @@ export const getEmailTemplate = (name: string, otp: string) => {
               "
             >
               Thank you for choosing Utter. Use the following OTP
-              to complete the signup. OTP is
+              to complete the process. OTP is
               valid for
               <span style="font-weight: 600; color: #1f1f1f;">2 minutes</span>.
               Do not share this code with others.
