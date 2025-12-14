@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { env } from 'process';
-import { IGetEntityDataUseCase } from '~application-interfaces/use-cases/IGetEntityDataUseCase';
+import { IGetEntityDataUseCase } from '~application-interfaces/user/IGetEntityDataUseCase';
 import { cookieData } from '~constants/cookieData';
 import { errorMessage } from '~constants/errorMessage';
 import { ITokenService } from '~domain-services/ITokenService';

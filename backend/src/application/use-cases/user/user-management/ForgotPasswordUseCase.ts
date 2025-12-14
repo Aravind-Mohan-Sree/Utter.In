@@ -1,4 +1,4 @@
-import { IForgotPasswordUseCase } from '~application-interfaces/use-cases/IForgotPasswordUseCase';
+import { IForgotPasswordUseCase } from '~application-interfaces/user/IForgotPasswordUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
 import { IUserRepository } from '~domain-repositories/IUserRepository';

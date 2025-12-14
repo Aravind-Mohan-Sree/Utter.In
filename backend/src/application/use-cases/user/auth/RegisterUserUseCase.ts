@@ -1,5 +1,5 @@
 import { RegisterUserDTO } from '~/application/dtos/RegisterUserDTO';
-import { IRegisterUserUseCase } from '~application-interfaces/use-cases/IUserUseCase';
+import { IRegisterUserUseCase } from '~application-interfaces/user/IUserUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
 import { IUserRepository } from '~domain-repositories/IUserRepository';

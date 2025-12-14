@@ -1,4 +1,4 @@
-import { IRegisterUserFromPendingUseCase } from '~application-interfaces/use-cases/IUserUseCase';
+import { IRegisterUserFromPendingUseCase } from '~application-interfaces/user/IUserUseCase';
 import { UserMapper } from '~application-mappers/UserMapper';
 import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
 import { IUserRepository } from '~domain-repositories/IUserRepository';

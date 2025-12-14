@@ -1,4 +1,4 @@
-import { ISendOtpUseCase } from '~application-interfaces/use-cases/IOtpUseCase';
+import { ISendOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
 import { IOtpService } from '~domain-services/IOtpService';

@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import { RegisterUserDTO } from '~/application/dtos/RegisterUserDTO';
 import { SigninUserDTO } from '~/application/dtos/SigninUserDTO';
-import { ISendOtpUseCase } from '~application-interfaces/use-cases/IOtpUseCase';
+import { ISendOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
 import {
   IRegisterUserUseCase,
   ISigninUserUseCase,
-} from '~application-interfaces/use-cases/IUserUseCase';
+} from '~application-interfaces/user/IUserUseCase';
 import { env } from '~config/env';
 import { cookieData } from '~constants/cookieData';
 import { httpStatusCode } from '~constants/httpStatusCode';

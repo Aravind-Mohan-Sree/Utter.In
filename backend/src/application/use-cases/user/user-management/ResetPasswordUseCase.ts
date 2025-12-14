@@ -1,4 +1,4 @@
-import { IResetPasswordUseCase } from '~application-interfaces/use-cases/IForgotPasswordUseCase';
+import { IResetPasswordUseCase } from '~application-interfaces/user/IForgotPasswordUseCase';
 import { IUserRepository } from '~domain-repositories/IUserRepository';
 import { IHashService } from '~domain-services/IHashService';
 import { ITokenService } from '~domain-services/ITokenService';

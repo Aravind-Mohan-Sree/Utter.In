@@ -1,4 +1,4 @@
-import { IForgotPasswordOtpVerifyUseCase } from '~application-interfaces/use-cases/IForgotPasswordUseCase';
+import { IForgotPasswordOtpVerifyUseCase } from '~application-interfaces/user/IForgotPasswordUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
 import { IOtpService } from '~domain-services/IOtpService';

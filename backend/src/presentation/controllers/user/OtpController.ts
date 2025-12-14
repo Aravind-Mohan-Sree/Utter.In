@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { ISendOtpUseCase, IVerifyOtpUseCase } from '~application-interfaces/use-cases/IOtpUseCase';
-import { IRegisterUserFromPendingUseCase } from '~application-interfaces/use-cases/IUserUseCase';
+import { ISendOtpUseCase, IVerifyOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
+import { IRegisterUserFromPendingUseCase } from '~application-interfaces/user/IUserUseCase';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { logger } from '~logger/logger';

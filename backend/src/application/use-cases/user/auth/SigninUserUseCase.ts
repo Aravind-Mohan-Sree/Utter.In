@@ -1,5 +1,5 @@
 import { SigninUserDTO } from '~/application/dtos/SigninUserDTO';
-import { ISigninUserUseCase } from '~application-interfaces/use-cases/IUserUseCase';
+import { ISigninUserUseCase } from '~application-interfaces/user/IUserUseCase';
 import { UserMapper } from '~application-mappers/UserMapper';
 import { errorMessage } from '~constants/errorMessage';
 import { IUserRepository } from '~domain-repositories/IUserRepository';

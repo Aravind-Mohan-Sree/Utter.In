@@ -3,8 +3,8 @@ import {
   IForgotPasswordOtpVerifyUseCase,
   IForgotPasswordUseCase,
   IResetPasswordUseCase,
-} from '~application-interfaces/use-cases/IForgotPasswordUseCase';
-import { ISendOtpUseCase } from '~application-interfaces/use-cases/IOtpUseCase';
+} from '~application-interfaces/user/IForgotPasswordUseCase';
+import { ISendOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
 import { env } from '~config/env';
 import { cookieData } from '~constants/cookieData';
 import { httpStatusCode } from '~constants/httpStatusCode';
