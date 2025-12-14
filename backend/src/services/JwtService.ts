@@ -1,4 +1,4 @@
-import { ITokenService, TokenPayload } from '~domain-services/ITokenService';
+import { ITokenService, TokenPayload } from '~service-interfaces/ITokenService';
 import jwt from 'jsonwebtoken';
 import { env } from '~config/env';
 

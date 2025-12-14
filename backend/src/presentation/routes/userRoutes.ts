@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express';
 import passport from 'passport';
-import { DataValidatorService } from '~/services/DataValidatorService';
-import { HashService } from '~/services/HashService';
-import { JwtService } from '~/services/JwtService';
-import { OtpService } from '~/services/OtpService';
+import { DataValidatorService } from '~concrete-services/DataValidatorService';
+import { HashService } from '~concrete-services/HashService';
+import { JwtService } from '~concrete-services/JwtService';
+import { OtpService } from '~concrete-services/OtpService';
 import { env } from '~config/env';
 import { AuthController } from '~controllers/user/AuthController';
 import { ForgotPasswordController } from '~controllers/user/ForgotPasswordController';
@@ -11,17 +11,17 @@ import { GoogleAuthController } from '~controllers/user/GoogleAuthController';
 import { OtpController } from '~controllers/user/OtpController';
 import { SignoutController } from '~controllers/user/SignoutController';
 import { User } from '~entities/User';
-import { PendingUserRepository } from '~infrastructure-repositories/PendingUserRepository';
-import { UserRepository } from '~infrastructure-repositories/UserRepository';
+import { PendingUserRepository } from '~concrete-repositories/PendingUserRepository';
+import { UserRepository } from '~concrete-repositories/UserRepository';
 import { Authenticate } from '~middlewares/Authenticate';
 import { AuthMiddlewareBundler } from '~middlewares/AuthMiddlewareBundler';
 import { Authorize } from '~middlewares/Authorize';
 import { IUser } from '~models/UserModel';
 import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
-import { GoogleAuthUseCase } from '~use-cases/user/auth/GoogleAuthUseCase';
 import { RegisterUserFromPendingUseCase } from '~use-cases/user/auth/RegisterUserFromPendingUseCase';
 import { RegisterUserUseCase } from '~use-cases/user/auth/RegisterUserUseCase';
 import { SigninUserUseCase } from '~use-cases/user/auth/SigninUserUseCase';
+import { UserGoogleAuthUseCase } from '~use-cases/user/auth/UserGoogleAuthUseCase';
 import { ForgotPasswordOtpVerifyUseCase } from '~use-cases/user/user-management/ForgotPasswordOtpVerifyUseCase';
 import { ForgotPasswordUseCase } from '~use-cases/user/user-management/ForgotPasswordUseCase';
 import { ResetPasswordUseCase } from '~use-cases/user/user-management/ResetPasswordUseCase';
@@ -67,7 +67,7 @@ const resetPasswordUseCase = new ResetPasswordUseCase(
   userRepository,
   hashService,
 );
-const googleAuthUseCase = new GoogleAuthUseCase(userRepository, jwtService);
+const userGoogleAuthUseCase = new UserGoogleAuthUseCase(userRepository, jwtService);
 const signinUserUseCase = new SigninUserUseCase(
   userRepository,
   hashService,
@@ -98,7 +98,7 @@ const forgotPasswordController = new ForgotPasswordController(
   dataValidatorService,
   resetPasswordUseCase,
 );
-const googleAuthController = new GoogleAuthController(googleAuthUseCase);
+const userGoogleAuthController = new GoogleAuthController(userGoogleAuthUseCase);
 const signoutController = new SignoutController();
 
 // wire auth middlewares
@@ -119,7 +119,7 @@ router.get(
     failureRedirect: '/signin',
     session: false,
   }),
-  (req, res, next) => googleAuthController.handleSuccess(req, res, next),
+  (req, res, next) => userGoogleAuthController.handleSuccess(req, res, next),
 );
 
 // auth

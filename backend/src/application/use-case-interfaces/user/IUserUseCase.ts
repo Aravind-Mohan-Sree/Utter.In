@@ -1,5 +1,5 @@
-import { RegisterUserDTO } from '~/application/dtos/RegisterUserDTO';
-import { SigninUserDTO } from '~/application/dtos/SigninUserDTO';
+import { RegisterUserDTO } from '~dtos/RegisterUserDTO';
+import { SigninDTO } from '~dtos/SigninDTO';
 import { User } from '~entities/User';
 
 export interface IRegisterUserUseCase {
@@ -10,7 +10,7 @@ export interface IRegisterUserFromPendingUseCase {
   execute(email: string): Promise<Partial<User>>;
 }
 
-export interface IGoogleAuthUseCase {
+export interface IUserGoogleAuthUseCase {
   execute(
     email: string,
     googleId: string,
@@ -22,7 +22,7 @@ export interface IGoogleAuthUseCase {
 }
 
 export interface ISigninUserUseCase {
-  execute(data: SigninUserDTO): Promise<{
+  execute(data: SigninDTO): Promise<{
     user: Partial<User>;
     accessToken: string;
     refreshToken: string;

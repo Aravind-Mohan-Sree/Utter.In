@@ -8,6 +8,8 @@ export interface IValidateDataService {
   validateEmail(email: string): ValidatedData;
   validateKnownLanguages(knownLanguages: string[]): ValidatedData;
   validateExperience(experience: string): ValidatedData;
+  validateIntroVideo(introVideo: File): ValidatedData;
+  validateCertificate(certificate: File): ValidatedData;
   validatePassword(password: string): ValidatedData;
   validateOtp(otp: string): ValidatedData;
 }

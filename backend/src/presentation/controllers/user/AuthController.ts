@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
-import { RegisterUserDTO } from '~/application/dtos/RegisterUserDTO';
-import { SigninUserDTO } from '~/application/dtos/SigninUserDTO';
-import { ISendOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
+import { RegisterUserDTO } from '~dtos/RegisterUserDTO';
+import { SigninDTO } from '~dtos/SigninDTO';
+import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import {
   IRegisterUserUseCase,
   ISigninUserUseCase,
-} from '~application-interfaces/user/IUserUseCase';
+} from '~use-case-interfaces/user/IUserUseCase';
 import { env } from '~config/env';
 import { cookieData } from '~constants/cookieData';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
-import { IValidateDataService } from '~domain-services/IValidateDataService';
+import { IValidateDataService } from '~service-interfaces/IValidateDataService';
 import { logger } from '~logger/logger';
 
 export class AuthController {
@@ -29,6 +29,18 @@ export class AuthController {
 
       await this.sendOtp.execute(email);
 
+      const isProduction = env.NODE_ENV === 'production';
+      const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
+        maxAge: cookieData.OTP_AGE,
+        domain: isProduction ? env.COOKIE_DOMAIN : undefined,
+        path: '/',
+      };
+
+      res.cookie('otp', Date.now(), cookieOptions);
+
       res
         .status(httpStatusCode.CREATED)
         .json({ message: successMessage.OTP_SENDED });
@@ -40,7 +52,7 @@ export class AuthController {
 
   signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = new SigninUserDTO(req.body, this.validator);
+      const data = new SigninDTO(req.body, this.validator);
       const userData = await this.signinUser.execute(data);
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {

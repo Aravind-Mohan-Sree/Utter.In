@@ -1,5 +1,5 @@
-import { IGetEntityDataUseCase } from '~application-interfaces/user/IGetEntityDataUseCase';
-import { IBaseRepository } from '~domain-repositories/IBaseRepository';
+import { IGetEntityDataUseCase } from '~use-case-interfaces/shared/IGetEntityDataUseCase';
+import { IBaseRepository } from '~repository-interfaces/IBaseRepository';
 
 export class GetEntityDataUseCase<
   Entity,

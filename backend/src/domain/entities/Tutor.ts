@@ -5,14 +5,14 @@ export class Tutor {
     public knownLanguages: string[],
     public yearsOfExperience: string,
     public bio: string,
-    public password: string | null,
+    public password: string,
     public googleId: string | null,
     public role: string,
     public isBlocked: boolean,
     public isVerified: boolean,
-    public rejectionReason: string,
+    public rejectionReason: string | null,
     public id?: string,
-    public createdAt?: Date,
+    public createdAt?: Date | string,
     public updatedAt?: Date,
   ) {}
 }

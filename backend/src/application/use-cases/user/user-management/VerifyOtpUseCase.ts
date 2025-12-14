@@ -1,7 +1,7 @@
-import { IVerifyOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
+import { IVerifyOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import { errorMessage } from '~constants/errorMessage';
-import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
-import { IOtpService } from '~domain-services/IOtpService';
+import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
+import { IOtpService } from '~service-interfaces/IOtpService';
 import { BadRequestError, NotFoundError } from '~errors/HttpError';
 
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {

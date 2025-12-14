@@ -1,4 +1,4 @@
-import { IValidateDataService } from '~domain-services/IValidateDataService';
+import { IValidateDataService } from '~service-interfaces/IValidateDataService';
 import { BadRequestError } from '~errors/HttpError';
 
 export class RegisterTutorDTO {
@@ -6,6 +6,8 @@ export class RegisterTutorDTO {
   email: string;
   knownLanguages: string[];
   yearsOfExperience: string;
+  introVideo: File;
+  certificate: File;
   password: string;
 
   constructor(
@@ -14,6 +16,8 @@ export class RegisterTutorDTO {
       email: string;
       languages: string[];
       experience: string;
+      introVideo: File;
+      certificate: File;
       password: string;
     },
     validator: IValidateDataService,
@@ -30,6 +34,18 @@ export class RegisterTutorDTO {
 
     if (!result.success) throw new BadRequestError(result.message);
 
+    result = validator.validateExperience(data.experience);
+
+    if (!result.success) throw new BadRequestError(result.message);
+
+    result = validator.validateIntroVideo(data.introVideo);
+
+    if (!result.success) throw new BadRequestError(result.message);
+
+    result = validator.validateCertificate(data.certificate);
+
+    if (!result.success) throw new BadRequestError(result.message);
+
     result = validator.validatePassword(data.password);
 
     if (!result.success) throw new BadRequestError(result.message);
@@ -38,6 +54,8 @@ export class RegisterTutorDTO {
     this.email = data.email;
     this.knownLanguages = data.languages;
     this.yearsOfExperience = data.experience;
+    this.introVideo = data.introVideo;
+    this.certificate = data.certificate;
     this.password = data.password;
   }
 }

@@ -1,7 +1,7 @@
-import { IForgotPasswordUseCase } from '~application-interfaces/user/IForgotPasswordUseCase';
+import { IForgotPasswordUseCase } from '~use-case-interfaces/shared/IForgotPasswordUseCase';
 import { errorMessage } from '~constants/errorMessage';
-import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
-import { IUserRepository } from '~domain-repositories/IUserRepository';
+import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
+import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { PendingUser } from '~entities/PendingUser';
 import { BadRequestError, NotFoundError } from '~errors/HttpError';
 

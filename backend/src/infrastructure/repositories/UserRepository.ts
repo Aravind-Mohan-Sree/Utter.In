@@ -1,7 +1,7 @@
 import { IUser, UserModel } from '~models/UserModel';
 import { BaseRepository } from './BaseRepository';
 import { User } from '~entities/User';
-import { IUserRepository } from '~domain-repositories/IUserRepository';
+import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { Document } from 'mongoose';
 
 export class UserRepository

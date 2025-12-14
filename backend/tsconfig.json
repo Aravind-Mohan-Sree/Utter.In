@@ -3,29 +3,27 @@
     "rootDir": "",
     "baseUrl": "src",
     "paths": {
-      "~dto/*": ["application/dto/*"],
-      "~application-interfaces/*": ["application/use-case-interfaces/*"],
-      "~application-mappers/*": ["application/mappers/*"],
+      "~dtos/*": ["application/dtos/*"],
+      "~use-case-interfaces/*": ["application/use-case-interfaces/*"],
+      "~mappers/*": ["application/mappers/*"],
       "~use-cases/*": ["application/use-cases/*"],
 
       "~entities/*": ["domain/entities/*"],
-      "~domain-repositories/*": ["domain/repositories/*"],
-      "~domain-services/*": ["domain/services/*"],
+      "~repository-interfaces/*": ["domain/repositories/*"],
+      "~service-interfaces/*": ["domain/services/*"],
 
       "~models/*": ["infrastructure/databases/mongo/models/*"],
       "~connect-db/*": ["infrastructure/databases/mongo/*"],
       "~logger/*": ["infrastructure/logger/*"],
-      "~infrastructure-repositories/*": ["infrastructure/repositories/*"],
-      "~infrastructure-mappers/*": ["infrastructure/mappers/*"],
-      "~infrastructure-services/*": ["infrastructure/services/*"],
-      "~infrastructure-strategies/*": ["infrastructure/strategies/*"],
+      "~concrete-repositories/*": ["infrastructure/repositories/*"],
+      "~strategies/*": ["infrastructure/strategies/*"],
 
       "~controllers/*": ["presentation/controllers/*"],
       "~routes/*": ["presentation/routes/*"],
 
       "~config/*": ["config/*"],
       "~middlewares/*": ["middlewares/*"],
-
+      "~concrete-services/*": ["services/*"],
       "~constants/*": ["shared/constants/*"],
       "~errors/*": ["shared/errors/*"],
 

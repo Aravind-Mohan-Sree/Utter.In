@@ -1,9 +1,9 @@
-import { RegisterUserDTO } from '~/application/dtos/RegisterUserDTO';
-import { IRegisterUserUseCase } from '~application-interfaces/user/IUserUseCase';
+import { RegisterUserDTO } from '~dtos/RegisterUserDTO';
+import { IRegisterUserUseCase } from '~use-case-interfaces/user/IUserUseCase';
 import { errorMessage } from '~constants/errorMessage';
-import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
-import { IUserRepository } from '~domain-repositories/IUserRepository';
-import { IHashService } from '~domain-services/IHashService';
+import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
+import { IUserRepository } from '~repository-interfaces/IUserRepository';
+import { IHashService } from '~service-interfaces/IHashService';
 import { PendingUser } from '~entities/PendingUser';
 import { ConflictError, InternalServerError } from '~errors/HttpError';
 

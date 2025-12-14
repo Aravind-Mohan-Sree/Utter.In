@@ -1,29 +1,29 @@
-import { RegisterUserDTO } from '~/application/dtos/RegisterUserDTO';
-import { SigninUserDTO } from '~/application/dtos/SigninUserDTO';
-import { User } from '~entities/User';
+import { RegisterTutorDTO } from "~dtos/RegisterTutorDTO";
+import { SigninDTO } from "~dtos/SigninDTO";
+import { Tutor } from "~entities/Tutor";
 
-export interface IRegisterUserUseCase {
-  execute(data: RegisterUserDTO): Promise<string>;
+export interface IRegisterTutorUseCase {
+  execute(data: RegisterTutorDTO): Promise<string>;
 }
 
-export interface IRegisterUserFromPendingUseCase {
-  execute(email: string): Promise<Partial<User>>;
+export interface IRegisterTutorFromPendingUseCase {
+  execute(email: string): Promise<Partial<Tutor>>;
 }
 
-export interface IGoogleAuthUseCase {
+export interface ITutorGoogleAuthUseCase {
   execute(
     email: string,
     googleId: string,
   ): Promise<{
-    user: Partial<User>;
+    tutor: Partial<Tutor>;
     accessToken: string;
     refreshToken: string;
   }>;
 }
 
-export interface ISigninUserUseCase {
-  execute(data: SigninUserDTO): Promise<{
-    user: Partial<User>;
+export interface ISigninTutorUseCase {
+  execute(data: SigninDTO): Promise<{
+    tutor: Partial<Tutor>;
     accessToken: string;
     refreshToken: string;
   }>;

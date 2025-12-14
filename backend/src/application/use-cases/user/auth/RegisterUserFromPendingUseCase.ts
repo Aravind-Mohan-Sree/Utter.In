@@ -1,7 +1,7 @@
-import { IRegisterUserFromPendingUseCase } from '~application-interfaces/user/IUserUseCase';
-import { UserMapper } from '~application-mappers/UserMapper';
-import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
-import { IUserRepository } from '~domain-repositories/IUserRepository';
+import { IRegisterUserFromPendingUseCase } from '~use-case-interfaces/user/IUserUseCase';
+import { UserMapper } from '~mappers/UserMapper';
+import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
+import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { User } from '~entities/User';
 import { InternalServerError, NotFoundError } from '~errors/HttpError';
 

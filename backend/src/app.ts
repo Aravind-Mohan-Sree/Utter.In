@@ -11,7 +11,7 @@ import { userRouter } from '~routes/userRoutes';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
-import '~infrastructure-strategies/googleStrategy';
+import '~strategies/googleStrategy';
 
 dotenv.config();
 

@@ -10,7 +10,6 @@ export class UserMapper {
       bio: user.bio,
       role: user.role,
       isBlocked: user.isBlocked,
-      googleId: user.googleId,
       streak: user.streak,
     };
   }

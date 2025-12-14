@@ -1,7 +1,7 @@
 import {
   IValidateDataService,
   ValidatedData,
-} from '~domain-services/IValidateDataService';
+} from '~service-interfaces/IValidateDataService';
 import * as z from 'zod';
 
 const toValidatedData = (data: z.ZodSafeParseResult<object>) => {
@@ -10,6 +10,22 @@ const toValidatedData = (data: z.ZodSafeParseResult<object>) => {
     message: data.error?.issues[0]?.message || 'Validation failed',
   };
 };
+
+const FileListSafe =
+  typeof FileList !== 'undefined' ? FileList : class FileList {};
+const FileSafe = typeof File !== 'undefined' ? File : class File {};
+
+const FileSchema = z
+  .union([z.instanceof(FileListSafe), z.instanceof(FileSafe)])
+  .refine((file) => {
+    const fileObj =
+      file instanceof FileListSafe ? (file as unknown as File[])[0] : file;
+    const standardFileObj = fileObj as File;
+
+    if (fileObj) return standardFileObj.size <= 5000000; // 5MB(5000000) max
+
+    return true;
+  }, 'File too large');
 
 export class DataValidatorService implements IValidateDataService {
   validateName(name: string): ValidatedData {
@@ -68,6 +84,66 @@ export class DataValidatorService implements IValidateDataService {
     });
 
     return toValidatedData(experienceSchema.safeParse({ experience }));
+  }
+
+  validateIntroVideo(introVideo: File): ValidatedData {
+    const introVideoSchema = z
+      .object({
+        introVideo: z.nullable(FileSchema).or(z.undefined()),
+      })
+      .refine(
+        (data) => {
+          const video = data.introVideo;
+
+          if (!video) return false;
+
+          if (video instanceof FileList) {
+            return video.length > 0;
+          }
+
+          if (video instanceof File) {
+            return true;
+          }
+
+          return false;
+        },
+        {
+          message: 'Intro video is required',
+          path: ['introVideo'],
+        },
+      );
+
+    return toValidatedData(introVideoSchema.safeParse({ introVideo }));
+  }
+
+  validateCertificate(certificate: File): ValidatedData {
+    const certificateSchema = z
+      .object({
+        certificate: z.nullable(FileSchema).or(z.undefined()),
+      })
+      .refine(
+        (data) => {
+          const cert = data.certificate;
+
+          if (!cert) return false;
+
+          if (cert instanceof FileList) {
+            return cert.length > 0;
+          }
+
+          if (cert instanceof File) {
+            return true;
+          }
+
+          return false;
+        },
+        {
+          message: 'Certificate is required',
+          path: ['certificate'],
+        },
+      );
+
+    return toValidatedData(certificateSchema.safeParse({ certificate }));
   }
 
   validatePassword(password: string): ValidatedData {

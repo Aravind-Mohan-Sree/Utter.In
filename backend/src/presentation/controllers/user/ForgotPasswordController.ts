@@ -3,13 +3,13 @@ import {
   IForgotPasswordOtpVerifyUseCase,
   IForgotPasswordUseCase,
   IResetPasswordUseCase,
-} from '~application-interfaces/user/IForgotPasswordUseCase';
-import { ISendOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
+} from '~use-case-interfaces/shared/IForgotPasswordUseCase';
+import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import { env } from '~config/env';
 import { cookieData } from '~constants/cookieData';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
-import { IValidateDataService } from '~domain-services/IValidateDataService';
+import { IValidateDataService } from '~service-interfaces/IValidateDataService';
 import { BadRequestError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
 
@@ -36,6 +36,18 @@ export class ForgotPasswordController {
 
       await this.forgotPassword.execute(email);
       await this.sendOtp.execute(email);
+
+      const isProduction = env.NODE_ENV === 'production';
+      const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
+        maxAge: cookieData.OTP_AGE,
+        domain: isProduction ? env.COOKIE_DOMAIN : undefined,
+        path: '/',
+      };
+
+      res.cookie('otp', Date.now(), cookieOptions);
 
       res
         .status(httpStatusCode.CREATED)

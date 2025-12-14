@@ -14,6 +14,7 @@ import { errorHandler } from '~utils/errorHandler';
 import { GoBackBtn } from '~components/auth/GoBackBtn';
 import { utterToast } from '~utils/utterToast';
 import bgImage from '../../../../public/bg.webp';
+import { getCookie } from '~utils/getCookie';
 
 const VerifyEmail: React.FC = () => {
   const router = useRouter();
@@ -52,6 +53,22 @@ const VerifyEmail: React.FC = () => {
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
     }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const now = new Date().getTime();
+      const cookie = await getCookie('otp');
+      const then = parseInt(cookie?.value as string);
+      const coolDownSec = 60;
+      const timeDifferenceSec = Math.round((now - then) / 1000);
+
+      if (timeDifferenceSec < coolDownSec) {
+        setTimer(coolDownSec - timeDifferenceSec);
+      } else {
+        setTimer(0);
+      }
+    })();
   }, []);
 
   const handleGoBack = () => {
@@ -138,6 +155,9 @@ const VerifyEmail: React.FC = () => {
       setCanResend(false);
     } catch (error) {
       utterToast.error(errorHandler(error));
+
+      if (errorHandler(error).startsWith('OTP expired'))
+        router.push(`/signin?mode=${userType}`);
     } finally {
       setIsLoading(false);
     }

@@ -4,7 +4,7 @@ export class User {
     public email: string,
     public knownLanguages: string[],
     public bio: string,
-    public password: string | null,
+    public password: string,
     public googleId: string | null,
     public streak: {
       lastActive: Date | null;

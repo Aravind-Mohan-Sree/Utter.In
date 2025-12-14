@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, UpdateQuery } from 'mongoose';
-import { IBaseRepository } from '~domain-repositories/IBaseRepository';
+import { IBaseRepository } from '~repository-interfaces/IBaseRepository';
 
 export abstract class BaseRepository<
   Entity,

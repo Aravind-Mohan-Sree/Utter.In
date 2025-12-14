@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { env } from 'process';
-import { IGetEntityDataUseCase } from '~application-interfaces/user/IGetEntityDataUseCase';
+import { IGetEntityDataUseCase } from '~use-case-interfaces/shared/IGetEntityDataUseCase';
 import { cookieData } from '~constants/cookieData';
 import { errorMessage } from '~constants/errorMessage';
-import { ITokenService } from '~domain-services/ITokenService';
+import { ITokenService } from '~service-interfaces/ITokenService';
 import { NotFoundError, UnauthorizedError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
 

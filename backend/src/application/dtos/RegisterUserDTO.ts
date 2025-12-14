@@ -1,4 +1,4 @@
-import { IValidateDataService } from '~domain-services/IValidateDataService';
+import { IValidateDataService } from '~service-interfaces/IValidateDataService';
 import { BadRequestError } from '~errors/HttpError';
 
 export class RegisterUserDTO {

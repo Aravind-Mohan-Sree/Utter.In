@@ -12,7 +12,7 @@ export interface IPendingUser extends Document {
 
 const pendingUserSchema = new Schema<IPendingUser>(
   {
-    name: { type: String, default: null },
+    name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     knownLanguages: { type: [String], default: null },
     password: { type: String, default: null },

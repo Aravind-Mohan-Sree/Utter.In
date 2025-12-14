@@ -1,4 +1,4 @@
-import { IHashService } from '~domain-services/IHashService';
+import { IHashService } from '~service-interfaces/IHashService';
 import bcrypt from 'bcrypt';
 
 export class HashService implements IHashService {

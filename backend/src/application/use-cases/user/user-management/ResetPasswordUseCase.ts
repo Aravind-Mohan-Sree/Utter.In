@@ -1,7 +1,7 @@
-import { IResetPasswordUseCase } from '~application-interfaces/user/IForgotPasswordUseCase';
-import { IUserRepository } from '~domain-repositories/IUserRepository';
-import { IHashService } from '~domain-services/IHashService';
-import { ITokenService } from '~domain-services/ITokenService';
+import { IResetPasswordUseCase } from '~use-case-interfaces/shared/IForgotPasswordUseCase';
+import { IUserRepository } from '~repository-interfaces/IUserRepository';
+import { IHashService } from '~service-interfaces/IHashService';
+import { ITokenService } from '~service-interfaces/ITokenService';
 import { User } from '~entities/User';
 
 export class ResetPasswordUseCase implements IResetPasswordUseCase {

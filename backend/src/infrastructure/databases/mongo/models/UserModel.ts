@@ -5,7 +5,7 @@ export interface IUser extends Document {
   email: string;
   knownLanguages: string[];
   bio: string;
-  password: string | null;
+  password: string;
   role: string;
   isBlocked: boolean;
   googleId: string | null;
@@ -24,7 +24,7 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true },
     knownLanguages: { type: [String], required: true },
     bio: { type: String, required: true },
-    password: { type: String, default: null },
+    password: { type: String, required: true },
     role: { type: String, required: true },
     isBlocked: { type: Boolean, required: true },
     googleId: { type: String, default: null },

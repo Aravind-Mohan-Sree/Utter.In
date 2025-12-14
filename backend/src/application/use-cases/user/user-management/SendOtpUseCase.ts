@@ -1,7 +1,7 @@
-import { ISendOtpUseCase } from '~application-interfaces/user/IOtpUseCase';
+import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import { errorMessage } from '~constants/errorMessage';
-import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
-import { IOtpService } from '~domain-services/IOtpService';
+import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
+import { IOtpService } from '~service-interfaces/IOtpService';
 import { PendingUser } from '~entities/PendingUser';
 import {
   BadRequestError,

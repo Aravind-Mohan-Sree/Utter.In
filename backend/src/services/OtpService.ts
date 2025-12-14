@@ -1,4 +1,4 @@
-import { IOtpService } from '~domain-services/IOtpService';
+import { IOtpService } from '~service-interfaces/IOtpService';
 import nodemailer from 'nodemailer';
 import { getEmailTemplate } from '~constants/getEmailTemplate';
 

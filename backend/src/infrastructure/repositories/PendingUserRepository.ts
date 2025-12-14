@@ -1,7 +1,7 @@
 import { PendingUser } from '~entities/PendingUser';
 import { BaseRepository } from './BaseRepository';
 import { IPendingUser, PendingUserModel } from '~models/PendingUserModel';
-import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
+import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
 import { Document } from 'mongoose';
 
 export class PendingUserRepository

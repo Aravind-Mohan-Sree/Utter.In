@@ -1,9 +1,9 @@
-import { IForgotPasswordOtpVerifyUseCase } from '~application-interfaces/user/IForgotPasswordUseCase';
+import { IForgotPasswordOtpVerifyUseCase } from '~use-case-interfaces/shared/IForgotPasswordUseCase';
 import { errorMessage } from '~constants/errorMessage';
-import { IPendingUserRepository } from '~domain-repositories/IPendingUserRepository';
-import { IOtpService } from '~domain-services/IOtpService';
+import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
+import { IOtpService } from '~service-interfaces/IOtpService';
 import { BadRequestError, NotFoundError } from '~errors/HttpError';
-import { ITokenService } from '~domain-services/ITokenService';
+import { ITokenService } from '~service-interfaces/ITokenService';
 
 export class ForgotPasswordOtpVerifyUseCase implements IForgotPasswordOtpVerifyUseCase {
   constructor(

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { IGoogleAuthUseCase } from '~application-interfaces/user/IUserUseCase';
+import { IGoogleAuthUseCase } from '~use-case-interfaces/user/IUserUseCase';
 import { env } from '~config/env';
 import { cookieData } from '~constants/cookieData';
 import { logger } from '~logger/logger';

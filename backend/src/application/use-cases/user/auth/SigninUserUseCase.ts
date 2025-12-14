@@ -1,10 +1,10 @@
-import { SigninUserDTO } from '~/application/dtos/SigninUserDTO';
-import { ISigninUserUseCase } from '~application-interfaces/user/IUserUseCase';
-import { UserMapper } from '~application-mappers/UserMapper';
+import { SigninDTO } from '~dtos/SigninDTO';
+import { ISigninUserUseCase } from '~use-case-interfaces/user/IUserUseCase';
+import { UserMapper } from '~mappers/UserMapper';
 import { errorMessage } from '~constants/errorMessage';
-import { IUserRepository } from '~domain-repositories/IUserRepository';
-import { IHashService } from '~domain-services/IHashService';
-import { ITokenService } from '~domain-services/ITokenService';
+import { IUserRepository } from '~repository-interfaces/IUserRepository';
+import { IHashService } from '~service-interfaces/IHashService';
+import { ITokenService } from '~service-interfaces/ITokenService';
 import { User } from '~entities/User';
 import { BadRequestError, NotFoundError } from '~errors/HttpError';
 
@@ -15,7 +15,7 @@ export class SigninUserUseCase implements ISigninUserUseCase {
     private tokenService: ITokenService,
   ) {}
 
-  async execute(data: SigninUserDTO): Promise<{
+  async execute(data: SigninDTO): Promise<{
     user: Partial<User>;
     accessToken: string;
     refreshToken: string;
