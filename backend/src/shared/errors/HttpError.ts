@@ -1,3 +1,5 @@
+import { httpStatusCode } from '~constants/httpStatusCode';
+
 // Base class for all HTTP errors
 export abstract class HttpError extends Error {
   public abstract statusCode: number;
@@ -12,77 +14,49 @@ export abstract class HttpError extends Error {
 
 // 4xx Client Errors
 export class BadRequestError extends HttpError {
-  statusCode = 400;
+  statusCode = httpStatusCode.BAD_REQUEST;
   constructor(message = 'Bad Request') {
     super(message);
   }
 }
 
 export class UnauthorizedError extends HttpError {
-  statusCode = 401;
+  statusCode = httpStatusCode.UNAUTHORIZED;
   constructor(message = 'Unauthorized') {
     super(message);
   }
 }
 
-export class PaymentRequiredError extends HttpError {
-  statusCode = 402;
-  constructor(message = 'Payment Required') {
-    super(message);
-  }
-}
-
 export class ForbiddenError extends HttpError {
-  statusCode = 403;
+  statusCode = httpStatusCode.FORBIDDEN;
   constructor(message = 'Forbidden') {
     super(message);
   }
 }
 
 export class NotFoundError extends HttpError {
-  statusCode = 404;
+  statusCode = httpStatusCode.NOT_FOUND;
   constructor(message = 'Not Found') {
     super(message);
   }
 }
 
 export class MethodNotAllowedError extends HttpError {
-  statusCode = 405;
+  statusCode = httpStatusCode.METHOD_NOT_ALLOWED;
   constructor(message = 'Method Not Allowed') {
     super(message);
   }
 }
 
 export class ConflictError extends HttpError {
-  statusCode = 409;
+  statusCode = httpStatusCode.CONFLICT;
   constructor(message = 'Conflict') {
     super(message);
   }
 }
 
-export class GoneError extends HttpError {
-  statusCode = 410;
-  constructor(message = 'Gone') {
-    super(message);
-  }
-}
-
-export class UnsupportedMediaTypeError extends HttpError {
-  statusCode = 415;
-  constructor(message = 'Unsupported Media Type') {
-    super(message);
-  }
-}
-
-export class UnprocessableEntityError extends HttpError {
-  statusCode = 422;
-  constructor(message = 'Unprocessable Entity') {
-    super(message);
-  }
-}
-
 export class TooManyRequestsError extends HttpError {
-  statusCode = 429;
+  statusCode = httpStatusCode.TOO_MANY_REQUESTS;
   constructor(message = 'Too Many Requests') {
     super(message);
   }
@@ -90,37 +64,9 @@ export class TooManyRequestsError extends HttpError {
 
 // 5xx Server Errors
 export class InternalServerError extends HttpError {
-  statusCode = 500;
-  isOperational = false; // true bugs
+  statusCode = httpStatusCode.INTERNAL_SERVER_ERROR;
+  isOperational = false;
   constructor(message = 'Internal Server Error') {
-    super(message);
-  }
-}
-
-export class NotImplementedError extends HttpError {
-  statusCode = 501;
-  constructor(message = 'Not Implemented') {
-    super(message);
-  }
-}
-
-export class BadGatewayError extends HttpError {
-  statusCode = 502;
-  constructor(message = 'Bad Gateway') {
-    super(message);
-  }
-}
-
-export class ServiceUnavailableError extends HttpError {
-  statusCode = 503;
-  constructor(message = 'Service Unavailable') {
-    super(message);
-  }
-}
-
-export class GatewayTimeoutError extends HttpError {
-  statusCode = 504;
-  constructor(message = 'Gateway Timeout') {
     super(message);
   }
 }
