@@ -1,17 +1,16 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
-  _id: Types.ObjectId;
   name: string;
   email: string;
   knownLanguages: string[];
   bio: string;
-  password: string;
+  password: string | null;
   role: string;
   isBlocked: boolean;
-  googleId: string;
+  googleId: string | null;
   streak: {
-    lastActive: Date;
+    lastActive: Date | null;
     currentStreak: number;
     highestStreak: number;
   };
@@ -25,12 +24,12 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true },
     knownLanguages: { type: [String], required: true },
     bio: { type: String, required: true },
-    password: { type: String, required: true },
+    password: { type: String, default: null },
     role: { type: String, required: true },
     isBlocked: { type: Boolean, required: true },
-    googleId: { type: String },
+    googleId: { type: String, default: null },
     streak: {
-      lastActive: { type: Date },
+      lastActive: { type: Date, default: null },
       currentStreak: { type: Number },
       highestStreak: { type: Number },
     },
