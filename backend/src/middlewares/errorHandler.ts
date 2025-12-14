@@ -1,4 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
+import { TokenValidationError } from '~/services/JwtService';
+import { env } from '~config/env';
+import { httpStatusCode } from '~constants/httpStatusCode';
 import { HttpError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
 
@@ -17,18 +20,27 @@ export const errorHandler = (
     });
   }
 
+  if (err instanceof TokenValidationError) {
+    logger.error(err);
+
+    return res.status(httpStatusCode.BAD_REQUEST).json({
+      message: err.message,
+      statusCode: httpStatusCode.BAD_REQUEST,
+    });
+  }
+
   if (err instanceof Error) {
     logger.error(err);
 
-    return res.status(500).json({
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR).json({
       message: 'Internal Server Error',
-      ...(process.env.NODE_ENV === 'development' && { debug: err.message }),
+      ...(env.NODE_ENV === 'development' && { debug: err.message }),
     });
   }
 
   logger.error('UNKNOWN ERROR THROWN', err);
 
-  return res.status(500).json({
+  return res.status(httpStatusCode.INTERNAL_SERVER_ERROR).json({
     message: 'Something went wrong',
   });
 };
