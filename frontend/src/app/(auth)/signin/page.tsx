@@ -10,9 +10,13 @@ import { PasswordInput } from '~components/auth/PasswordInput';
 import { UserTypeToggle } from '~components/auth/UserTypeToggle';
 import { UserType } from '~types/auth/UserType';
 import { GoogleAuthButton } from '~components/auth/GoogleAuthButton';
-import SignButton from '~components/auth/SignButton';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SigninSchema } from '~validations/AuthSchema';
+import { SubmitButton } from '~components/auth/SubmitButton';
+import { errorHandler } from '~utils/errorHandler';
+import { utterToast } from '~utils/utterToast';
+import bgImage from '../../../../public/bg.webp';
+import { signin } from '~services/user/authService';
 
 interface SigninData {
   email: string;
@@ -31,11 +35,15 @@ const INITIAL_FORM_DATA: SigninData = {
 
 const SignIn: React.FC = () => {
   const searchParams = useSearchParams();
-  const mode = searchParams.get('mode');
-  const [userType, setUserType] = useState<UserType>(mode as UserType);
+  const USER_TYPE = searchParams.get('mode');
+  const [userType, setUserType] = useState<UserType>(
+    (USER_TYPE as UserType) || 'user',
+  );
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [error, setError] = useState(INITIAL_ERROR_STATE);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     (() => {
@@ -44,7 +52,7 @@ const SignIn: React.FC = () => {
     })();
   }, [userType]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = SigninSchema.safeParse(formData).error?.issues.reduce<
@@ -71,7 +79,18 @@ const SignIn: React.FC = () => {
     }));
 
     if (!newErrors) {
-      console.log('Sign in data:', formData);
+      setIsLoading(true);
+
+      try {
+        const res = await signin(userType, formData);
+
+        utterToast.success(res.message);
+        router.replace('/');
+      } catch (error) {
+        setError((prev) => ({ ...prev, ['password']: errorHandler(error) }));
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -90,7 +109,16 @@ const SignIn: React.FC = () => {
     }));
   };
 
-  const onGoogleSignIn = () => {};
+  const onGoogleSignIn = async () => {
+    try {
+      window.location.href =
+        userType === 'user'
+          ? process.env.NEXT_PUBLIC_USER_GOOGLE_URL!
+          : process.env.NEXT_PUBLIC_TUTOR_GOOGLE_URL!;
+    } catch (error) {
+      utterToast.error(errorHandler(error));
+    }
+  };
 
   const subtitle =
     userType === 'user'
@@ -100,7 +128,7 @@ const SignIn: React.FC = () => {
   return (
     <div
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
-      style={{ backgroundImage: `url('/bg.webp')` }}
+      style={{ backgroundImage: `url(${bgImage.src})` }}
     >
       {/* Navbar */}
       <Navbar />
@@ -156,7 +184,7 @@ const SignIn: React.FC = () => {
                 <FormOptions userType={userType} />
 
                 {/* Sign In Button */}
-                <SignButton text="Sign In" />
+                <SubmitButton text="Sign In" isLoading={isLoading} />
 
                 {/* Divider */}
                 <Divider text="Or" />
