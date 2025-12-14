@@ -4,7 +4,7 @@
     "baseUrl": "src",
     "paths": {
       "~dto/*": ["application/dto/*"],
-      "~application-interfaces/*": ["application/interfaces/*"],
+      "~application-interfaces/*": ["application/use-case-interfaces/*"],
       "~application-mappers/*": ["application/mappers/*"],
       "~use-cases/*": ["application/use-cases/*"],
 
