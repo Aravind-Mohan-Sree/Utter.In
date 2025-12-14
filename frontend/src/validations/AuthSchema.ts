@@ -37,7 +37,10 @@ const BaseAuthSchema = z.object({
     .trim()
     .nonempty('Email is required')
     .regex(/^\S*$/, "Email can't include space")
-    .regex(/^(?![0-9]+@)([a-z0-9]+)@([a-z]+)\.com$/, 'Invalid email format'),
+    .regex(
+      /^(?![0-9]+@)([a-z0-9._+-]+)@([a-z]+)\.com$/,
+      'Invalid email format',
+    ),
 
   languages: z
     .array(z.string().trim().nonempty("Language can't be empty"))
@@ -135,3 +138,15 @@ export const TutorSignupSchema = BaseAuthSchema.refine(
       path: ['certificate'],
     },
   );
+
+export const ForgotPasswordSchema = BaseAuthSchema.pick({
+  email: true,
+});
+
+export const ResetPasswordSchema = BaseAuthSchema.pick({
+  password: true,
+  confirmPassword: true,
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
