@@ -8,4 +8,5 @@ export interface IValidateDataService {
   validateEmail(email: string): ValidatedData;
   validateKnownLanguages(knownLanguages: string[]): ValidatedData;
   validatePassword(password: string): ValidatedData;
+  validateOtp(otp: string): ValidatedData;
 }
