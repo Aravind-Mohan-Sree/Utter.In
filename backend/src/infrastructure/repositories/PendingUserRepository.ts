@@ -12,21 +12,18 @@ export class PendingUserRepository
     super(PendingUserModel);
   }
 
-  async findPendingUser(email: string): Promise<PendingUser | null> {
-    const user = await PendingUserModel.findOne({ email });
-
-    if (!user) return null;
-
-    return this.toEntity(user);
-  }
-
-  async updateOtp(email: string, otp: string): Promise<boolean> {
-    const result = await PendingUserModel.updateOne(
-      { email },
-      { $set: { otp } },
-    );
-
-    return result.acknowledged;
+  protected toSchema(
+    entity: PendingUser | Partial<PendingUser>,
+  ): IPendingUser | Partial<IPendingUser> {
+    return {
+      name: entity.name!,
+      email: entity.email,
+      knownLanguages: entity.knownLanguages!,
+      password: entity.password!,
+      otp: entity.otp!,
+      createdAt: entity.createdAt!,
+      updatedAt: entity.updatedAt!,
+    };
   }
 
   protected toEntity(
@@ -35,11 +32,13 @@ export class PendingUserRepository
     if (!data) return null;
 
     return new PendingUser(
-      data.name,
       data.email,
+      data.name,
       data.knownLanguages,
       data.password,
       data.otp,
+      data.createdAt,
+      data.updatedAt,
     );
   }
 }
