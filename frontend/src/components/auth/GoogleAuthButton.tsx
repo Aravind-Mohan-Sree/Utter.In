@@ -10,7 +10,7 @@ export const GoogleAuthButton: React.FC<GoogleSignInButtonProps> = ({
   return (
     <button
       type="button"
-      className="cursor-pointer w-full py-3 px-4 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-lg hover:from-rose-500 hover:to-pink-600 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg focus:outline-none flex items-center justify-center space-x-3"
+      className="btn relative overflow-hidden inline-flex w-full items-center justify-center rounded-md bg-gradient-to-r from-rose-400 to-rose-900 hover:bg-gradient-to-l hover:to-rose-900 hover:from-rose-400 bg-[length:200%_200%] bg-[position:0%_50%] hover:bg-[position:100%_50%] transition-[background-position] duration-500 ease-out px-4 py-3 font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer space-x-3"
       onClick={onClick}
     >
       <FaGoogle />
