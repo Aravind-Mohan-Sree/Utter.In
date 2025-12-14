@@ -7,6 +7,7 @@ export class UserMapper {
       name: user.name,
       email: user.email,
       knownLanguages: user.knownLanguages,
+      bio: user.bio,
       role: user.role,
       isBlocked: user.isBlocked,
       googleId: user.googleId,
