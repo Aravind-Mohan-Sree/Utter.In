@@ -11,7 +11,7 @@ export class RegisterUserDTO {
     data: {
       name: string;
       email: string;
-      knownLanguages: string[];
+      languages: string[];
       password: string;
     },
     validator: IValidateDataService,
@@ -24,7 +24,7 @@ export class RegisterUserDTO {
 
     if (!result.success) throw new BadRequestError(result.message);
 
-    result = validator.validateKnownLanguages(data.knownLanguages);
+    result = validator.validateKnownLanguages(data.languages);
 
     if (!result.success) throw new BadRequestError(result.message);
 
@@ -34,7 +34,7 @@ export class RegisterUserDTO {
 
     this.name = data.name;
     this.email = data.email;
-    this.knownLanguages = data.knownLanguages;
+    this.knownLanguages = data.languages;
     this.password = data.password;
   }
 }
