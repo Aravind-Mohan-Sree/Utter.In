@@ -18,6 +18,7 @@
       "~infrastructure-repositories/*": ["infrastructure/repositories/*"],
       "~infrastructure-mappers/*": ["infrastructure/mappers/*"],
       "~infrastructure-services/*": ["infrastructure/services/*"],
+      "~infrastructure-strategies/*": ["infrastructure/strategies/*"],
 
       "~controllers/*": ["presentation/controllers/*"],
       "~routes/*": ["presentation/routes/*"],
