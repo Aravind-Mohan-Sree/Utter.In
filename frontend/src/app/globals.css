@@ -31,5 +31,6 @@ body {
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: #364153;
   }
 }
