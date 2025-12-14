@@ -12,12 +12,20 @@ export class UserRepository
     super(UserModel);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    const doc = await UserModel.findOne({ email });
-
-    if (!doc) return null;
-
-    return this.toEntity(doc);
+  protected toSchema(entity: User | Partial<User>): IUser | Partial<IUser> {
+    return {
+      name: entity.name,
+      email: entity.email,
+      knownLanguages: entity.knownLanguages,
+      bio: entity.bio,
+      password: entity.password,
+      role: entity.role,
+      isBlocked: entity.isBlocked,
+      googleId: entity.googleId!,
+      streak: entity.streak!,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    };
   }
 
   protected toEntity(doc: (IUser & Document<unknown>) | null): User | null {
@@ -27,15 +35,15 @@ export class UserRepository
       doc.name,
       doc.email,
       doc.knownLanguages,
-      doc.password,
-      doc.createdAt,
-      doc.updatedAt,
       doc.bio,
-      String(doc._id),
-      doc.role,
-      doc.isBlocked,
+      doc.password,
       doc.googleId,
       doc.streak,
+      doc.role,
+      doc.isBlocked,
+      String(doc._id),
+      doc.createdAt,
+      doc.updatedAt,
     );
   }
 }
