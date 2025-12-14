@@ -18,9 +18,9 @@ export class DataValidatorService implements IValidateDataService {
         .string()
         .trim()
         .nonempty('Name is required.')
-        .regex(/^((?!\s{2,}).)*$/, "Name can't include consecutive space.")
-        .regex(/^\D*$/, "Name can't include numbers.")
-        .regex(/^[a-zA-Z0-9 ]*$/, "Name can't include special characters.")
+        .regex(/^((?!\s{2,}).)*$/, "Name can't include consecutive space")
+        .regex(/^\D*$/, "Name can't include numbers")
+        .regex(/^[a-zA-Z0-9 ]*$/, "Name can't include special characters")
         .transform((val) => val.replace(/\s+/g, ''))
         .refine((val) => val.length >= 3, {
           message: 'Name minimum length is 3.',
@@ -38,10 +38,10 @@ export class DataValidatorService implements IValidateDataService {
       email: z
         .string()
         .trim()
-        .nonempty('Email is required.')
-        .regex(/^\S*$/, "Email can't include space.")
+        .nonempty('Email is required')
+        .regex(/^\S*$/, "Email can't include space")
         .regex(
-          /^(?![0-9]+@)([a-z0-9]+)@([a-z]+)\.com$/,
+          /^(?![0-9]+@)([a-z0-9._+-]+)@([a-z]+)\.com$/,
           'Invalid email format',
         ),
     });
@@ -65,16 +65,27 @@ export class DataValidatorService implements IValidateDataService {
       password: z
         .string()
         .trim()
-        .nonempty('Password is required.')
-        .min(8, 'Password minimum length is 8.')
-        .max(30, 'Password maximum length is 30.')
-        .regex(/^\S*$/, "Password can't include space.")
-        .regex(/\d/, 'Password must include a number.')
-        .regex(/[^\w\s]/, 'Password must include a special character.')
-        .regex(/(?=.*[A-Z])/, 'Password must include an uppercase character.')
-        .regex(/(?=.*[a-z])/, 'Password must include a lowercase character.'),
+        .nonempty('Password is required')
+        .min(8, 'Password minimum length is 8')
+        .max(30, 'Password maximum length is 30')
+        .regex(/^\S*$/, "Password can't include space")
+        .regex(/\d/, 'Password must include a number')
+        .regex(/[^\w\s]/, 'Password must include a special character')
+        .regex(/(?=.*[A-Z])/, 'Password must include an uppercase character')
+        .regex(/(?=.*[a-z])/, 'Password must include a lowercase character'),
     });
 
     return toValidatedData(passwordSchema.safeParse({ password }));
+  }
+
+  validateOtp(otp: string): ValidatedData {
+    const otpSchema = z.object({
+      otp: z
+        .string()
+        .length(6, { message: 'OTP must be 6 digits long' })
+        .regex(/^\d{6}$/, { message: 'OTP must contain only digits' }),
+    });
+
+    return toValidatedData(otpSchema.safeParse({ otp }));
   }
 }
