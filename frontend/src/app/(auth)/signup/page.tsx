@@ -1,20 +1,22 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaFileVideo, FaRegFilePdf } from 'react-icons/fa6';
 import { AuthFooter } from '~components/auth/AuthFooter';
-import { Divider } from '~components/auth/Divider';
 import { FileUpload } from '~components/auth/FileUpload';
-import { GoogleAuthButton } from '~components/auth/GoogleAuthButton';
 import { InputField } from '~components/auth/InputField';
 import { LanguagesInput } from '~components/auth/LanguagesInput';
 import { PasswordInput } from '~components/auth/PasswordInput';
-import SignButton from '~components/auth/SignButton';
+import { SubmitButton } from '~components/auth/SubmitButton';
 import { UserTypeToggle } from '~components/auth/UserTypeToggle';
 import { Navbar } from '~components/layout/Navbar';
+import { register } from '~services/user/authService';
 import { UserType } from '~types/auth/UserType';
+import { errorHandler } from '~utils/errorHandler';
+import { utterToast } from '~utils/utterToast';
 import { TutorSignupSchema, UserSignupSchema } from '~validations/AuthSchema';
+import bgImage from '../../../../public/bg.webp';
 
 type ExperienceLevel = '0-1' | '1-2' | '2-3' | '3-5' | '5-10' | '10+' | '';
 
@@ -53,13 +55,17 @@ const INITIAL_FORM_DATA: SignUpData = {
 
 const SignUp: React.FC = () => {
   const searchParams = useSearchParams();
-  const mode = searchParams.get('mode');
-  const [userType, setUserType] = useState<UserType>(mode as UserType);
+  const USER_TYPE = searchParams.get('mode');
+  const [userType, setUserType] = useState<UserType>(
+    (USER_TYPE as UserType) || 'user',
+  );
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [error, setError] = useState(INITIAL_ERROR_STATE);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const schema = userType === 'user' ? UserSignupSchema : TutorSignupSchema;
+  const router = useRouter();
 
   useEffect(() => {
     (() => {
@@ -68,7 +74,7 @@ const SignUp: React.FC = () => {
     })();
   }, [userType]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = schema
@@ -94,8 +100,23 @@ const SignUp: React.FC = () => {
       ...newErrors,
     }));
 
-    if (!newErrors) {
-      console.log('Sign up data:', formData);
+    if (!newErrors && !isLoading) {
+      setIsLoading(true);
+
+      try {
+        const res = await register(userType, formData);
+
+        utterToast.success(res.message);
+        router.push(
+          `/verify-email?mode=${userType}&email=${encodeURIComponent(
+            formData.email,
+          )}`,
+        );
+      } catch (error) {
+        utterToast.error(errorHandler(error));
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -151,7 +172,7 @@ const SignUp: React.FC = () => {
   return (
     <div
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
-      style={{ backgroundImage: `url('/bg.webp')` }}
+      style={{ backgroundImage: `url(${bgImage.src})` }}
     >
       <Navbar />
 
@@ -217,7 +238,7 @@ const SignUp: React.FC = () => {
                       name="experience"
                       value={formData.experience}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition-all duration-300 bg-transparent text-gray-700 appearance-none cursor-pointer"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-transparent text-gray-700 appearance-none cursor-pointer"
                     >
                       <option value="" hidden>
                         Select your experience level
@@ -298,13 +319,7 @@ const SignUp: React.FC = () => {
                 />
 
                 {/* Sign Up Button */}
-                <SignButton text="Sign Up" />
-
-                <Divider text="Or" />
-
-                <GoogleAuthButton
-                  onClick={() => console.log('Google sign up')}
-                />
+                <SubmitButton text="Sign Up" isLoading={isLoading} />
               </form>
             </div>
 
