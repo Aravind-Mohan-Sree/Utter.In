@@ -60,6 +60,16 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(languagesSchema.safeParse({ knownLanguages }));
   }
 
+  validateExperience(experience: string): ValidatedData {
+    const experienceSchema = z.object({
+      experience: z.enum(['0-1', '1-2', '2-3', '3-5', '5-10', '10+'], {
+        message: 'Please select a valid experience range',
+      }),
+    });
+
+    return toValidatedData(experienceSchema.safeParse({ experience }));
+  }
+
   validatePassword(password: string): ValidatedData {
     const passwordSchema = z.object({
       password: z
