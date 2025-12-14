@@ -1,4 +1,4 @@
-import { UserType } from "~types/auth/UserType";
+import { UserType } from '~types/auth/UserType';
 
 interface UserTypeToggleProps {
   userType: UserType;
@@ -13,7 +13,7 @@ export const UserTypeToggle: React.FC<UserTypeToggleProps> = ({
     <div className="flex justify-center mb-6">
       <div className="relative inline-flex bg-gray-100 rounded-full p-1">
         <div
-          className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r from-rose-400 to-pink-500 rounded-full transition-all duration-300 ease-in-out"
+          className="absolute top-1 bottom-1 w-1/2 bg-gradient-to-r bg-gradient-to-r from-rose-400 to-rose-900 rounded-full transition-all duration-300 ease-in-out"
           style={{
             transform:
               userType === 'tutor' ? 'translateX(92%)' : 'translateX(0)',
