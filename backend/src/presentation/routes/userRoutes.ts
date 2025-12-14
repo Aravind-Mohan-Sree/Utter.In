@@ -1,16 +1,32 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
+import passport from 'passport';
 import { DataValidatorService } from '~/services/DataValidatorService';
 import { HashService } from '~/services/HashService';
+import { JwtService } from '~/services/JwtService';
 import { OtpService } from '~/services/OtpService';
 import { env } from '~config/env';
-import { AuthController } from '~controllers/user/authController';
-import { VerifyOtpController } from '~controllers/user/VerifyOtpController';
+import { AuthController } from '~controllers/user/AuthController';
+import { ForgotPasswordController } from '~controllers/user/ForgotPasswordController';
+import { GoogleAuthController } from '~controllers/user/GoogleAuthController';
+import { OtpController } from '~controllers/user/OtpController';
+import { SignoutController } from '~controllers/user/SignoutController';
+import { User } from '~entities/User';
 import { PendingUserRepository } from '~infrastructure-repositories/PendingUserRepository';
 import { UserRepository } from '~infrastructure-repositories/UserRepository';
+import { Authenticate } from '~middlewares/Authenticate';
+import { AuthMiddlewareBundler } from '~middlewares/AuthMiddlewareBundler';
+import { Authorize } from '~middlewares/Authorize';
+import { IUser } from '~models/UserModel';
+import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
+import { GoogleAuthUseCase } from '~use-cases/user/auth/GoogleAuthUseCase';
 import { RegisterUserFromPendingUseCase } from '~use-cases/user/auth/RegisterUserFromPendingUseCase';
 import { RegisterUserUseCase } from '~use-cases/user/auth/RegisterUserUseCase';
-import { SendOtpUseCase } from '~use-cases/user/auth/SendOtpUseCase';
-import { VerifyOtpUseCase } from '~use-cases/user/auth/VerifyOtpUseCase';
+import { SigninUserUseCase } from '~use-cases/user/auth/SigninUserUseCase';
+import { ForgotPasswordOtpVerifyUseCase } from '~use-cases/user/user-management/ForgotPasswordOtpVerifyUseCase';
+import { ForgotPasswordUseCase } from '~use-cases/user/user-management/ForgotPasswordUseCase';
+import { ResetPasswordUseCase } from '~use-cases/user/user-management/ResetPasswordUseCase';
+import { SendOtpUseCase } from '~use-cases/user/user-management/SendOtpUseCase';
+import { VerifyOtpUseCase } from '~use-cases/user/user-management/VerifyOtpUseCase';
 
 // repositories
 const userRepository = new UserRepository();
@@ -20,20 +36,110 @@ const pendingUserRepository = new PendingUserRepository();
 const otpService = new OtpService(env.APP_EMAIL, env.GOOGLE_APP_PASSWORD);
 const dataValidatorService = new DataValidatorService();
 const hashService = new HashService();
+const jwtService = new JwtService();
 
 // use-cases
-const registerUserUseCase = new RegisterUserUseCase(userRepository, pendingUserRepository, hashService);
+const registerUserUseCase = new RegisterUserUseCase(
+  userRepository,
+  pendingUserRepository,
+  hashService,
+);
 const sendOtpUseCase = new SendOtpUseCase(otpService, pendingUserRepository);
-const verifyOtpUseCase = new VerifyOtpUseCase(otpService, pendingUserRepository);
-const registerUserFromPendingUseCase = new RegisterUserFromPendingUseCase(pendingUserRepository, userRepository);
+const verifyOtpUseCase = new VerifyOtpUseCase(
+  otpService,
+  pendingUserRepository,
+);
+const registerUserFromPendingUseCase = new RegisterUserFromPendingUseCase(
+  pendingUserRepository,
+  userRepository,
+);
+const forgotPasswordUseCase = new ForgotPasswordUseCase(
+  userRepository,
+  pendingUserRepository,
+);
+const forgotPasswordOtpVerifyUseCase = new ForgotPasswordOtpVerifyUseCase(
+  pendingUserRepository,
+  otpService,
+  jwtService,
+);
+const resetPasswordUseCase = new ResetPasswordUseCase(
+  jwtService,
+  userRepository,
+  hashService,
+);
+const googleAuthUseCase = new GoogleAuthUseCase(userRepository, jwtService);
+const signinUserUseCase = new SigninUserUseCase(
+  userRepository,
+  hashService,
+  jwtService,
+);
+
+// shared use cases
+const getUserDataUseCase = new GetEntityDataUseCase<User, IUser>(
+  userRepository,
+);
 
 // controllers
-const authController = new AuthController(registerUserUseCase, dataValidatorService, sendOtpUseCase);
-const verifyOtpController = new VerifyOtpController(verifyOtpUseCase, registerUserFromPendingUseCase);
+const authController = new AuthController(
+  registerUserUseCase,
+  signinUserUseCase,
+  dataValidatorService,
+  sendOtpUseCase,
+);
+const otpController = new OtpController(
+  verifyOtpUseCase,
+  sendOtpUseCase,
+  registerUserFromPendingUseCase,
+);
+const forgotPasswordController = new ForgotPasswordController(
+  forgotPasswordUseCase,
+  sendOtpUseCase,
+  forgotPasswordOtpVerifyUseCase,
+  dataValidatorService,
+  resetPasswordUseCase,
+);
+const googleAuthController = new GoogleAuthController(googleAuthUseCase);
+const signoutController = new SignoutController();
+
+// wire auth middlewares
+const authenticate = new Authenticate<User>(jwtService, getUserDataUseCase);
+const authorize = new Authorize();
+const auth = new AuthMiddlewareBundler(authenticate, authorize, 'user');
 
 const router = express.Router();
 
+// google auth
+router.get(
+  '/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] }),
+);
+router.get(
+  '/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/signin',
+    session: false,
+  }),
+  (req, res, next) => googleAuthController.handleSuccess(req, res, next),
+);
+
+// auth
 router.post('/signup', authController.register);
-router.post('/otp', verifyOtpController.verify);
+router.post('/signin', authController.signin);
+
+// user management
+router.post('/verify-otp', otpController.verify);
+router.patch('/resend-otp', otpController.resend);
+router.post('/verify-email', forgotPasswordController.registerForgotPassword);
+router.post(
+  '/forgot-password-otp-verify',
+  forgotPasswordController.ForgotPasswordOtpVerify,
+);
+router.patch('/reset-password', forgotPasswordController.resetPassword);
+router.post('/signout', signoutController.signout);
+
+// home
+router.get('/users', auth.verify(), (req: Request, res: Response) =>
+  res.end('users'),
+);
 
 export const userRouter = router;
