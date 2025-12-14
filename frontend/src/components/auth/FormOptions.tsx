@@ -14,7 +14,7 @@ export const FormOptions: React.FC<FormOptionsProps> = ({ userType }) => {
         type="button"
         className="text-gray-600 text-sm text-gradient-to-r from-rose-400 to-pink-500 hover:text-rose-600 transition-colors duration-300 font-medium cursor-pointer"
         onClick={() =>
-          router.push(userType === 'user' ? '/user/forgot-password' : '/tutor/forgot-password')
+          router.push(`/forgot-password?mode=${userType}`)
         }
       >
         Forgot password?
