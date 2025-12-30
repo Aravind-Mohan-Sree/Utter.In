@@ -6,10 +6,10 @@ import { JwtService } from '~concrete-services/JwtService';
 import { OtpService } from '~concrete-services/OtpService';
 import { env } from '~config/env';
 import { AuthController } from '~controllers/user/AuthController';
-import { ForgotPasswordController } from '~controllers/user/ForgotPasswordController';
-import { GoogleAuthController } from '~controllers/user/GoogleAuthController';
+import { ForgotPasswordController } from '~controllers/shared/ForgotPasswordController';
+import { UserGoogleAuthController } from '~controllers/user/UserGoogleAuthController';
 import { OtpController } from '~controllers/user/OtpController';
-import { SignoutController } from '~controllers/user/SignoutController';
+import { SignoutController } from '~controllers/shared/SignoutController';
 import { User } from '~entities/User';
 import { PendingUserRepository } from '~concrete-repositories/PendingUserRepository';
 import { UserRepository } from '~concrete-repositories/UserRepository';
@@ -27,6 +27,9 @@ import { ForgotPasswordUseCase } from '~use-cases/user/user-management/ForgotPas
 import { ResetPasswordUseCase } from '~use-cases/user/user-management/ResetPasswordUseCase';
 import { SendOtpUseCase } from '~use-cases/user/user-management/SendOtpUseCase';
 import { VerifyOtpUseCase } from '~use-cases/user/user-management/VerifyOtpUseCase';
+import { uploadMiddleware } from '~middlewares/multer';
+import { GetDataController } from '~controllers/user/GetDataController';
+import { GetDataUseCase } from '~use-cases/user/user-management/GetDataUseCase';
 
 // repositories
 const userRepository = new UserRepository();
@@ -67,12 +70,16 @@ const resetPasswordUseCase = new ResetPasswordUseCase(
   userRepository,
   hashService,
 );
-const userGoogleAuthUseCase = new UserGoogleAuthUseCase(userRepository, jwtService);
+const userGoogleAuthUseCase = new UserGoogleAuthUseCase(
+  userRepository,
+  jwtService,
+);
 const signinUserUseCase = new SigninUserUseCase(
   userRepository,
   hashService,
   jwtService,
 );
+const getDataUseCase = new GetDataUseCase(userRepository);
 
 // shared use cases
 const getUserDataUseCase = new GetEntityDataUseCase<User, IUser>(
@@ -98,8 +105,11 @@ const forgotPasswordController = new ForgotPasswordController(
   dataValidatorService,
   resetPasswordUseCase,
 );
-const userGoogleAuthController = new GoogleAuthController(userGoogleAuthUseCase);
+const userGoogleAuthController = new UserGoogleAuthController(
+  userGoogleAuthUseCase,
+);
 const signoutController = new SignoutController();
+const getDataController = new GetDataController(getDataUseCase);
 
 // wire auth middlewares
 const authenticate = new Authenticate<User>(jwtService, getUserDataUseCase);
@@ -111,11 +121,11 @@ const router = express.Router();
 // google auth
 router.get(
   '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }),
+  passport.authenticate('google-user', { scope: ['profile', 'email'] }),
 );
 router.get(
   '/auth/google/callback',
-  passport.authenticate('google', {
+  passport.authenticate('google-user', {
     failureRedirect: '/signin',
     session: false,
   }),
@@ -123,7 +133,7 @@ router.get(
 );
 
 // auth
-router.post('/signup', authController.register);
+router.post('/signup', uploadMiddleware, authController.register);
 router.post('/signin', authController.signin);
 
 // user management
@@ -136,6 +146,12 @@ router.post(
 );
 router.patch('/reset-password', forgotPasswordController.resetPassword);
 router.post('/signout', signoutController.signout);
+router.get(
+  '/get-account-details/:userEmail',
+  auth.verify(),
+  getDataController.getAccountDetails,
+);
+router.patch('/update-profile', getDataController.getAccountDetails);
 
 // home
 router.get('/users', auth.verify(), (req: Request, res: Response) =>

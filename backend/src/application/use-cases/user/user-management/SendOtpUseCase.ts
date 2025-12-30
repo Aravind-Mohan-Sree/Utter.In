@@ -42,7 +42,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
       partialPendingUser,
     );
 
-    if (!user) throw new InternalServerError('Something went wrong');
+    if (!user) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
     await this.otpService.sendOtp(user.name!, email, otp);
   }

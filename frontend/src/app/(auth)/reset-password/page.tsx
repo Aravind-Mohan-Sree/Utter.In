@@ -3,15 +3,14 @@
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PasswordInput } from '~components/auth/PasswordInput';
-import { SubmitButton } from '~components/auth/SubmitButton';
-import { Navbar } from '~components/layout/Navbar';
 import { ResetPasswordSchema } from '~validations/AuthSchema';
 import bgImage from '../../../../public/bg.webp';
 import { GoBackBtn } from '~components/auth/GoBackBtn';
-import { resetPassword } from '~services/user/authService';
+import { resetPassword } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
+import Button from '~components/shared/Button';
 
 interface ResetPasswordData {
   password: string;
@@ -101,8 +100,6 @@ const ResetPassword: React.FC = () => {
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
       style={{ backgroundImage: `url(${bgImage.src})` }}
     >
-      <Navbar />
-
       <div className="relative flex min-h-screen items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-white/20 border border-gray-100">
@@ -148,7 +145,7 @@ const ResetPassword: React.FC = () => {
               />
 
               {/* Reset Password Button */}
-              <SubmitButton text="Reset" isLoading={isLoading} />
+              <Button text="Reset" fullWidth={true} isLoading={isLoading} />
             </form>
 
             {/* Go back */}

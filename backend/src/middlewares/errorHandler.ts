@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { TokenValidationError } from '~/services/JwtService';
 import { env } from '~config/env';
+import { errorMessage } from '~constants/errorMessage';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { HttpError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
@@ -41,6 +42,6 @@ export const errorHandler = (
   logger.error('UNKNOWN ERROR THROWN', err);
 
   return res.status(httpStatusCode.INTERNAL_SERVER_ERROR).json({
-    message: 'Something went wrong',
+    message: errorMessage.SOMETHING_WRONG,
   });
 };

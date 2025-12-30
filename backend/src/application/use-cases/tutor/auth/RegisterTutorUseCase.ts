@@ -1,45 +1,57 @@
-import { RegisterUserDTO } from '~dtos/RegisterUserDTO';
-import { IRegisterUserUseCase } from '~use-case-interfaces/user/IUserUseCase';
+import { RegisterTutorDTO } from '~dtos/RegisterTutorDTO';
+import { IRegisterTutorUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
 import { errorMessage } from '~constants/errorMessage';
-import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
-import { IUserRepository } from '~repository-interfaces/IUserRepository';
+import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
+import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IHashService } from '~service-interfaces/IHashService';
-import { PendingUser } from '~entities/PendingUser';
+import { PendingTutor } from '~entities/PendingTutor';
 import { ConflictError, InternalServerError } from '~errors/HttpError';
 
-export class RegisterUserUseCase implements IRegisterUserUseCase {
+export class RegisterTutorUseCase implements IRegisterTutorUseCase {
   constructor(
-    private userRepo: IUserRepository,
-    private pendingUserRepo: IPendingUserRepository,
+    private tutorRepo: ITutorRepository,
+    private pendingTutorRepo: IPendingTutorRepository,
     private hashService: IHashService,
   ) {}
 
-  async execute(data: RegisterUserDTO): Promise<string> {
-    const user = await this.userRepo.findOneByField({ email: data.email });
+  async execute(data: RegisterTutorDTO): Promise<string> {
+    const tutor = await this.tutorRepo.findOneByField({ email: data.email });
 
-    if (user) throw new ConflictError(errorMessage.ACCOUNT_EXISTS);
+    parent: if (tutor) {
+      if (tutor.rejectionReason) {
+        await this.tutorRepo.deleteOneById(tutor.id!);
 
-    let pendingUser = await this.pendingUserRepo.findOneByField({
+        break parent;
+      }
+
+      throw new ConflictError(errorMessage.ACCOUNT_EXISTS);
+    }
+
+    let pendingTutor = await this.pendingTutorRepo.findOneByField({
       email: data.email,
     });
 
-    if (pendingUser) {
-      await this.pendingUserRepo.deleteOneByField({ email: pendingUser.email });
+    if (pendingTutor) {
+      await this.pendingTutorRepo.deleteOneByField({
+        email: pendingTutor.email,
+      });
     }
 
     const hashedPassword = await this.hashService.hash(data.password);
 
-    pendingUser = new PendingUser(
+    pendingTutor = new PendingTutor(
       data.email,
       data.name,
       data.knownLanguages,
+      data.yearsOfExperience,
       hashedPassword,
     );
 
-    pendingUser = await this.pendingUserRepo.create(pendingUser);
+    pendingTutor = await this.pendingTutorRepo.create(pendingTutor);
 
-    if (!pendingUser) throw new InternalServerError('Something went wrong');
+    if (!pendingTutor)
+      throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    return pendingUser.email;
+    return pendingTutor.email;
   }
 }

@@ -8,15 +8,18 @@ import { FileUpload } from '~components/auth/FileUpload';
 import { InputField } from '~components/auth/InputField';
 import { LanguagesInput } from '~components/auth/LanguagesInput';
 import { PasswordInput } from '~components/auth/PasswordInput';
-import { SubmitButton } from '~components/auth/SubmitButton';
 import { UserTypeToggle } from '~components/auth/UserTypeToggle';
-import { Navbar } from '~components/layout/Navbar';
-import { register } from '~services/user/authService';
+import { register } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
 import { TutorSignupSchema, UserSignupSchema } from '~validations/AuthSchema';
 import bgImage from '../../../../public/bg.webp';
+import { validateVideoDuration } from '~validations/validateVideoDuration';
+import { utterAlert } from '~utils/utterAlert';
+import { getAccountDetails } from '~services/shared/managementService';
+import { ExperienceSelector } from '~components/auth/ExperienceSelector';
+import Button from '~components/shared/Button';
 
 type ExperienceLevel = '0-1' | '1-2' | '2-3' | '3-5' | '5-10' | '10+' | '';
 
@@ -56,6 +59,7 @@ const INITIAL_FORM_DATA: SignUpData = {
 const SignUp: React.FC = () => {
   const searchParams = useSearchParams();
   const USER_TYPE = searchParams.get('mode');
+  const tutorEmail = searchParams.get('email');
   const [userType, setUserType] = useState<UserType>(
     (USER_TYPE as UserType) || 'user',
   );
@@ -64,20 +68,58 @@ const SignUp: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const schema = userType === 'user' ? UserSignupSchema : TutorSignupSchema;
+  const validationSchema =
+    userType === 'user' ? UserSignupSchema : TutorSignupSchema;
   const router = useRouter();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        if (tutorEmail) {
+          const res = await getAccountDetails('tutor', tutorEmail);
+          const {
+            name,
+            email,
+            knownLanguages,
+            yearsOfExperience,
+            rejectionReason,
+          } = res.tutor;
+
+          setFormData((prev) => ({
+            ...prev,
+            name,
+            email,
+            languages: knownLanguages,
+            experience: yearsOfExperience,
+          }));
+          utterAlert({
+            title: 'Account verification failed',
+            text: `Reason: ${rejectionReason}.`,
+            footer: 'Please signup again',
+            icon: 'info',
+          });
+        }
+      } catch (error) {
+        utterToast.error(errorHandler(error));
+      }
+    })();
+  }, [tutorEmail]);
 
   useEffect(() => {
     (() => {
       setFormData(INITIAL_FORM_DATA);
       setError(INITIAL_ERROR_STATE);
+      setShowPassword(false);
+      setShowConfirmPassword(false);
     })();
   }, [userType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors = schema
+    if (error.introVideo) return;
+
+    const newErrors = validationSchema
       .safeParse(formData)
       .error?.issues.reduce<Record<string, string>>((acc, issue) => {
         const fieldName = issue.path[0];
@@ -101,14 +143,34 @@ const SignUp: React.FC = () => {
     }));
 
     if (!newErrors && !isLoading) {
+      const apiFormData = new FormData();
+      const formDataState: SignUpData = formData;
+
+      for (const key in formDataState) {
+        const propKey = key as keyof SignUpData;
+        const value = formDataState[propKey];
+
+        if (propKey === 'introVideo' || propKey === 'certificate') {
+          if (value instanceof File) {
+            apiFormData.append(propKey, value);
+          }
+        } else if (Array.isArray(value)) {
+          value.forEach((item) => {
+            apiFormData.append(`${propKey}[]`, item.toString());
+          });
+        } else {
+          apiFormData.append(propKey, value!.toString());
+        }
+      }
+
       setIsLoading(true);
 
       try {
-        const res = await register(userType, formData);
+        const res = await register(userType, apiFormData);
 
         utterToast.success(res.message);
         router.push(
-          `/verify-email?mode=${userType}&email=${encodeURIComponent(
+          `/verify-otp?mode=${userType}&email=${encodeURIComponent(
             formData.email,
           )}`,
         );
@@ -129,7 +191,7 @@ const SignUp: React.FC = () => {
     setFormData(updatedFormData);
     setError((prev) => ({
       ...prev,
-      [name]: schema
+      [name]: validationSchema
         .safeParse(updatedFormData)
         .error?.issues.find((ele) => ele.path[0] === name)?.message,
     }));
@@ -141,14 +203,14 @@ const SignUp: React.FC = () => {
     setError((prev) => ({
       ...prev,
       ['languages']:
-        schema
+        validationSchema
           .safeParse(updatedFormData)
           .error?.issues.find((ele) => ele.path[0] === 'languages')?.message ??
         '',
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files } = e.target;
 
     if (!files) return;
@@ -158,10 +220,25 @@ const SignUp: React.FC = () => {
     setFormData(updatedFormData);
     setError((prev) => ({
       ...prev,
-      [name]: schema
+      [name]: validationSchema
         .safeParse(updatedFormData)
         .error?.issues.find((ele) => ele.path[0] === name)?.message,
     }));
+
+    if (files[0]) {
+      const file = files[0];
+
+      if (file.type.startsWith('video/')) {
+        const isValid = await validateVideoDuration(file, 31); // limit = 30 seconds
+
+        if (!isValid) {
+          setError((prev) => ({
+            ...prev,
+            ['introVideo']: 'Video must be 30 seconds or less',
+          }));
+        }
+      }
+    }
   };
 
   const subtitle =
@@ -174,8 +251,6 @@ const SignUp: React.FC = () => {
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
       style={{ backgroundImage: `url(${bgImage.src})` }}
     >
-      <Navbar />
-
       <div className="relative flex min-h-screen items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-white/20 border border-gray-100">
@@ -226,37 +301,12 @@ const SignUp: React.FC = () => {
 
                 {/* Experience Field (Tutor only) */}
                 {userType === 'tutor' && (
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="experience"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Years of Experience
-                    </label>
-                    <select
-                      id="experience"
-                      name="experience"
-                      value={formData.experience}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-transparent text-gray-700 appearance-none cursor-pointer"
-                    >
-                      <option value="" hidden>
-                        Select your experience level
-                      </option>
-                      <option value="0-1">0-1 years</option>
-                      <option value="1-2">1-2 years</option>
-                      <option value="2-3">2-3 years</option>
-                      <option value="3-5">3-5 years</option>
-                      <option value="5-10">5-10 years</option>
-                      <option value="10+">10+ years</option>
-                    </select>
-
-                    {error.experience && (
-                      <span className="text-sm text-red-500 wrap-break-word">
-                        {error.experience}
-                      </span>
-                    )}
-                  </div>
+                  <ExperienceSelector
+                    id="experience"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    error={error.experience}
+                  />
                 )}
 
                 {/* Tutor-specific fields */}
@@ -266,9 +316,9 @@ const SignUp: React.FC = () => {
                       {/* Intro Video Upload */}
                       <FileUpload
                         id="intro-video"
-                        label="Intro Video (Max 10 sec)"
+                        label="Intro Video (Max 30 sec)"
                         name="introVideo"
-                        accept="video/*"
+                        accept=".mp4"
                         onChange={handleFileChange}
                         error={error.introVideo}
                         Icon={FaFileVideo}
@@ -277,7 +327,7 @@ const SignUp: React.FC = () => {
                       {/* Certificates Upload */}
                       <FileUpload
                         id="certificates"
-                        label="Add Certificate (PDF)"
+                        label="Certificate (PDF)"
                         name="certificate"
                         accept=".pdf"
                         onChange={handleFileChange}
@@ -319,7 +369,7 @@ const SignUp: React.FC = () => {
                 />
 
                 {/* Sign Up Button */}
-                <SubmitButton text="Sign Up" isLoading={isLoading} />
+                <Button text="Sign Up" fullWidth={true} isLoading={isLoading} />
               </form>
             </div>
 

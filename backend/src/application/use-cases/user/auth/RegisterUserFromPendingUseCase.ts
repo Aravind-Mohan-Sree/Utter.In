@@ -4,6 +4,7 @@ import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepos
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { User } from '~entities/User';
 import { InternalServerError, NotFoundError } from '~errors/HttpError';
+import { errorMessage } from '~constants/errorMessage';
 
 export class RegisterUserFromPendingUseCase implements IRegisterUserFromPendingUseCase {
   constructor(
@@ -30,7 +31,7 @@ export class RegisterUserFromPendingUseCase implements IRegisterUserFromPendingU
 
     const newUser = await this.userRepo.create(user);
 
-    if (!newUser) throw new InternalServerError('Something went wrong');
+    if (!newUser) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
     return UserMapper.toResponse(newUser);
   }

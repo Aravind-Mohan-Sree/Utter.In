@@ -1,4 +1,5 @@
 import {
+  FileInput,
   IValidateDataService,
   ValidatedData,
 } from '~service-interfaces/IValidateDataService';
@@ -11,21 +12,69 @@ const toValidatedData = (data: z.ZodSafeParseResult<object>) => {
   };
 };
 
-const FileListSafe =
-  typeof FileList !== 'undefined' ? FileList : class FileList {};
-const FileSafe = typeof File !== 'undefined' ? File : class File {};
+const IntroVideoSchema = z.any().superRefine((file, ctx) => {
+  if (!file || typeof file !== 'object') {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Intro video is required',
+    });
+    return;
+  }
 
-const FileSchema = z
-  .union([z.instanceof(FileListSafe), z.instanceof(FileSafe)])
-  .refine((file) => {
-    const fileObj =
-      file instanceof FileListSafe ? (file as unknown as File[])[0] : file;
-    const standardFileObj = fileObj as File;
+  if (typeof file.size !== 'number' || file.size <= 0) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Intro video is required',
+    });
+    return;
+  }
 
-    if (fileObj) return standardFileObj.size <= 5000000; // 5MB(5000000) max
+  if (file.size > 5_000_000) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Intro video too large (max 5MB)',
+    });
+  }
 
-    return true;
-  }, 'File too large');
+  if (file.mimetype !== 'video/mp4') {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Intro video must be an MP4 file',
+    });
+  }
+});
+
+const CertificateSchema = z.any().superRefine((file, ctx) => {
+  if (!file || typeof file !== 'object') {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Certificate is required',
+    });
+    return;
+  }
+
+  if (typeof file.size !== 'number' || file.size <= 0) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Certificate is required',
+    });
+    return;
+  }
+
+  if (file.size > 5_000_000) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Certificate too large (max 5MB)',
+    });
+  }
+
+  if (file.mimetype !== 'application/pdf') {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Certificate must be a PDF file',
+    });
+  }
+});
 
 export class DataValidatorService implements IValidateDataService {
   validateName(name: string): ValidatedData {
@@ -86,62 +135,18 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(experienceSchema.safeParse({ experience }));
   }
 
-  validateIntroVideo(introVideo: File): ValidatedData {
-    const introVideoSchema = z
-      .object({
-        introVideo: z.nullable(FileSchema).or(z.undefined()),
-      })
-      .refine(
-        (data) => {
-          const video = data.introVideo;
-
-          if (!video) return false;
-
-          if (video instanceof FileList) {
-            return video.length > 0;
-          }
-
-          if (video instanceof File) {
-            return true;
-          }
-
-          return false;
-        },
-        {
-          message: 'Intro video is required',
-          path: ['introVideo'],
-        },
-      );
+  validateIntroVideo(introVideo: FileInput): ValidatedData {
+    const introVideoSchema = z.object({
+      introVideo: IntroVideoSchema,
+    });
 
     return toValidatedData(introVideoSchema.safeParse({ introVideo }));
   }
 
-  validateCertificate(certificate: File): ValidatedData {
-    const certificateSchema = z
-      .object({
-        certificate: z.nullable(FileSchema).or(z.undefined()),
-      })
-      .refine(
-        (data) => {
-          const cert = data.certificate;
-
-          if (!cert) return false;
-
-          if (cert instanceof FileList) {
-            return cert.length > 0;
-          }
-
-          if (cert instanceof File) {
-            return true;
-          }
-
-          return false;
-        },
-        {
-          message: 'Certificate is required',
-          path: ['certificate'],
-        },
-      );
+  validateCertificate(certificate: FileInput): ValidatedData {
+    const certificateSchema = z.object({
+      certificate: CertificateSchema,
+    });
 
     return toValidatedData(certificateSchema.safeParse({ certificate }));
   }

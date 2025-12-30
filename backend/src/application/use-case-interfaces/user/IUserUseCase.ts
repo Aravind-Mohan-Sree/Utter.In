@@ -28,3 +28,7 @@ export interface ISigninUserUseCase {
     refreshToken: string;
   }>;
 }
+
+export interface IGetDataUseCase {
+  execute(email: string): Promise<Partial<User>>;
+}

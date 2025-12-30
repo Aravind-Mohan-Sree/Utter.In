@@ -3,6 +3,9 @@ import { Poppins } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { ReduxProvider } from 'ReduxProvider';
+import Script from 'next/script';
+import { Navbar } from '~components/layout/Navbar';
+import Footer from '~components/layout/Footer';
 
 const poppins = Poppins({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
@@ -22,8 +25,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script src="/assets/lang-config.js" strategy="beforeInteractive" />
+        <Script src="/assets/translation.js" strategy="beforeInteractive" />
+        <Script
+          src="//translate.google.com/translate_a/element.js?cb=TranslateInit"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className={`${poppins.variable} antialiased`}>
-        <ReduxProvider>{children}</ReduxProvider>
+        <div id="google_translate_element"></div>
+        <ReduxProvider>
+          <Navbar />
+          {children}
+          <Footer />
+        </ReduxProvider>
         <Toaster
           toastOptions={{
             style: {

@@ -4,6 +4,7 @@ import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRep
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { Tutor } from '~entities/Tutor';
 import { InternalServerError, NotFoundError } from '~errors/HttpError';
+import { errorMessage } from '~constants/errorMessage';
 
 export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendingUseCase {
   constructor(
@@ -11,7 +12,11 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
     private tutorRepo: ITutorRepository,
   ) {}
 
-  async execute(email: string): Promise<Partial<Tutor>> {
+  async execute(email: string): Promise<{
+    pendingTutorId: string;
+    newTutorId: string;
+    tutor: Partial<Tutor>;
+  }> {
     const pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
 
     if (!pendingTutor) throw new NotFoundError('Tutor not found');
@@ -32,8 +37,12 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
 
     const newTutor = await this.tutorRepo.create(tutor);
 
-    if (!newTutor) throw new InternalServerError('Something went wrong');
+    if (!newTutor) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    return TutorMapper.toResponse(newTutor);
+    return {
+      pendingTutorId: pendingTutor.id!,
+      newTutorId: newTutor.id!,
+      tutor: TutorMapper.toResponse(newTutor),
+    };
   }
 }

@@ -12,4 +12,10 @@ export const utterToast = {
   error: (message: string) => {
     toast.error(message, defaultOptions);
   },
+  info: (message: string) => {
+    toast.info(message, defaultOptions);
+  },
+  warning: (message: string) => {
+    toast.warning(message, defaultOptions);
+  },
 };

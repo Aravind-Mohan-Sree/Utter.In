@@ -11,7 +11,9 @@ import { userRouter } from '~routes/userRoutes';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
-import '~strategies/googleStrategy';
+import '~strategies/googleUserStrategy';
+import '~strategies/googleTutorStrategy';
+import { tutorRouter } from '~routes/tutorRoutes';
 
 dotenv.config();
 
@@ -61,6 +63,7 @@ async function startServer() {
   app.use(requestLogger);
 
   app.use('/api/user', userRouter);
+  app.use('/api/tutor', tutorRouter);
 
   app.use(errorHandler);
   app.use(morgan('dev'));

@@ -1,0 +1,54 @@
+.custom-popup {
+  width: auto;
+  max-width: 500px;
+  border-radius: 14px;
+  padding: 20px;
+  background: white;
+  font-family: inherit;
+}
+
+.custom-title {
+  color: black;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.custom-text {
+  color: rgb(0, 0, 0);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.custom-footer {
+  color: rgb(80, 80, 80);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.custom-icon {
+  margin-top: 0;
+  font-size: 10px;
+}
+
+.custom-confirm-btn {
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: oklch(71.2% 0.194 13.428);
+  transition: background-color linear 150ms;
+  cursor: pointer;
+  outline: none;
+}
+
+.custom-confirm-btn:hover {
+  background-color: oklch(64.738% 0.23966 19.65);
+}
+
+.custom-cancel-btn {
+  background: #2a2a3b;
+  color: white;
+  padding: 10px 22px;
+  border-radius: 6px;
+  border: 1px solid #444;
+}

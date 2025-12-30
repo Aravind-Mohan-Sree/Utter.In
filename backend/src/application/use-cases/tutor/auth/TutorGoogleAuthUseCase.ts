@@ -4,7 +4,11 @@ import { errorMessage } from '~constants/errorMessage';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { ITokenService } from '~service-interfaces/ITokenService';
 import { Tutor } from '~entities/Tutor';
-import { BadRequestError, NotFoundError } from '~errors/HttpError';
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from '~errors/HttpError';
 
 export class TutorGoogleAuthUseCase implements ITutorGoogleAuthUseCase {
   constructor(
@@ -36,8 +40,12 @@ export class TutorGoogleAuthUseCase implements ITutorGoogleAuthUseCase {
       }
     }
 
+    if (!tutor?.isVerified && !tutor?.rejectionReason)
+      throw new ForbiddenError(errorMessage.UNVERIFIED);
+    if (tutor?.rejectionReason)
+      throw new BadRequestError(errorMessage.REJECTED);
     if (tutor?.isBlocked) {
-      throw new BadRequestError(errorMessage.BLOCKED);
+      throw new ForbiddenError(errorMessage.BLOCKED);
     }
 
     const accessToken = this.tokenService.generateAuthToken({

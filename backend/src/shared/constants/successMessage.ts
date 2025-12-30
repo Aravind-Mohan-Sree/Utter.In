@@ -5,4 +5,5 @@ export const successMessage = {
   OTP_SENDED: 'OTP sended',
   OTP_VERIFIED: 'OTP verified',
   PASSWORD_RESET_SUCCESS: 'Password reset successful',
+  DATA_FETCHED: 'Data successfully fetched',
 };

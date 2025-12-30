@@ -38,7 +38,7 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
 
     pendingUser = await this.pendingUserRepo.create(pendingUser);
 
-    if (!pendingUser) throw new InternalServerError('Something went wrong');
+    if (!pendingUser) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
     return pendingUser.email;
   }

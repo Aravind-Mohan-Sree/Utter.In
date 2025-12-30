@@ -11,6 +11,8 @@ export class TutorMapper {
       bio: tutor.bio,
       role: tutor.role,
       isBlocked: tutor.isBlocked,
+      isVerified: tutor.isVerified,
+      rejectionReason: tutor.rejectionReason,
     };
   }
 }

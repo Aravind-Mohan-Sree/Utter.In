@@ -5,18 +5,19 @@ import { AuthFooter } from '~components/auth/AuthFooter';
 import { Divider } from '~components/auth/Divider';
 import { InputField } from '~components/auth/InputField';
 import { FormOptions } from '~components/auth/FormOptions';
-import { Navbar } from '~components/layout/Navbar';
 import { PasswordInput } from '~components/auth/PasswordInput';
 import { UserTypeToggle } from '~components/auth/UserTypeToggle';
 import { UserType } from '~types/auth/UserType';
-import { GoogleAuthButton } from '~components/auth/GoogleAuthButton';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SigninSchema } from '~validations/AuthSchema';
-import { SubmitButton } from '~components/auth/SubmitButton';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
 import bgImage from '../../../../public/bg.webp';
-import { signin } from '~services/user/authService';
+import { signin } from '~services/shared/authService';
+import { useDispatch } from 'react-redux';
+import { signIn } from '~features/authSlice';
+import Button from '~components/shared/Button';
+import { FaGoogle } from 'react-icons/fa6';
 
 interface SigninData {
   email: string;
@@ -36,6 +37,7 @@ const INITIAL_FORM_DATA: SigninData = {
 const SignIn: React.FC = () => {
   const searchParams = useSearchParams();
   const USER_TYPE = searchParams.get('mode');
+  const tutorEmail = searchParams.get('email');
   const [userType, setUserType] = useState<UserType>(
     (USER_TYPE as UserType) || 'user',
   );
@@ -44,13 +46,36 @@ const SignIn: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     (() => {
       setFormData(INITIAL_FORM_DATA);
       setError(INITIAL_ERROR_STATE);
+      setShowPassword(false);
     })();
   }, [userType]);
+
+  useEffect(() => {
+    (() => {
+      const responseMessage = searchParams.get('responseMessage');
+
+      if (responseMessage) {
+        if (responseMessage.startsWith('Account under verification')) {
+          return router.push('/verification-pending');
+        } else if (responseMessage.startsWith('Account verification failed')) {
+          return router.push(
+            `/signup?mode=${userType}&email=${encodeURIComponent(
+              tutorEmail as string,
+            )}`,
+          );
+        }
+
+        utterToast.error(responseMessage);
+        router.replace('/signin');
+      }
+    })();
+  }, [router, searchParams, userType, tutorEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +108,32 @@ const SignIn: React.FC = () => {
 
       try {
         const res = await signin(userType, formData);
+        const data = res.user ? res.user : res.tutor;
 
+        dispatch(
+          signIn({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            role: data.role,
+          }),
+        );
         utterToast.success(res.message);
         router.replace('/');
       } catch (error) {
-        setError((prev) => ({ ...prev, ['password']: errorHandler(error) }));
+        const message: string = errorHandler(error);
+
+        if (message.startsWith('Account under verification')) {
+          return router.push('/verification-pending');
+        } else if (message.startsWith('Account verification failed')) {
+          return router.push(
+            `/signup?mode=${userType}&email=${encodeURIComponent(
+              formData.email,
+            )}`,
+          );
+        }
+
+        setError((prev) => ({ ...prev, ['password']: message }));
       } finally {
         setIsLoading(false);
       }
@@ -130,9 +176,6 @@ const SignIn: React.FC = () => {
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
       style={{ backgroundImage: `url(${bgImage.src})` }}
     >
-      {/* Navbar */}
-      <Navbar />
-
       {/* Main Content */}
       <div className="relative flex min-h-screen items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">
@@ -184,14 +227,20 @@ const SignIn: React.FC = () => {
                 <FormOptions userType={userType} />
 
                 {/* Sign In Button */}
-                <SubmitButton text="Sign In" isLoading={isLoading} />
+                <Button text="Sign In" fullWidth={true} isLoading={isLoading} />
 
                 {/* Divider */}
                 <Divider text="Or" />
-
-                {/* Google Login Button */}
-                <GoogleAuthButton onClick={onGoogleSignIn} />
               </form>
+
+              {/* Google Login Button */}
+              <Button
+                text="Continue with Google"
+                icon={<FaGoogle />}
+                fullWidth={true}
+                isLoading={isLoading}
+                onClick={onGoogleSignIn}
+              />
             </div>
 
             {/* Footer */}

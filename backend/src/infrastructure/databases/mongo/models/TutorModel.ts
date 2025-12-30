@@ -12,6 +12,7 @@ export interface ITutor extends Document {
   isVerified: boolean;
   rejectionReason: string | null;
   googleId: string | null;
+  expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,7 +30,7 @@ const tutorSchema = new Schema<ITutor>(
     isVerified: { type: Boolean, required: true },
     rejectionReason: { type: String, default: null },
     googleId: { type: String, default: null },
-    createdAt: { type: Date, default: Date.now, expires: 10 },
+    expiresAt: { type: Date, default: null, expires: 120 },
   },
   { timestamps: true },
 );

@@ -12,7 +12,8 @@ export class Tutor {
     public isVerified: boolean,
     public rejectionReason: string | null,
     public id?: string,
-    public createdAt?: Date | string,
+    public expiresAt?: Date,
+    public createdAt?: Date,
     public updatedAt?: Date,
   ) {}
 }

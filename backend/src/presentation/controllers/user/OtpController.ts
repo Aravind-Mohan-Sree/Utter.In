@@ -42,7 +42,6 @@ export class OtpController {
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
-        httpOnly: true,
         secure: isProduction,
         sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
         maxAge: cookieData.OTP_AGE,

@@ -8,5 +8,6 @@ export class PendingTutor {
     public otp?: string,
     public createdAt?: Date,
     public updatedAt?: Date,
+    public id?: string,
   ) {}
 }

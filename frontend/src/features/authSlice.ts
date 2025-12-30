@@ -4,6 +4,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  role: string;
 }
 
 interface AuthState {
@@ -20,16 +21,16 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    signin: (state, action: PayloadAction<User>) => {
+    signIn: (state, action: PayloadAction<User>) => {
       state.isSignedIn = true;
       state.user = action.payload;
     },
-    signout: (state) => {
+    signOut: (state) => {
       state.isSignedIn = false;
       state.user = null;
     },
   },
 });
 
-export const { signin, signout } = authSlice.actions;
+export const { signIn, signOut } = authSlice.actions;
 export const authReducer = authSlice.reducer;

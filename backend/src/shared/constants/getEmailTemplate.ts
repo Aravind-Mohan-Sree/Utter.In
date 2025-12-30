@@ -35,7 +35,7 @@ export const getEmailTemplate = (name: string, otp: string) => {
         margin: 0 auto;
         padding: 45px 30px 60px;
         background: #f4f7ff;
-        background-image: url(https://res.cloudinary.com/dgfduke8j/image/upload/v1764608981/bg-image_ee49f4.webp);
+        background-image: url(https://utter-web-app.s3.ap-south-2.amazonaws.com/utter/bg-image_ee49f4.webp);
         background-repeat: no-repeat;
         background-size: 800px 452px;
         background-position: top center;
@@ -50,7 +50,7 @@ export const getEmailTemplate = (name: string, otp: string) => {
               <td>
                 <img
                   alt=""
-                  src="https://res.cloudinary.com/dgfduke8j/image/upload/v1765000921/utter_logo2_ufhzz2.png"
+                  src="https://utter-web-app.s3.ap-south-2.amazonaws.com/utter/utter_logo2_ufhzz2.png"
                   height="50px"
                   style="border-radius: 3px;"
                 />

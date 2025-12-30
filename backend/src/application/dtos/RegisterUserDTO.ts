@@ -13,6 +13,7 @@ export class RegisterUserDTO {
       email: string;
       languages: string[];
       password: string;
+      confirmPassword: string;
     },
     validator: IValidateDataService,
   ) {
@@ -31,6 +32,9 @@ export class RegisterUserDTO {
     result = validator.validatePassword(data.password);
 
     if (!result.success) throw new BadRequestError(result.message);
+
+    if (data.password !== data.confirmPassword)
+      throw new BadRequestError("Passwords don't match");
 
     this.name = data.name;
     this.email = data.email;

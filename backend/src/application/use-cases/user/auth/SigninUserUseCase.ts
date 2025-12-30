@@ -6,7 +6,7 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { IHashService } from '~service-interfaces/IHashService';
 import { ITokenService } from '~service-interfaces/ITokenService';
 import { User } from '~entities/User';
-import { BadRequestError, NotFoundError } from '~errors/HttpError';
+import { BadRequestError, ForbiddenError, NotFoundError } from '~errors/HttpError';
 
 export class SigninUserUseCase implements ISigninUserUseCase {
   constructor(
@@ -24,6 +24,8 @@ export class SigninUserUseCase implements ISigninUserUseCase {
     const user = await this.userRepo.findOneByField({ email });
 
     if (!user) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
+
+    if (user.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
 
     const valid = await this.hashService.compare(password, user.password!);
 

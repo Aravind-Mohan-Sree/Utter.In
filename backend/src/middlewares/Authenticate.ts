@@ -4,7 +4,7 @@ import { IGetEntityDataUseCase } from '~use-case-interfaces/shared/IGetEntityDat
 import { cookieData } from '~constants/cookieData';
 import { errorMessage } from '~constants/errorMessage';
 import { ITokenService } from '~service-interfaces/ITokenService';
-import { NotFoundError, UnauthorizedError } from '~errors/HttpError';
+import { UnauthorizedError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
 
 interface IEntityData {
@@ -50,7 +50,7 @@ export class Authenticate<Entity> implements IAuthenticate {
           res.clearCookie('refreshToken', cookieOptions);
 
           if (!user) {
-            throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
+            throw new UnauthorizedError(errorMessage.ACCOUNT_NOT_EXISTS);
           } else {
             throw new UnauthorizedError(errorMessage.BLOCKED);
           }
@@ -69,7 +69,7 @@ export class Authenticate<Entity> implements IAuthenticate {
         const cleanPayload = {
           id: payload.id,
           role: payload.role,
-        };  
+        };
         const newAccessToken =
           this.tokenService.generateAuthToken(cleanPayload);
 
@@ -95,7 +95,7 @@ export class Authenticate<Entity> implements IAuthenticate {
           return next();
         }
 
-        throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
+        throw new UnauthorizedError(errorMessage.ACCOUNT_NOT_EXISTS);
       }
     } catch (error) {
       logger.error(error);

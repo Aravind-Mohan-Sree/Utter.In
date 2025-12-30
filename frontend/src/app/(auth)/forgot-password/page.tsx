@@ -2,16 +2,15 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Navbar } from '~components/layout/Navbar';
 import { GoBackBtn } from '~components/auth/GoBackBtn';
-import { SubmitButton } from '~components/auth/SubmitButton';
 import { InputField } from '~components/auth/InputField';
 import { ForgotPasswordSchema } from '~validations/AuthSchema';
 import bgImage from '../../../../public/bg.webp';
-import { verifyEmail } from '~services/user/authService';
+import { verifyEmail } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
+import Button from '~components/shared/Button';
 
 interface ForgotPasswordData {
   email: string;
@@ -29,7 +28,7 @@ const ForgotPassword: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
       const error =
         ForgotPasswordSchema.safeParse(formData).error?.issues[0].message;
@@ -40,7 +39,7 @@ const ForgotPassword: React.FC = () => {
 
       utterToast.success(res.message);
       router.push(
-        `/verify-email?page=resetPasswordEmailVerify&mode=${userType}&email=${encodeURIComponent(
+        `/verify-otp?page=resetPasswordEmailVerify&mode=${userType}&email=${encodeURIComponent(
           formData.email,
         )}`,
       );
@@ -73,8 +72,6 @@ const ForgotPassword: React.FC = () => {
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
       style={{ backgroundImage: `url(${bgImage.src})` }}
     >
-      <Navbar />
-
       <div className="relative flex min-h-screen items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-white/20 border border-gray-100">
@@ -104,7 +101,7 @@ const ForgotPassword: React.FC = () => {
               />
 
               {/* Send Reset Link Button */}
-              <SubmitButton text="Send OTP" isLoading={isLoading} />
+              <Button text="Send OTP" fullWidth={true} isLoading={isLoading} />
             </form>
 
             {/* Back to Login Link */}

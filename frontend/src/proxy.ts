@@ -4,10 +4,11 @@ import type { NextRequest } from 'next/server';
 const publicRoutes = [
   '/signin',
   '/google',
-  '/verify-email',
+  '/verify-otp',
   '/signup',
   '/forgot-password',
   '/reset-password',
+  '/verification-pending',
   '/admin/signin',
 ];
 

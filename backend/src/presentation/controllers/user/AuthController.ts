@@ -24,14 +24,12 @@ export class AuthController {
   register = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = new RegisterUserDTO(req.body, this.validator);
-
       const email = await this.registerUser.execute(data);
 
       await this.sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
-        httpOnly: true,
         secure: isProduction,
         sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
         maxAge: cookieData.OTP_AGE,
@@ -59,17 +57,21 @@ export class AuthController {
         httpOnly: true,
         secure: isProduction,
         sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
-        maxAge: cookieData.ACCESS_TOKEN_AGE,
         domain: isProduction ? env.COOKIE_DOMAIN : undefined,
         path: '/',
       };
 
-      res.cookie('accessToken', userData.accessToken, cookieOptions);
-      res.cookie('refreshToken', userData.refreshToken, cookieOptions);
-
+      res.cookie('accessToken', userData.accessToken, {
+        ...cookieOptions,
+        maxAge: cookieData.ACCESS_TOKEN_AGE,
+      });
+      res.cookie('refreshToken', userData.refreshToken, {
+        ...cookieOptions,
+        maxAge: cookieData.REFRESH_TOKEN_AGE,
+      });
       res
         .status(httpStatusCode.OK)
-        .json({ message: successMessage.SIGNIN_SUCCESS });
+        .json({ message: successMessage.SIGNIN_SUCCESS, user: userData.user });
     } catch (error) {
       logger.error(error);
       next(error);

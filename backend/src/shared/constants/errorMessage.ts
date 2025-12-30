@@ -4,8 +4,12 @@ export const errorMessage = {
   ACCOUNT_EXISTS: 'Account already exists',
   ACCOUNT_NOT_EXISTS: 'Account not exists',
   BLOCKED: 'Account is blocked. Please contact Admin',
+  REJECTED: 'Account verification failed. Please signup again',
+  UNVERIFIED: 'Account under verification. Try after sometime',
   UNAUTHORIZED: 'Not authenticated. Please signin',
   SESSION_EXPIRED: 'Session expired. Please signin',
   FORBIDDEN: 'Access denied due to insufficient permission',
   WRONG_PASSWORD: 'Wrong password',
+  SOMETHING_WRONG: 'Something went wrong',
+  VIDEO: 'Video must be 30 seconds or less',
 };

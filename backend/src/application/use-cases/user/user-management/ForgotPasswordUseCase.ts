@@ -3,7 +3,11 @@ import { errorMessage } from '~constants/errorMessage';
 import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { PendingUser } from '~entities/PendingUser';
-import { BadRequestError, NotFoundError } from '~errors/HttpError';
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from '~errors/HttpError';
 
 export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
   constructor(
@@ -15,6 +19,7 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     const user = await this.userRepo.findOneByField({ email });
 
     if (!user) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
+    if (user.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
 
     let pendingUser = await this.pendingUserRepo.findOneByField({ email });
 

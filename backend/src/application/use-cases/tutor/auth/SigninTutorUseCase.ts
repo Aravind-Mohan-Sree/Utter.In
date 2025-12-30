@@ -1,45 +1,54 @@
 import { SigninDTO } from '~dtos/SigninDTO';
-import { ISigninUserUseCase } from '~use-case-interfaces/user/IUserUseCase';
-import { UserMapper } from '~mappers/UserMapper';
+import { ISigninTutorUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
+import { TutorMapper } from '~mappers/TutorMapper';
 import { errorMessage } from '~constants/errorMessage';
-import { IUserRepository } from '~repository-interfaces/IUserRepository';
+import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IHashService } from '~service-interfaces/IHashService';
 import { ITokenService } from '~service-interfaces/ITokenService';
-import { User } from '~entities/User';
-import { BadRequestError, NotFoundError } from '~errors/HttpError';
+import { Tutor } from '~entities/Tutor';
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from '~errors/HttpError';
 
-export class SigninUserUseCase implements ISigninUserUseCase {
+export class SigninTutorUseCase implements ISigninTutorUseCase {
   constructor(
-    private userRepo: IUserRepository,
+    private tutorRepo: ITutorRepository,
     private hashService: IHashService,
     private tokenService: ITokenService,
   ) {}
 
   async execute(data: SigninDTO): Promise<{
-    user: Partial<User>;
+    tutor: Partial<Tutor>;
     accessToken: string;
     refreshToken: string;
   }> {
     const { email, password } = data;
-    const user = await this.userRepo.findOneByField({ email });
+    const tutor = await this.tutorRepo.findOneByField({ email });
 
-    if (!user) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
+    if (!tutor) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
 
-    const valid = await this.hashService.compare(password, user.password!);
+    if (!tutor.isVerified && !tutor.rejectionReason)
+      throw new ForbiddenError(errorMessage.UNVERIFIED);
+    if (tutor.rejectionReason) throw new BadRequestError(errorMessage.REJECTED);
+    if (tutor.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
+
+    const valid = await this.hashService.compare(password, tutor.password!);
 
     if (!valid) throw new BadRequestError(errorMessage.WRONG_PASSWORD);
 
     const accessToken = this.tokenService.generateAuthToken({
-      id: user.id,
-      role: 'user',
+      id: tutor.id,
+      role: 'tutor',
     });
     const refreshToken = this.tokenService.generateRefreshToken({
-      id: user.id,
-      role: 'user',
+      id: tutor.id,
+      role: 'tutor',
     });
 
     return {
-      user: UserMapper.toResponse(user),
+      tutor: TutorMapper.toResponse(tutor),
       accessToken,
       refreshToken,
     };

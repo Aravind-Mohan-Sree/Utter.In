@@ -54,7 +54,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <Icon className="text-gray-500 mb-2" size={20} />
             <p className="text-sm text-gray-500">Click to upload</p>
             {fileName && (
-              <p className="text-xs text-rose-600 mt-2 font-medium">
+              <p className="text-xs text-rose-600 mt-2 font-medium break-all">
                 {fileName}
               </p>
             )}
