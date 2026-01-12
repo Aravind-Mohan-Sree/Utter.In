@@ -388,6 +388,7 @@ export default function ProfilePage() {
           <div className="bg-white/20 rounded-2xl shadow-lg p-6 h-fit backdrop-blur-xs">
             <div className="flex items-center gap-4 mb-6">
               <Avatar
+                size="xxl"
                 user={{
                   name: user?.name as string,
                   avatarUrl,

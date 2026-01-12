@@ -8,7 +8,7 @@ import { logger } from '~logger/logger';
 import morgan from 'morgan';
 import cors from 'cors';
 import { userRouter } from '~routes/userRoutes';
-import rateLimit from 'express-rate-limit';
+// import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import '~strategies/googleUserStrategy';
@@ -39,27 +39,27 @@ async function startServer() {
   app.use(express.json());
   app.use(passport.initialize());
 
-  const globalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      message: 'Too many requests, please try again later',
-    },
+  // const globalLimiter = rateLimit({
+  //   windowMs: 15 * 60 * 1000,
+  //   max: 100,
+  //   standardHeaders: true,
+  //   legacyHeaders: false,
+  //   message: {
+  //     success: false,
+  //     message: 'Too many requests, please try again later',
+  //   },
 
-    // Crucial: IP identification must be robust for proxies
-    // keyGenerator: (req: Request) => {
-    //   // Check for IP forwarded by a proxy (like Nginx, Vercel, etc.)
-    //   const forwarded = req.headers['x-forwarded-for'];
-    //   return forwarded
-    //     ? String(forwarded).split(',')[0]
-    //     : req.socket.remoteAddress;
-    // },
-  });
+  // Crucial: IP identification must be robust for proxies
+  // keyGenerator: (req: Request) => {
+  //   // Check for IP forwarded by a proxy (like Nginx, Vercel, etc.)
+  //   const forwarded = req.headers['x-forwarded-for'];
+  //   return forwarded
+  //     ? String(forwarded).split(',')[0]
+  //     : req.socket.remoteAddress;
+  // },
+  // });
 
-  app.use(globalLimiter);
+  // app.use(globalLimiter);
 
   app.use(requestLogger);
 

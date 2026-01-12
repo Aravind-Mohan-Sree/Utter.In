@@ -1,23 +1,42 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { SearchAndFilter } from '~components/admin/SearchAndFilter';
-import { Card, TutorCardProps } from '~components/admin/Card';
+import { Card } from '~components/admin/Card';
 import { Pagination } from '~components/shared/Pagination';
 import { MdPeople } from 'react-icons/md';
 import { fetchUsers } from '~services/admin/usersService';
 import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
+import { Dropdown } from '~components/shared/Dropdown';
+import { fetchAvatar } from '~services/shared/managementService';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  knownLanguages: string[];
+  bio: string;
+  role: string;
+  isBlocked: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [itemsOptions] = useState(['3', '6', '9', '15', '21']);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [users, setUsers] = useState([]);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
+  const [filteredUsersCount, setFilteredUsersCount] = useState(0);
+  const [users, setUsers] = useState<User[]>([]);
+  const totalPages = Math.ceil(totalUsersCount / itemsPerPage);
+  const from = totalUsersCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const to = Math.min(currentPage * itemsPerPage, totalUsersCount);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -36,26 +55,42 @@ export default function UsersPage() {
           debouncedQuery,
           activeFilter,
         );
-        console.log(res.userData.users);
-        setTotalUsers(res.usersData.totalUsers);
-        setUsers(res.usersData.users);
+
+        const users = res.usersData.users;
+
+        const avatarResults = await Promise.allSettled(
+          users.map((user: User) =>
+            fetchAvatar({
+              id: user.id,
+              role: user.role,
+            }),
+          ),
+        );
+
+        const usersWithAvatars = users.map((user: User, index: number) => {
+          const result = avatarResults[index];
+          return {
+            ...user,
+            avatarUrl: result.status === 'fulfilled' ? result.value : null,
+          };
+        });
+
+        setTotalUsersCount(res.usersData.totalUsersCount);
+        setFilteredUsersCount(res.usersData.filteredUsersCount);
+        setUsers(usersWithAvatars);
       } catch (error) {
         utterToast.error(errorHandler(error));
       }
     })();
   }, [debouncedQuery, activeFilter, currentPage, itemsPerPage]);
 
-  // Pagination calculation
-  const totalPages = Math.ceil(totalUsers / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = users?.slice(startIndex, startIndex + itemsPerPage);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [users]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  if (!paginatedUsers) return;
 
   return (
     <div className="w-full">
@@ -74,7 +109,41 @@ export default function UsersPage() {
         }}
       />
 
-      {paginatedUsers.length === 0 ? (
+      <div className="flex flex-col md:flex-row md:items-center gap-6 mb-4 text-black">
+        <div className="flex items-center gap-2">
+          <p className="text-sm">Items per page</p>
+          <Dropdown
+            options={itemsOptions}
+            selected={itemsPerPage.toString()}
+            onSelect={(val) => {
+              setItemsPerPage(+val);
+            }}
+          />
+        </div>
+
+        <p className="text-sm text-black">
+          Showing{' '}
+          <span className="font-medium text-rose-400">
+            {from}-{to}
+          </span>{' '}
+          of{' '}
+          <span className="font-medium text-rose-400">
+            {filteredUsersCount}
+          </span>{' '}
+          results
+          {filteredUsersCount !== totalUsersCount && (
+            <span className="text-black ml-1">
+              (Total{' '}
+              <span className="text-rose-400 font-medium">
+                {totalUsersCount}
+              </span>{' '}
+              users)
+            </span>
+          )}
+        </p>
+      </div>
+
+      {users.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="text-gray-400 mb-4">
             <MdPeople className="mx-auto w-24 h-24" />
@@ -90,16 +159,16 @@ export default function UsersPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {paginatedUsers.map((user) => (
+          {users.map((user) => (
             <Card
               key={user.id}
               type="user"
               id={user.id}
               name={user.name}
               email={user.email}
-              avatarUrl={avatarUrl}
-              status={user.status as TutorCardProps['status']}
-              languages={user.languages}
+              avatarUrl={user.avatarUrl}
+              status={user.isBlocked ? 'Blocked' : 'Active'}
+              languages={user.knownLanguages}
               onToggleStatus={() => {}}
             />
           ))}

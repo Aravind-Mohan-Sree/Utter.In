@@ -7,10 +7,10 @@ interface ActionButtonsProps {
   status?: 'Active' | 'Blocked' | string;
   verified?: boolean;
   rejectionReason?: string | null;
-  onToggle?: (id: number) => void;
-  onEdit?: (id: number) => void;
-  onView?: (id: number) => void;
-  itemId?: number;
+  onToggle?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onView?: (id: string) => void;
+  itemId?: string;
   customActions?: ReactNode;
   className?: string;
 }

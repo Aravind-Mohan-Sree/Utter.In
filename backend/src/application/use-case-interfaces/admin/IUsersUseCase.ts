@@ -7,7 +7,8 @@ export interface IFetchUsersUseCase {
     query: string;
     filter: string;
   }): Promise<{
-    totalUsers: number;
+    totalUsersCount: number;
+    filteredUsersCount: number;
     users: UserResponseDTO[];
   }>;
 }

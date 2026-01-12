@@ -12,8 +12,8 @@ import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
 
 type AvatarProps = {
-  user: { name: string; avatarUrl?: string; role: 'user' | 'admin' };
-  size: 'sm' | 'md' | 'lg';
+  user: { name: string; avatarUrl?: string | null; role: 'user' | 'admin' };
+  size: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   handleAvatarUpload?: (croppedBlob: Blob) => Promise<void>;
   handleAvatarDeletion?: () => Promise<void>;
 };
@@ -28,6 +28,8 @@ const Avatar = ({
     sm: 'w-10 h-10 text-base',
     md: 'w-12 h-12 text-lg',
     lg: 'w-16 h-16 text-xl',
+    xl: 'w-22 h-22 text-2xl',
+    xxl: 'w-28 h-28 text-5xl',
   };
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -94,7 +96,9 @@ const Avatar = ({
 
         <div
           className={`absolute inset-0 ${
-            user.role == 'user' ? 'bg-black/40 backdrop-blur-[2px]' : ''
+            user.role == 'user' || user.avatarUrl
+              ? 'bg-black/40 backdrop-blur-[2px]'
+              : ''
           }  flex flex-col items-center justify-center gap-4 transition-all duration-300 rounded-full z-10 ${
             isMenuOpen
               ? 'opacity-100 pointer-events-auto'
@@ -108,7 +112,7 @@ const Avatar = ({
               <Button
                 variant="outline"
                 icon={
-                  <LuImagePlus className="transition-transform hover:scale-150 hover:rotate-12" />
+                  <LuImagePlus className="transition-transform hover:scale-135 hover:rotate-12" />
                 }
                 size={0}
                 onClick={() => {
@@ -125,7 +129,7 @@ const Avatar = ({
                 <Button
                   variant="outline"
                   icon={
-                    <LuMaximize className="transition-transform hover:scale-150 hover:rotate-12" />
+                    <LuMaximize className="transition-transform hover:scale-135 hover:rotate-12" />
                   }
                   size={0}
                   onClick={() => {
@@ -140,7 +144,7 @@ const Avatar = ({
                   <Button
                     variant="outline"
                     icon={
-                      <RiDeleteBin6Line className="transition-transform hover:scale-150 hover:rotate-12" />
+                      <RiDeleteBin6Line className="transition-transform hover:scale-135 hover:rotate-12" />
                     }
                     size={0}
                     onClick={handleDelete}

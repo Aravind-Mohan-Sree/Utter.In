@@ -11,7 +11,7 @@ import Avatar from '~components/shared/Avatar';
 export type CardType = 'user' | 'tutor' | 'report';
 
 interface BaseCardProps {
-  id: number;
+  id: string;
   type: CardType;
 }
 
@@ -19,24 +19,24 @@ interface UserCardProps extends BaseCardProps {
   type: 'user';
   name: string;
   email: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
   status: 'Active' | 'Blocked';
   languages: string[];
-  onToggleStatus?: (id: number) => void;
+  onToggleStatus?: (id: string) => void;
 }
 
 export interface TutorCardProps extends BaseCardProps {
   type: 'tutor';
   name: string;
   email: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
   status: 'Active' | 'Blocked';
   verified: boolean;
   rejectionReason: string | null;
   languages: string[];
   experience?: string;
-  onToggleStatus?: (id: number) => void;
-  onViewDetails?: (id: number) => void;
+  onToggleStatus?: (id: string) => void;
+  onViewDetails?: (id: string) => void;
   customActions?: React.ReactNode;
 }
 
@@ -56,7 +56,7 @@ interface ReportCardProps extends BaseCardProps {
   dateTime?: string;
   abuseType?: string;
   channel?: 'chat' | 'video';
-  onViewDetails?: (id: number) => void;
+  onViewDetails?: (id: string) => void;
 }
 
 type CardProps = UserCardProps | TutorCardProps | ReportCardProps;
@@ -95,7 +95,7 @@ const UserCard = ({
     </div>
 
     {languages && languages.length > 0 && (
-      <LanguageTags languages={languages} variant="rose" className="mb-4" />
+      <LanguageTags languages={languages} variant="default" className="mb-4" />
     )}
 
     {onToggleStatus && (
@@ -138,7 +138,7 @@ const TutorCard = ({
     </div>
 
     {languages && languages.length > 0 && (
-      <LanguageTags languages={languages} variant="rose" className="mb-4" />
+      <LanguageTags languages={languages} variant="default" className="mb-4" />
     )}
 
     {(onToggleStatus || onViewDetails || customActions) && (

@@ -17,8 +17,13 @@ export class UserRepository
     limit: number,
     query: string,
     filter: string,
-  ): Promise<{ totalUsers: number; users: User[] }> {
+  ): Promise<{
+    totalUsersCount: number;
+    filteredUsersCount: number;
+    users: User[];
+  }> {
     const pipeline: PipelineStage[] = [];
+    const totalUsersCount = await this.model.countDocuments({});
 
     // Handle Status Filter
     if (filter !== 'All') {
@@ -34,7 +39,9 @@ export class UserRepository
           $or: [
             { name: { $regex: query, $options: 'i' } },
             { email: { $regex: query, $options: 'i' } },
-            { languages: { $elemMatch: { $regex: query, $options: 'i' } } },
+            {
+              knownLanguages: { $elemMatch: { $regex: query, $options: 'i' } },
+            },
           ],
         },
       });
@@ -45,7 +52,7 @@ export class UserRepository
       $facet: {
         metadata: [{ $count: 'total' }],
         data: [
-          { $sort: { createdAt: -1 } },
+          { $sort: { createdAt: -1, _id: 1 } },
           { $skip: (page - 1) * limit },
           { $limit: limit },
         ],
@@ -54,9 +61,13 @@ export class UserRepository
 
     const result = await this.model.aggregate(pipeline);
     const users = result[0].data;
-    const totalUsers = result[0].metadata[0]?.total || 0;
+    const filteredUsersCount = result[0].metadata[0]?.total || 0;
 
-    return { totalUsers, users };
+    return {
+      totalUsersCount,
+      filteredUsersCount,
+      users: users.map(this.toEntity),
+    };
   }
 
   protected toSchema(entity: User | Partial<User>): IUser | Partial<IUser> {

@@ -10,16 +10,21 @@ export class FetchUsersUseCase implements IFetchUsersUseCase {
     limit: number;
     query: string;
     filter: string;
-  }): Promise<{ totalUsers: number; users: UserResponseDTO[] }> {
-    const { totalUsers, users } = await this.userRepo.fetchUsers(
-      data.page,
-      data.limit,
-      data.query,
-      data.filter,
-    );
+  }): Promise<{
+    totalUsersCount: number;
+    filteredUsersCount: number;
+    users: UserResponseDTO[];
+  }> {
+    const { totalUsersCount, filteredUsersCount, users } =
+      await this.userRepo.fetchUsers(
+        data.page,
+        data.limit,
+        data.query,
+        data.filter,
+      );
 
     const fetchedUsers = users.map(UserMapper.toResponse);
 
-    return { totalUsers, users: fetchedUsers };
+    return { totalUsersCount, filteredUsersCount, users: fetchedUsers };
   }
 }

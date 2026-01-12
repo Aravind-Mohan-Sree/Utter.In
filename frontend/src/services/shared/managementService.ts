@@ -22,7 +22,7 @@ export const fetchAvatar = async (user: { id: string; role: string }) => {
         ? `${API_ROUTES.USER.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`
         : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`;
 
-    await axios.get(avatarUrl);
+    await axios.head(avatarUrl);
 
     return avatarUrl;
   } catch (error) {
