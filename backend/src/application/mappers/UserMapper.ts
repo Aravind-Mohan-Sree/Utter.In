@@ -14,3 +14,5 @@ export class UserMapper {
     };
   }
 }
+
+export type UserResponseDTO = ReturnType<typeof UserMapper.toResponse>;

@@ -14,6 +14,7 @@ export const API_ROUTES = {
     DELETE_AVATAR: '/user/delete-avatar',
     UPDATE_PROFILE: '/user/update-profile',
     CHANGE_PASSWORD: '/user/change-password',
+    SIGNOUT: '/user/signout',
   },
   TUTOR: {
     SIGNUP: '/tutor/signup',
@@ -25,10 +26,18 @@ export const API_ROUTES = {
     SIGNIN: '/tutor/signin',
     GOOGLE_SIGNIN: '/tutor/auth/google',
     GET_ACCOUNT_DETAILS: '/tutor/get-account-details',
-    FETCH_AVATAR: `${process.env.NEXT_PUBLIC_S3_OBJECT_URL}/users/avatars`,
+    FETCH_AVATAR: `${process.env.NEXT_PUBLIC_S3_OBJECT_URL}/tutors/avatars`,
     UPLOAD_AVATAR: '/tutor/upload-avatar',
     DELETE_AVATAR: '/tutor/delete-avatar',
     UPDATE_PROFILE: '/tutor/update-profile',
     CHANGE_PASSWORD: '/tutor/change-password',
+    SIGNOUT: '/tutor/signout',
+  },
+  ADMIN: {
+    SIGNIN: '/admin/signin',
+    GET_ACCOUNT_DETAILS: '/admin/get-account-details',
+    SIGNOUT: '/admin/signout',
+    FETCH_USERS: '/admin/users',
+    FETCH_TUTORS: '/admin/tutors',
   },
 };

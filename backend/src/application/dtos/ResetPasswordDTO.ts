@@ -15,9 +15,9 @@ export class ResetPasswordDTO {
 
     if (!result.success) throw new BadRequestError(result.message);
 
-    if (data.password !== data.confirmPassword)
+    if (data.password.trim() !== data.confirmPassword.trim())
       throw new BadRequestError("Passwords don't match");
 
-    this.password = data.password;
+    this.password = data.password.trim();
   }
 }

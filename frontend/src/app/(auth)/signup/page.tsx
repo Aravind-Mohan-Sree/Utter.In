@@ -65,7 +65,6 @@ const SignUp: React.FC = () => {
   );
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [error, setError] = useState(INITIAL_ERROR_STATE);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const validationSchema =
@@ -114,9 +113,7 @@ const SignUp: React.FC = () => {
     })();
   }, [userType]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (error.introVideo) return;
 
     const newErrors = validationSchema
@@ -142,7 +139,7 @@ const SignUp: React.FC = () => {
       ...newErrors,
     }));
 
-    if (!newErrors && !isLoading) {
+    if (!newErrors) {
       const apiFormData = new FormData();
       const formDataState: SignUpData = formData;
 
@@ -163,8 +160,6 @@ const SignUp: React.FC = () => {
         }
       }
 
-      setIsLoading(true);
-
       try {
         const res = await register(userType, apiFormData);
 
@@ -176,8 +171,6 @@ const SignUp: React.FC = () => {
         );
       } catch (error) {
         utterToast.error(errorHandler(error));
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -264,7 +257,7 @@ const SignUp: React.FC = () => {
             <div className="space-y-6">
               <UserTypeToggle userType={userType} onChange={setUserType} />
 
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form className="space-y-6">
                 {/* Name Input */}
                 <InputField
                   id="name"
@@ -369,7 +362,11 @@ const SignUp: React.FC = () => {
                 />
 
                 {/* Sign Up Button */}
-                <Button text="Sign Up" fullWidth={true} isLoading={isLoading} />
+                <Button
+                  text="Sign Up"
+                  fullWidth={true}
+                  onClick={handleSubmit}
+                />
               </form>
             </div>
 

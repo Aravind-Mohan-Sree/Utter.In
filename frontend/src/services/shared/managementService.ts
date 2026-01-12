@@ -19,8 +19,8 @@ export const fetchAvatar = async (user: { id: string; role: string }) => {
   try {
     const avatarUrl =
       user.role === 'user'
-        ? `${API_ROUTES.USER.FETCH_AVATAR}/${user.id}.webp`
-        : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user.id}.webp`;
+        ? `${API_ROUTES.USER.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`
+        : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`;
 
     await axios.get(avatarUrl);
 
@@ -81,6 +81,20 @@ export const changePassword = async (userType: string, body: object) => {
         ? `${API_ROUTES.USER.CHANGE_PASSWORD}`
         : `${API_ROUTES.TUTOR.CHANGE_PASSWORD}`,
       body,
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const signout = async (userType: string) => {
+  try {
+    const res = await axios.post(
+      userType === 'user'
+        ? `${API_ROUTES.USER.SIGNOUT}`
+        : `${API_ROUTES.TUTOR.SIGNOUT}`,
     );
 
     return res.data;

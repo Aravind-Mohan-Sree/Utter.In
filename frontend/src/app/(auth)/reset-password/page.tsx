@@ -28,15 +28,12 @@ const ResetPassword: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] =
     useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{
     password?: string;
     confirmPassword?: string;
   }>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     const newErrors = ResetPasswordSchema.safeParse(
       formData,
     ).error?.issues.reduce<Record<string, string>>((acc, issue) => {
@@ -61,8 +58,6 @@ const ResetPassword: React.FC = () => {
     }));
 
     if (!newErrors) {
-      setIsLoading(true);
-
       try {
         const res = await resetPassword(userType as UserType, formData);
 
@@ -71,7 +66,6 @@ const ResetPassword: React.FC = () => {
         utterToast.error(errorHandler(error));
       } finally {
         router.replace(`/signin?mode=${userType}`);
-        setIsLoading(false);
       }
     }
   };
@@ -111,7 +105,7 @@ const ResetPassword: React.FC = () => {
               <p className="text-gray-600">Enter your new password below</p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6">
               {/* New Password Input */}
               <PasswordInput
                 id="new-password"
@@ -145,7 +139,7 @@ const ResetPassword: React.FC = () => {
               />
 
               {/* Reset Password Button */}
-              <Button text="Reset" fullWidth={true} isLoading={isLoading} />
+              <Button text="Reset" fullWidth={true} onClick={handleSubmit} />
             </form>
 
             {/* Go back */}

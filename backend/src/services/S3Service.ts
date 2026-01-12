@@ -8,7 +8,7 @@ import {
   UploadOptions,
   UploadResult,
   DeleteResult,
-  IUpdateResult,
+  UpdateResult,
   S3Config,
 } from '~service-interfaces/ICloudService';
 import fs from 'fs';
@@ -64,7 +64,7 @@ export class S3Service {
     }
   }
 
-  async update(fromKey: string, toKey: string): Promise<IUpdateResult> {
+  async update(fromKey: string, toKey: string): Promise<UpdateResult> {
     try {
       await this.s3.send(
         new CopyObjectCommand({

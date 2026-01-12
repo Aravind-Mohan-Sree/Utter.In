@@ -1,5 +1,5 @@
 import { IRegisterUserFromPendingUseCase } from '~use-case-interfaces/user/IUserUseCase';
-import { UserMapper } from '~mappers/UserMapper';
+import { UserMapper, UserResponseDTO } from '~mappers/UserMapper';
 import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { User } from '~entities/User';
@@ -12,7 +12,7 @@ export class RegisterUserFromPendingUseCase implements IRegisterUserFromPendingU
     private userRepo: IUserRepository,
   ) {}
 
-  async execute(email: string): Promise<Partial<User>> {
+  async execute(email: string): Promise<UserResponseDTO> {
     const pendingUser = await this.pendingUserRepo.findOneByField({ email });
 
     if (!pendingUser) throw new NotFoundError('User not found');

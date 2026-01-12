@@ -4,6 +4,9 @@ export const successMessage = {
   SIGNOUT_SUCCESS: 'Signout successful',
   OTP_SENDED: 'OTP sended',
   OTP_VERIFIED: 'OTP verified',
-  PASSWORD_RESET_SUCCESS: 'Password reset successful',
+  PASSWORD_UPDATED: 'Password successfully updated',
   DATA_FETCHED: 'Data successfully fetched',
+  AVATAR_UPLOADED: 'Avatar successfully uploaded',
+  AVATAR_DELETED: 'Avatar successfully deleted',
+  PROFILE_UPDATED: 'Profile successfully updated',
 };

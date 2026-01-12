@@ -2,7 +2,7 @@ import { IUser, UserModel } from '~models/UserModel';
 import { BaseRepository } from './BaseRepository';
 import { User } from '~entities/User';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
-import { Document } from 'mongoose';
+import { Document, PipelineStage } from 'mongoose';
 
 export class UserRepository
   extends BaseRepository<User, IUser>
@@ -10,6 +10,53 @@ export class UserRepository
 {
   constructor() {
     super(UserModel);
+  }
+
+  async fetchUsers(
+    page: number,
+    limit: number,
+    query: string,
+    filter: string,
+  ): Promise<{ totalUsers: number; users: User[] }> {
+    const pipeline: PipelineStage[] = [];
+
+    // Handle Status Filter
+    if (filter !== 'All') {
+      pipeline.push({
+        $match: { isBlocked: filter === 'Blocked' },
+      });
+    }
+
+    // Handle Search Query
+    if (query) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { name: { $regex: query, $options: 'i' } },
+            { email: { $regex: query, $options: 'i' } },
+            { languages: { $elemMatch: { $regex: query, $options: 'i' } } },
+          ],
+        },
+      });
+    }
+
+    // Fetch data and total count simultaneously
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: 'total' }],
+        data: [
+          { $sort: { createdAt: -1 } },
+          { $skip: (page - 1) * limit },
+          { $limit: limit },
+        ],
+      },
+    });
+
+    const result = await this.model.aggregate(pipeline);
+    const users = result[0].data;
+    const totalUsers = result[0].metadata[0]?.total || 0;
+
+    return { totalUsers, users };
   }
 
   protected toSchema(entity: User | Partial<User>): IUser | Partial<IUser> {

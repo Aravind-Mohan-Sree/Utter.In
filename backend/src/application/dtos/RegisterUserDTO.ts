@@ -33,12 +33,12 @@ export class RegisterUserDTO {
 
     if (!result.success) throw new BadRequestError(result.message);
 
-    if (data.password !== data.confirmPassword)
+    if (data.password.trim() !== data.confirmPassword.trim())
       throw new BadRequestError("Passwords don't match");
 
-    this.name = data.name;
-    this.email = data.email;
+    this.name = data.name.trim();
+    this.email = data.email.trim();
     this.knownLanguages = data.languages;
-    this.password = data.password;
+    this.password = data.password.trim();
   }
 }

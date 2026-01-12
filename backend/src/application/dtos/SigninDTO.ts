@@ -20,7 +20,7 @@ export class SigninDTO {
 
     if (!result.success) throw new BadRequestError(result.message);
 
-    this.email = data.email;
-    this.password = data.password;
+    this.email = data.email.trim();
+    this.password = data.password.trim();
   }
 }

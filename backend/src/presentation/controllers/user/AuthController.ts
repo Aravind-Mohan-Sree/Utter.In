@@ -7,7 +7,6 @@ import {
   ISigninUserUseCase,
 } from '~use-case-interfaces/user/IUserUseCase';
 import { env } from '~config/env';
-import { cookieData } from '~constants/cookieData';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { IValidateDataService } from '~service-interfaces/IValidateDataService';
@@ -32,7 +31,7 @@ export class AuthController {
       const cookieOptions = {
         secure: isProduction,
         sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
-        maxAge: cookieData.OTP_AGE,
+        maxAge: parseInt(env.OTP_AGE),
         domain: isProduction ? env.COOKIE_DOMAIN : undefined,
         path: '/',
       };
@@ -63,11 +62,11 @@ export class AuthController {
 
       res.cookie('accessToken', userData.accessToken, {
         ...cookieOptions,
-        maxAge: cookieData.ACCESS_TOKEN_AGE,
+        maxAge: parseInt(env.ACCESS_TOKEN_AGE),
       });
       res.cookie('refreshToken', userData.refreshToken, {
         ...cookieOptions,
-        maxAge: cookieData.REFRESH_TOKEN_AGE,
+        maxAge: parseInt(env.REFRESH_TOKEN_AGE),
       });
       res
         .status(httpStatusCode.OK)

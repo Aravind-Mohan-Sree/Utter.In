@@ -1,5 +1,5 @@
 import { ITutorGoogleAuthUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
-import { TutorMapper } from '~mappers/TutorMapper';
+import { TutorMapper, TutorResponseDTO } from '~mappers/TutorMapper';
 import { errorMessage } from '~constants/errorMessage';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { ITokenService } from '~service-interfaces/ITokenService';
@@ -20,7 +20,7 @@ export class TutorGoogleAuthUseCase implements ITutorGoogleAuthUseCase {
     email: string,
     googleId: string,
   ): Promise<{
-    tutor: Partial<Tutor>;
+    tutor: TutorResponseDTO;
     accessToken: string;
     refreshToken: string;
   }> {

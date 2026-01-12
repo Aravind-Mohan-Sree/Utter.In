@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import passport from 'passport';
 import { DataValidatorService } from '~concrete-services/DataValidatorService';
 import { HashService } from '~concrete-services/HashService';
@@ -30,16 +30,29 @@ import { VerifyOtpUseCase } from '~use-cases/user/user-management/VerifyOtpUseCa
 import { uploadMiddleware } from '~middlewares/multer';
 import { GetDataController } from '~controllers/user/GetDataController';
 import { GetDataUseCase } from '~use-cases/user/user-management/GetDataUseCase';
+import { AvatarController } from '~controllers/shared/AvatarController';
+import { S3Service } from '~concrete-services/S3Service';
+import { UploadAvatarUseCase } from '~use-cases/user/user-management/UploadAvatarUseCase';
+import { DeleteAvatarUseCase } from '~use-cases/user/user-management/DeleteAvatarUseCase';
+import { UpdateProfileUseCase } from '~use-cases/user/user-management/UpdateProfileUseCase';
+import { ChangePasswordUseCase } from '~use-cases/user/user-management/ChangePasswordUseCase';
+import { ProfileController } from '~controllers/user/ProfileController';
 
 // repositories
 const userRepository = new UserRepository();
 const pendingUserRepository = new PendingUserRepository();
 
 // services
-const otpService = new OtpService(env.APP_EMAIL, env.GOOGLE_APP_PASSWORD);
+const otpService = new OtpService(env.NODEMAILER_USER, env.NODEMAILER_PASS);
 const dataValidatorService = new DataValidatorService();
 const hashService = new HashService();
 const jwtService = new JwtService();
+const s3Service = new S3Service({
+  region: env.AWS_REGION,
+  bucket: env.AWS_BUCKET,
+  accessKeyId: env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+});
 
 // use-cases
 const registerUserUseCase = new RegisterUserUseCase(
@@ -80,6 +93,13 @@ const signinUserUseCase = new SigninUserUseCase(
   jwtService,
 );
 const getDataUseCase = new GetDataUseCase(userRepository);
+const uploadAvatarUseCase = new UploadAvatarUseCase(s3Service);
+const deleteAvatarUseCase = new DeleteAvatarUseCase(s3Service);
+const updateProfileUseCase = new UpdateProfileUseCase(userRepository);
+const changePasswordUseCase = new ChangePasswordUseCase(
+  userRepository,
+  hashService,
+);
 
 // shared use cases
 const getUserDataUseCase = new GetEntityDataUseCase<User, IUser>(
@@ -110,6 +130,16 @@ const userGoogleAuthController = new UserGoogleAuthController(
 );
 const signoutController = new SignoutController();
 const getDataController = new GetDataController(getDataUseCase);
+const avatarController = new AvatarController(
+  uploadAvatarUseCase,
+  deleteAvatarUseCase,
+  dataValidatorService,
+);
+const profileController = new ProfileController(
+  updateProfileUseCase,
+  changePasswordUseCase,
+  dataValidatorService,
+);
 
 // wire auth middlewares
 const authenticate = new Authenticate<User>(jwtService, getUserDataUseCase);
@@ -121,7 +151,10 @@ const router = express.Router();
 // google auth
 router.get(
   '/auth/google',
-  passport.authenticate('google-user', { scope: ['profile', 'email'] }),
+  passport.authenticate('google-user', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+  }),
 );
 router.get(
   '/auth/google/callback',
@@ -151,11 +184,18 @@ router.get(
   auth.verify(),
   getDataController.getAccountDetails,
 );
-router.patch('/update-profile', getDataController.getAccountDetails);
-
-// home
-router.get('/users', auth.verify(), (req: Request, res: Response) =>
-  res.end('users'),
+router.post(
+  '/upload-avatar',
+  auth.verify(),
+  uploadMiddleware,
+  avatarController.uploadAvatar,
+);
+router.delete('/delete-avatar', auth.verify(), avatarController.deleteAvatar);
+router.patch('/update-profile', auth.verify(), profileController.updateProfile);
+router.patch(
+  '/change-password',
+  auth.verify(),
+  profileController.changePassword,
 );
 
 export const userRouter = router;

@@ -1,5 +1,5 @@
 import { ITokenService, TokenPayload } from '~service-interfaces/ITokenService';
-import jwt from 'jsonwebtoken';
+import jwt, { Algorithm } from 'jsonwebtoken';
 import { env } from '~config/env';
 
 const ACCESS_EXPIRY = '15m';
@@ -12,21 +12,21 @@ export class JwtService implements ITokenService {
   public generateAuthToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.ACCESS_TOKEN_SECRET, {
       expiresIn: ACCESS_EXPIRY,
-      algorithm: 'HS256',
+      algorithm: env.JWT_ALGORITHM as Algorithm,
     });
   }
 
   public generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.REFRESH_TOKEN_SECRET, {
       expiresIn: REFRESH_EXPIRY,
-      algorithm: 'HS256',
+      algorithm: env.JWT_ALGORITHM as Algorithm,
     });
   }
 
   public generateResetToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.RESET_TOKEN_SECRET, {
       expiresIn: RESET_EXPIRY,
-      algorithm: 'HS256',
+      algorithm: env.JWT_ALGORITHM as Algorithm,
     });
   }
 

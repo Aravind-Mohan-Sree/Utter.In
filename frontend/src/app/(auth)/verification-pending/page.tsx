@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { GoBackBtn } from '~components/auth/GoBackBtn';
 import { FaCircleCheck } from 'react-icons/fa6';
-import bgImage from '../../../public/bg.webp';
+import bgImage from '../../../../public/bg.webp';
 
 const VerificationPending: React.FC = () => {
   const router = useRouter();

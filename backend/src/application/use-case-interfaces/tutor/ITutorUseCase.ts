@@ -1,6 +1,8 @@
+import { ChangePasswordDTO } from '~dtos/ChangePasswordDTO';
 import { RegisterTutorDTO } from '~dtos/RegisterTutorDTO';
 import { SigninDTO } from '~dtos/SigninDTO';
-import { Tutor } from '~entities/Tutor';
+import { TutorProfileUpdateDTO } from '~dtos/TutorProfileUpdateDTO';
+import { TutorResponseDTO } from '~mappers/TutorMapper';
 
 export interface IRegisterTutorUseCase {
   execute(data: RegisterTutorDTO): Promise<string>;
@@ -26,7 +28,7 @@ export interface IRegisterTutorFromPendingUseCase {
   execute(email: string): Promise<{
     pendingTutorId: string;
     newTutorId: string;
-    tutor: Partial<Tutor>;
+    tutor: TutorResponseDTO;
   }>;
 }
 
@@ -35,7 +37,7 @@ export interface ITutorGoogleAuthUseCase {
     email: string,
     googleId: string,
   ): Promise<{
-    tutor: Partial<Tutor>;
+    tutor: TutorResponseDTO;
     accessToken: string;
     refreshToken: string;
   }>;
@@ -43,12 +45,20 @@ export interface ITutorGoogleAuthUseCase {
 
 export interface ISigninTutorUseCase {
   execute(data: SigninDTO): Promise<{
-    tutor: Partial<Tutor>;
+    tutor: TutorResponseDTO;
     accessToken: string;
     refreshToken: string;
   }>;
 }
 
 export interface IGetDataUseCase {
-  execute(email: string): Promise<Partial<Tutor>>;
+  execute(email: string): Promise<TutorResponseDTO>;
+}
+
+export interface IUpdateProfileUseCase {
+  execute(id: string, data: TutorProfileUpdateDTO): Promise<TutorResponseDTO>;
+}
+
+export interface IChangePasswordUseCase {
+  execute(id: string, data: ChangePasswordDTO): Promise<void>;
 }

@@ -1,6 +1,17 @@
+'use client';
+
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 const Footer = () => {
+  const pathname = usePathname();
+  const isAdminPath = pathname?.startsWith('/admin');
+
+  // Hide footer on admin pages
+  if (isAdminPath) {
+    return null;
+  }
+
   return (
     <footer className="bg-white text-rose-400 pt-10 pb-8 border-t border-rose-200">
       <div className="max-w-[1200px] mx-auto px-4 text-center">
@@ -9,11 +20,11 @@ const Footer = () => {
           <Image
             src="/utter_logo.png"
             alt="utterLogo"
-            width={40}
-            height={40}
+            width={36}
+            height={36}
             className="animate-bounce"
           />
-          <span className="text-[1.25rem] font-semibold">Utter.In</span>
+          <span className="text-2xl font-bold">Utter</span>
         </div>
 
         {/* Description */}
@@ -23,7 +34,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="text-[#6b7280] text-xs">
-          © {new Date().getFullYear()} Utter.In. All rights reserved.
+          © {new Date().getFullYear()} Utter. All rights reserved.
         </div>
       </div>
     </footer>

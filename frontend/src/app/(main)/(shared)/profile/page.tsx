@@ -1,6 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { ExperienceSelector } from '~components/auth/ExperienceSelector';
 import { InputField } from '~components/auth/InputField';
@@ -9,7 +11,7 @@ import { PasswordInput } from '~components/auth/PasswordInput';
 import { TextAreaInput } from '~components/auth/TextAreaInput';
 import Notification from '~components/layout/Notification';
 import AbuseReportsModal from '~components/profile/AbuseReportsModal';
-import Avatar from '~components/profile/Avatar';
+import Avatar from '~components/shared/Avatar';
 import ProfileDetail from '~components/profile/ProfileDetail';
 import TransactionHistoryModal from '~components/profile/TransactionHistoryModal';
 import AbstractShapesBackground from '~components/shared/AbstractShapesBackground';
@@ -20,11 +22,13 @@ import {
   fetchAvatar,
   getAccountDetails,
   removeAvatar,
+  signout,
   updateProfile,
   uploadAvatar,
 } from '~services/shared/managementService';
-import { RootState } from '~store/store';
+import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
+import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
 import {
   changePasswordSchema,
@@ -38,6 +42,7 @@ interface ProfileData {
   bio: string;
   knownLanguages: string[];
   yearsOfExperience: string;
+  certification: string;
   walletBalance: number;
   currentPassword: string;
   password: string;
@@ -81,16 +86,15 @@ export default function ProfilePage() {
   const [isAbuseReportsModalOpen, setIsAbuseReportsModalOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [error, setError] = useState(INITIAL_ERROR_STATE);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [formData, setFormData] = useState<ProfileData | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string>(
-    'https://utter-web-app.s3.ap-south-2.amazonaws.com/utter/logo_bd9o9t.png',
-  );
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const router = useRouter();
   const validationSchema =
     user?.role === 'user' ? userProfileUpdateSchema : tutorProfileUpdateSchema;
 
@@ -129,9 +133,11 @@ export default function ProfilePage() {
   ];
 
   useEffect(() => {
+    if (!user) return;
+
     (async () => {
       try {
-        const avatarUrl = await fetchAvatar({ role: user!.role, id: user!.id });
+        const avatarUrl = await fetchAvatar({ role: user.role, id: user.id });
 
         setAvatarUrl(avatarUrl);
       } catch (error) {
@@ -141,61 +147,64 @@ export default function ProfilePage() {
   }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+
     (async () => {
       try {
-        const res = await getAccountDetails(user!.role, user!.email);
+        const res = await getAccountDetails(user.role, user.email);
         const data: ProfileData = res.user ?? res.tutor;
+
         setProfileData(data);
+        setFormData({
+          ...data,
+          currentPassword: '',
+          password: '',
+          confirmPassword: '',
+        });
       } catch (error) {
         utterToast.error(errorHandler(error));
       }
     })();
   }, [user]);
 
-  useEffect(() => {
-    if (profileData) {
-      setFormData({
-        ...profileData,
-        currentPassword: '',
-        password: '',
-        confirmPassword: '',
-      });
-    }
-  }, [profileData]);
-
   const handleAvatarUpload = async (croppedBlob: Blob) => {
-    try {
-      setIsLoading(true);
+    if (!user) return;
 
+    try {
       const formData = new FormData();
       formData.append('avatar', croppedBlob);
 
       const res = await uploadAvatar(user!.role, formData);
+      const avatarUrl = await fetchAvatar({ role: user.role, id: user.id });
 
+      setAvatarUrl(avatarUrl);
       utterToast.success(res.message);
     } catch (error) {
       utterToast.error(errorHandler(error));
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleAvatarDeletion = async () => {
     try {
-      setIsLoading(true);
-
       const res = await removeAvatar(user!.role);
 
+      setAvatarUrl('');
       utterToast.success(res.message);
     } catch (error) {
       utterToast.error(errorHandler(error));
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleSignOut = () => {
-    console.log('Signing out...');
+  const handleSignOut = async () => {
+    try {
+      const res = await signout(user!.role);
+
+      utterToast.success(res.message);
+      router.replace(`/signin?mode=${user?.role}`);
+      dispatch({ type: 'signout' });
+    } catch (error) {
+      utterToast.error(errorHandler(error));
+    }
   };
 
   const handleInputChange = (
@@ -204,12 +213,19 @@ export default function ProfilePage() {
     >,
   ) => {
     const { name, value } = e.target;
-    const updatedFormData = { ...formData, [name]: value };
+    const updatedFormData = {
+      ...formData,
+      [name === 'experience' ? 'yearsOfExperience' : name]: value,
+    };
+
     setFormData(updatedFormData as ProfileData);
     setError((prev) => ({
       ...prev,
       [name]: validationSchema
-        .safeParse(updatedFormData)
+        .safeParse({
+          ...updatedFormData,
+          experience: updatedFormData.yearsOfExperience,
+        })
         .error?.issues.find((ele) => ele.path[0] === name)?.message,
     }));
   };
@@ -219,6 +235,7 @@ export default function ProfilePage() {
       ...formData,
       knownLanguages: [...languages],
     };
+
     setFormData(updatedFormData as ProfileData);
     setError((prev) => ({
       ...prev,
@@ -236,6 +253,7 @@ export default function ProfilePage() {
   const handlePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const updatedFormData = { ...formData, [name]: value };
+
     setFormData(updatedFormData as ProfileData);
     setError((prev) => ({
       ...prev,
@@ -245,19 +263,27 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleProfileUpdate = async () => {
     const fieldsToCompare = ['name', 'bio', 'knownLanguages'];
+
     if (user?.role === 'tutor') {
       fieldsToCompare.push('yearsOfExperience');
     }
 
-    const isUnchanged = fieldsToCompare.every(
-      (key) =>
-        formData![key as keyof ProfileData] ===
-        profileData![key as keyof ProfileData],
-    );
+    const isUnchanged = fieldsToCompare.every((key) => {
+      let newVal = formData![key as keyof ProfileData];
+      let oldVal = profileData![key as keyof ProfileData];
+
+      if (typeof newVal === 'string') newVal = newVal.trim();
+      if (typeof oldVal === 'string') oldVal = oldVal.trim();
+
+      if (Array.isArray(newVal) && Array.isArray(oldVal)) {
+        newVal = [...newVal].sort();
+        oldVal = [...oldVal].sort();
+      }
+
+      return JSON.stringify(newVal) === JSON.stringify(oldVal);
+    });
 
     if (isUnchanged) {
       utterToast.info('No changes to update');
@@ -267,6 +293,7 @@ export default function ProfilePage() {
     const validation = validationSchema.safeParse({
       ...formData,
       languages: formData?.knownLanguages,
+      experience: formData?.yearsOfExperience,
     });
 
     if (!validation.success) {
@@ -283,28 +310,30 @@ export default function ProfilePage() {
         ...INITIAL_ERROR_STATE,
         ...newErrors,
       });
+
       return;
     }
 
-    if (!isLoading) {
-      setIsLoading(true);
-      setError(INITIAL_ERROR_STATE);
+    setError(INITIAL_ERROR_STATE);
 
-      try {
-        const res = await updateProfile(user!.role, formData as ProfileData);
+    try {
+      const res = await updateProfile(user!.role, formData as ProfileData);
+      const updatedData = res.updatedTutor ? res.updatedTutor : res.updatedUser;
 
-        utterToast.success(res.message);
-      } catch (error) {
-        utterToast.error(errorHandler(error));
-      } finally {
-        setIsLoading(false);
-      }
+      setProfileData(updatedData);
+      setFormData({
+        ...updatedData,
+        currentPassword: '',
+        password: '',
+        confirmPassword: '',
+      });
+      utterToast.success(res.message);
+    } catch (error) {
+      utterToast.error(errorHandler(error));
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleChangePassword = async () => {
     const validation = changePasswordSchema.safeParse(formData);
 
     if (!validation.success) {
@@ -324,19 +353,23 @@ export default function ProfilePage() {
       return;
     }
 
-    if (!isLoading) {
-      setIsLoading(true);
-      setError(INITIAL_ERROR_STATE);
+    setError(INITIAL_ERROR_STATE);
 
-      try {
-        const res = await changePassword(user!.role, formData as ProfileData);
+    try {
+      const res = await changePassword(user!.role, formData as ProfileData);
 
-        utterToast.success(res.message);
-      } catch (error) {
-        utterToast.error(errorHandler(error));
-      } finally {
-        setIsLoading(false);
-      }
+      setFormData((prev) => ({
+        ...prev!,
+        currentPassword: '',
+        password: '',
+        confirmPassword: '',
+      }));
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmNewPassword(false);
+      utterToast.success(res.message);
+    } catch (error) {
+      utterToast.error(errorHandler(error));
     }
   };
 
@@ -355,7 +388,11 @@ export default function ProfilePage() {
           <div className="bg-white/20 rounded-2xl shadow-lg p-6 h-fit backdrop-blur-xs">
             <div className="flex items-center gap-4 mb-6">
               <Avatar
-                user={{ name: user!.name, avatarUrl }}
+                user={{
+                  name: user?.name as string,
+                  avatarUrl,
+                  role: user?.role as 'user',
+                }}
                 handleAvatarUpload={handleAvatarUpload}
                 handleAvatarDeletion={handleAvatarDeletion}
               />
@@ -373,6 +410,7 @@ export default function ProfilePage() {
               bio={profileData?.bio}
               languages={profileData?.knownLanguages}
               experience={profileData?.yearsOfExperience}
+              certification={profileData?.certification}
             />
 
             <div className="mt-8 pt-6 border-t border-gray-200">
@@ -401,8 +439,17 @@ export default function ProfilePage() {
               <Button
                 text="Sign Out"
                 variant="danger"
-                isLoading={isLoading}
-                onClick={handleSignOut}
+                onClick={() =>
+                  utterAlert({
+                    title: 'Saying Goodbye...',
+                    text: 'Do you really want to signout?',
+                    icon: 'question',
+                    confirmText: 'Yes',
+                    cancelText: 'No',
+                    showCancel: true,
+                    onConfirm: handleSignOut,
+                  })
+                }
               />
             </div>
           </div>
@@ -415,14 +462,14 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            <form onSubmit={handleProfileUpdate}>
+            <form>
               <div className="space-y-6">
                 <InputField
                   id="name"
                   label="Full Name"
                   type="text"
                   name="name"
-                  placeholder="user@example.com"
+                  placeholder="Enter your full name"
                   value={formData.name}
                   onChange={handleInputChange}
                   error={error.name}
@@ -455,11 +502,11 @@ export default function ProfilePage() {
                   />
                 )}
 
-                <Button text="Update" isLoading={isLoading} />
+                <Button text="Update" onClick={handleProfileUpdate} />
               </div>
             </form>
 
-            <form action="" className="mt-6 pt-6 border-t border-gray-200">
+            <form className="mt-6 pt-6 border-t border-gray-200">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">
                 Change Password
               </h4>
@@ -510,11 +557,7 @@ export default function ProfilePage() {
                 />
 
                 <div className="pt-2">
-                  <Button
-                    text="Change"
-                    isLoading={isLoading}
-                    onClick={handleChangePassword}
-                  />
+                  <Button text="Change" onClick={handleChangePassword} />
                 </div>
               </div>
             </form>

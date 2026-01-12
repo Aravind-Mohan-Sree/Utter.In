@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import passport from 'passport';
 import { DataValidatorService } from '~concrete-services/DataValidatorService';
 import { HashService } from '~concrete-services/HashService';
@@ -34,13 +34,19 @@ import { S3Service } from '~concrete-services/S3Service';
 import { UpdateTutorFilesUseCase } from '~use-cases/tutor/tutor-management/UpdateTutorFilesUseCase';
 import { GetDataController } from '~controllers/tutor/GetDataController';
 import { GetDataUseCase } from '~use-cases/tutor/tutor-management/GetDataUseCase';
+import { AvatarController } from '~controllers/shared/AvatarController';
+import { UploadAvatarUseCase } from '~use-cases/tutor/tutor-management/UploadAvatarUseCase';
+import { DeleteAvatarUseCase } from '~use-cases/tutor/tutor-management/DeleteAvatarUseCase';
+import { ProfileController } from '~controllers/tutor/ProfileController';
+import { UpdateProfileUseCase } from '~use-cases/tutor/tutor-management/UpdateProfileUseCase';
+import { ChangePasswordUseCase } from '~use-cases/tutor/tutor-management/ChangePasswordUseCase';
 
 // repositories
 const tutorRepository = new TutorRepository();
 const pendingTutorRepository = new PendingTutorRepository();
 
 // services
-const otpService = new OtpService(env.APP_EMAIL, env.GOOGLE_APP_PASSWORD);
+const otpService = new OtpService(env.NODEMAILER_USER, env.NODEMAILER_PASS);
 const dataValidatorService = new DataValidatorService();
 const hashService = new HashService();
 const jwtService = new JwtService();
@@ -96,6 +102,13 @@ const uploadTutorFilesUseCase = new UploadTutorFilesUseCase(
 );
 const updateTutorFilesUseCase = new UpdateTutorFilesUseCase(s3Service);
 const getDataUseCase = new GetDataUseCase(tutorRepository);
+const uploadAvatarUseCase = new UploadAvatarUseCase(s3Service);
+const deleteAvatarUseCase = new DeleteAvatarUseCase(s3Service);
+const updateProfileUseCase = new UpdateProfileUseCase(tutorRepository);
+const changePasswordUseCase = new ChangePasswordUseCase(
+  tutorRepository,
+  hashService,
+);
 
 // shared use cases
 const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
@@ -129,6 +142,16 @@ const tutorGoogleAuthController = new TutorGoogleAuthController(
 );
 const signoutController = new SignoutController();
 const getDataController = new GetDataController(getDataUseCase);
+const avatarController = new AvatarController(
+  uploadAvatarUseCase,
+  deleteAvatarUseCase,
+  dataValidatorService,
+);
+const profileController = new ProfileController(
+  updateProfileUseCase,
+  changePasswordUseCase,
+  dataValidatorService,
+);
 
 // wire auth middlewares
 const authenticate = new Authenticate<Tutor>(jwtService, getTutorDataUseCase);
@@ -140,7 +163,10 @@ const router = express.Router();
 // google auth
 router.get(
   '/auth/google',
-  passport.authenticate('google-tutor', { scope: ['profile', 'email'] }),
+  passport.authenticate('google-tutor', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+  }),
 );
 router.get(
   '/auth/google/callback',
@@ -164,17 +190,24 @@ router.post(
   forgotPasswordController.ForgotPasswordOtpVerify,
 );
 router.patch('/reset-password', forgotPasswordController.resetPassword);
-router.post('/signout', signoutController.signout);
+router.post('/signout', auth.verify(), signoutController.signout);
 router.get(
   '/get-account-details/:tutorEmail',
   auth.verify(),
   getDataController.getAccountDetails,
 );
-router.patch('/update-profile', getDataController.getAccountDetails);
-
-// home
-router.get('/tutors', auth.verify(), (req: Request, res: Response) =>
-  res.end('tutors'),
+router.post(
+  '/upload-avatar',
+  auth.verify(),
+  uploadMiddleware,
+  avatarController.uploadAvatar,
+);
+router.delete('/delete-avatar', auth.verify(), avatarController.deleteAvatar);
+router.patch('/update-profile', auth.verify(), profileController.updateProfile);
+router.patch(
+  '/change-password',
+  auth.verify(),
+  profileController.changePassword,
 );
 
 export const tutorRouter = router;

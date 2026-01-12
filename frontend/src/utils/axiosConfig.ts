@@ -1,7 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 import { utterToast } from './utterToast';
 import { store } from '~store/store';
-import { signOut } from '~features/authSlice';
 
 axios.interceptors.request.use(
   (config: InternalAxiosRequestConfig<unknown>) => {
@@ -18,7 +17,7 @@ axios.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       const responseMessage = error.response?.data?.message;
 
-      store.dispatch(signOut());
+      store.dispatch({ type: 'signout' });
       utterToast.error(responseMessage || 'Unauthorized access');
       window.location.href = `/signin?responseMessage=${responseMessage}`;
     }

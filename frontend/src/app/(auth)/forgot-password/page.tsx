@@ -18,15 +18,12 @@ interface ForgotPasswordData {
 
 const ForgotPassword: React.FC = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<ForgotPasswordData>({ email: '' });
   const [error, setError] = useState<string>('');
   const searchParams = useSearchParams();
   const userType = searchParams.get('mode');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleSubmit = async () => {
     setError('');
 
     try {
@@ -45,8 +42,6 @@ const ForgotPassword: React.FC = () => {
       );
     } catch (error) {
       setError(errorHandler(error));
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -86,7 +81,7 @@ const ForgotPassword: React.FC = () => {
               </p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6">
               {/* Email Input */}
               <InputField
                 id="email"
@@ -101,7 +96,7 @@ const ForgotPassword: React.FC = () => {
               />
 
               {/* Send Reset Link Button */}
-              <Button text="Send OTP" fullWidth={true} isLoading={isLoading} />
+              <Button text="Send OTP" fullWidth={true} onClick={handleSubmit} />
             </form>
 
             {/* Back to Login Link */}

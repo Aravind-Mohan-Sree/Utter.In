@@ -6,7 +6,6 @@ import {
 } from '~use-case-interfaces/shared/IForgotPasswordUseCase';
 import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import { env } from '~config/env';
-import { cookieData } from '~constants/cookieData';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { IValidateDataService } from '~service-interfaces/IValidateDataService';
@@ -42,7 +41,7 @@ export class ForgotPasswordController {
       const cookieOptions = {
         secure: isProduction,
         sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
-        maxAge: cookieData.OTP_AGE,
+        maxAge: parseInt(env.OTP_AGE),
         domain: isProduction ? env.COOKIE_DOMAIN : undefined,
         path: '/',
       };
@@ -80,7 +79,7 @@ export class ForgotPasswordController {
         httpOnly: true,
         secure: isProduction,
         sameSite: isProduction ? 'none' : 'strict',
-        maxAge: cookieData.RESET_TOKEN_AGE,
+        maxAge: parseInt(env.RESET_TOKEN_AGE),
         domain: isProduction ? env.COOKIE_DOMAIN : undefined,
         path: '/',
       });
@@ -116,7 +115,7 @@ export class ForgotPasswordController {
       });
 
       res.status(httpStatusCode.OK).json({
-        message: successMessage.PASSWORD_RESET_SUCCESS,
+        message: successMessage.PASSWORD_UPDATED,
       });
     } catch (error) {
       logger.error(error);

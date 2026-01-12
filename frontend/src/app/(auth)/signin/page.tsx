@@ -43,7 +43,6 @@ const SignIn: React.FC = () => {
   );
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [error, setError] = useState(INITIAL_ERROR_STATE);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -71,15 +70,13 @@ const SignIn: React.FC = () => {
           );
         }
 
-        utterToast.error(responseMessage);
+        utterToast.info(responseMessage);
         router.replace('/signin');
       }
     })();
   }, [router, searchParams, userType, tutorEmail]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     const newErrors = SigninSchema.safeParse(formData).error?.issues.reduce<
       Record<string, string>
     >((acc, issue) => {
@@ -104,8 +101,6 @@ const SignIn: React.FC = () => {
     }));
 
     if (!newErrors) {
-      setIsLoading(true);
-
       try {
         const res = await signin(userType, formData);
         const data = res.user ? res.user : res.tutor;
@@ -134,8 +129,6 @@ const SignIn: React.FC = () => {
         }
 
         setError((prev) => ({ ...prev, ['password']: message }));
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -159,8 +152,8 @@ const SignIn: React.FC = () => {
     try {
       window.location.href =
         userType === 'user'
-          ? process.env.NEXT_PUBLIC_USER_GOOGLE_URL!
-          : process.env.NEXT_PUBLIC_TUTOR_GOOGLE_URL!;
+          ? process.env.NEXT_PUBLIC_GOOGLE_USER_URL!
+          : process.env.NEXT_PUBLIC_GOOGLE_TUTOR_URL!;
     } catch (error) {
       utterToast.error(errorHandler(error));
     }
@@ -195,7 +188,7 @@ const SignIn: React.FC = () => {
               <UserTypeToggle userType={userType} onChange={setUserType} />
 
               {/* Login Form */}
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form className="space-y-6">
                 {/* Email Input */}
                 <InputField
                   id="email"
@@ -227,7 +220,11 @@ const SignIn: React.FC = () => {
                 <FormOptions userType={userType} />
 
                 {/* Sign In Button */}
-                <Button text="Sign In" fullWidth={true} isLoading={isLoading} />
+                <Button
+                  text="Sign In"
+                  fullWidth={true}
+                  onClick={handleSubmit}
+                />
 
                 {/* Divider */}
                 <Divider text="Or" />
@@ -238,7 +235,6 @@ const SignIn: React.FC = () => {
                 text="Continue with Google"
                 icon={<FaGoogle />}
                 fullWidth={true}
-                isLoading={isLoading}
                 onClick={onGoogleSignIn}
               />
             </div>

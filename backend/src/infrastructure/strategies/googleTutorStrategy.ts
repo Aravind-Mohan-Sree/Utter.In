@@ -9,6 +9,7 @@ passport.use(
       clientID: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
       callbackURL: env.GOOGLE_TUTOR_CALLBACK_URL,
+      proxy: true,
     },
     async (accessToken, refreshToken, profile, done) => {
       const user = {

@@ -1,11 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
-import { env } from 'process';
 import { IGetEntityDataUseCase } from '~use-case-interfaces/shared/IGetEntityDataUseCase';
-import { cookieData } from '~constants/cookieData';
 import { errorMessage } from '~constants/errorMessage';
 import { ITokenService } from '~service-interfaces/ITokenService';
 import { UnauthorizedError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
+import { env } from '~config/env';
 
 interface IEntityData {
   id: string;
@@ -77,7 +76,7 @@ export class Authenticate<Entity> implements IAuthenticate {
           httpOnly: true,
           secure: isProduction,
           sameSite: isProduction ? 'none' : 'strict',
-          maxAge: cookieData.ACCESS_TOKEN_AGE,
+          maxAge: parseInt(env.ACCESS_TOKEN_AGE),
           domain: isProduction ? env.COOKIE_DOMAIN : undefined,
           path: '/',
         });

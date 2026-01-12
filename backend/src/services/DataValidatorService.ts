@@ -76,6 +76,39 @@ const CertificateSchema = z.any().superRefine((file, ctx) => {
   }
 });
 
+const AvatarSchema = z.any().superRefine((file, ctx) => {
+  if (!file || typeof file !== 'object') {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Avatar is required',
+    });
+    return;
+  }
+
+  if (typeof file.size !== 'number' || file.size <= 0) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Avatar is required',
+    });
+    return;
+  }
+
+  if (file.size > 2_000_000) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Avatar too large (max 2MB)',
+    });
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowedTypes.includes(file.mimetype)) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Avatar must be a JPEG, PNG, or WebP image',
+    });
+  }
+});
+
 export class DataValidatorService implements IValidateDataService {
   validateName(name: string): ValidatedData {
     const nameSchema = z.object({
@@ -96,6 +129,25 @@ export class DataValidatorService implements IValidateDataService {
     });
 
     return toValidatedData(nameSchema.safeParse({ name }));
+  }
+
+  validateBio(bio: string): ValidatedData {
+    const bioSchema = z.object({
+      bio: z
+        .string()
+        .trim()
+        .nonempty('Bio is required')
+        .regex(/^((?!\s{2,}).)*$/, "Bio can't include consecutive space")
+        .transform((val) => val.replace(/\s+/g, ''))
+        .refine((val) => val.length >= 12, {
+          message: 'Bio minimum length is 12',
+        })
+        .refine((val) => val.length <= 500, {
+          message: 'Bio maximum length is 500',
+        }),
+    });
+
+    return toValidatedData(bioSchema.safeParse({ bio }));
   }
 
   validateEmail(email: string): ValidatedData {
@@ -178,5 +230,13 @@ export class DataValidatorService implements IValidateDataService {
     });
 
     return toValidatedData(otpSchema.safeParse({ otp }));
+  }
+
+  validateAvatar(avatar: FileInput): ValidatedData {
+    const avatarSchema = z.object({
+      avatar: AvatarSchema,
+    });
+
+    return toValidatedData(avatarSchema.safeParse({ avatar }));
   }
 }

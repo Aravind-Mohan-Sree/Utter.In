@@ -8,7 +8,6 @@ import {
   IUpdateTutorFilesUseCase,
 } from '~use-case-interfaces/tutor/ITutorUseCase';
 import { env } from '~config/env';
-import { cookieData } from '~constants/cookieData';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { logger } from '~logger/logger';
@@ -50,7 +49,7 @@ export class OtpController {
       const cookieOptions = {
         secure: isProduction,
         sameSite: isProduction ? 'none' : ('strict' as 'strict' | 'none'),
-        maxAge: cookieData.OTP_AGE,
+        maxAge: parseInt(env.OTP_AGE),
         domain: isProduction ? env.COOKIE_DOMAIN : undefined,
         path: '/',
       };

@@ -1,11 +1,10 @@
 import { SigninDTO } from '~dtos/SigninDTO';
 import { ISigninTutorUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
-import { TutorMapper } from '~mappers/TutorMapper';
+import { TutorMapper, TutorResponseDTO } from '~mappers/TutorMapper';
 import { errorMessage } from '~constants/errorMessage';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IHashService } from '~service-interfaces/IHashService';
 import { ITokenService } from '~service-interfaces/ITokenService';
-import { Tutor } from '~entities/Tutor';
 import {
   BadRequestError,
   ForbiddenError,
@@ -20,7 +19,7 @@ export class SigninTutorUseCase implements ISigninTutorUseCase {
   ) {}
 
   async execute(data: SigninDTO): Promise<{
-    tutor: Partial<Tutor>;
+    tutor: TutorResponseDTO;
     accessToken: string;
     refreshToken: string;
   }> {

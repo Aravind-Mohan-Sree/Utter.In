@@ -18,8 +18,22 @@ import Button from '~components/shared/Button';
 const VerifyOtp: React.FC = () => {
   const router = useRouter();
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState<number>(60);
-  const [canResend, setCanResend] = useState<boolean>(false);
+
+  const [timer, setTimer] = useState<number>(() => {
+    const cookie = Cookies.get('otp');
+    if (!cookie) return 60;
+
+    const now = Date.now();
+    const then = parseInt(cookie);
+    const coolDownSec = 60;
+    const timeDifferenceSec = Math.floor((now - then) / 1000);
+
+    return timeDifferenceSec < coolDownSec
+      ? coolDownSec - timeDifferenceSec
+      : 0;
+  });
+
+  const [canResend, setCanResend] = useState<boolean>(timer === 0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -27,44 +41,31 @@ const VerifyOtp: React.FC = () => {
   const page = searchParams.get('page');
   const userType = searchParams.get('mode');
   const email = searchParams.get('email');
+  const isTimerActive = timer > 0;
 
-  // Initialize refs array
   useEffect(() => {
     inputRefs.current = inputRefs.current.slice(0, 6);
   }, []);
 
-  // Timer effect
   useEffect(() => {
-    if (timer === 0) {
-      setCanResend(true);
-      return;
-    }
+    if (!isTimerActive) return;
 
     const interval = setInterval(() => {
-      setTimer((prev) => prev - 1);
+      setTimer((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [isTimerActive]);
 
-  // Auto-focus first input on mount
   useEffect(() => {
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
-    }
-  }, []);
-
-  useEffect(() => {
-    const now = Date.now();
-    const cookie = Cookies.get('otp');
-    const then = parseInt(cookie as string);
-    const coolDownSec = 60;
-    const timeDifferenceSec = Math.floor((now - then) / 1000);
-
-    if (timeDifferenceSec < coolDownSec) {
-      setTimer(coolDownSec - timeDifferenceSec);
-    } else {
-      setTimer(0);
     }
   }, []);
 
@@ -73,14 +74,12 @@ const VerifyOtp: React.FC = () => {
   };
 
   const handleOtpChange = (index: number, value: string) => {
-    // Allow only numeric input
     if (!/^\d*$/.test(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
-    // Auto-focus next input
     if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -93,7 +92,6 @@ const VerifyOtp: React.FC = () => {
     index: number,
     e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
-    // Move to previous input on backspace
     if (
       e.key === 'Backspace' &&
       !otp[index] &&
@@ -103,7 +101,6 @@ const VerifyOtp: React.FC = () => {
       inputRefs.current[index - 1]?.focus();
     }
 
-    // Move to next input on arrow right or previous on arrow left
     if (e.key === 'ArrowRight' && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -121,14 +118,12 @@ const VerifyOtp: React.FC = () => {
     const pastedDigits = pastedData.split('');
     const newOtp = [...otp];
 
-    // Fill OTP fields with pasted digits
     for (let i = 0; i < Math.min(6, pastedDigits.length); i++) {
       newOtp[i] = pastedDigits[i];
     }
 
     setOtp(newOtp);
 
-    // Focus on the last input
     const lastFilledIndex = Math.min(5, pastedDigits.length - 1);
     if (inputRefs.current[lastFilledIndex]) {
       inputRefs.current[lastFilledIndex]?.focus();
@@ -145,14 +140,12 @@ const VerifyOtp: React.FC = () => {
 
     try {
       const res = await resendOtp(userType as UserType, { email });
-
       utterToast.success(res.message);
 
       setTimer(60);
       setCanResend(false);
     } catch (error) {
       utterToast.error(errorHandler(error));
-
       if (errorHandler(error).startsWith('OTP expired'))
         router.push(`/signin?mode=${userType}`);
     } finally {
@@ -160,9 +153,7 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     const otpCode = otp.join('');
 
     if (otpCode.length !== 6) {
@@ -227,8 +218,7 @@ const VerifyOtp: React.FC = () => {
               </p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* OTP Input Fields */}
+            <form className="space-y-6">
               <div className="space-y-4">
                 <div className="flex justify-center gap-2 sm:gap-3">
                   {otp.map((digit, index) => (
@@ -259,7 +249,6 @@ const VerifyOtp: React.FC = () => {
                 )}
               </div>
 
-              {/* Timer and Resend */}
               <div className="flex items-center justify-center space-x-4">
                 <div className="text-center">
                   {!canResend ? (
@@ -286,18 +275,15 @@ const VerifyOtp: React.FC = () => {
                 </div>
               </div>
 
-              {/* Verify Button */}
               <Button
                 text="Verify Code"
                 fullWidth={true}
-                isLoading={isLoading}
+                onClick={handleSubmit}
               />
             </form>
 
-            {/* Go back */}
             <GoBackBtn handleGoBack={handleGoBack} />
 
-            {/* Help Text */}
             <div className="pt-5 text-center text-sm text-gray-500">
               <p>
                 Didn&apos;t receive the code? Check your spam folder or request

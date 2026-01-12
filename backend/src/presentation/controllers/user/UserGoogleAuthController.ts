@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { IUserGoogleAuthUseCase } from '~use-case-interfaces/user/IUserUseCase';
 import { env } from '~config/env';
-import { cookieData } from '~constants/cookieData';
 import { logger } from '~logger/logger';
 import { HttpError } from '~errors/HttpError';
 import { successMessage } from '~constants/successMessage';
@@ -31,11 +30,11 @@ export class UserGoogleAuthController {
 
       res.cookie('accessToken', user.accessToken, {
         ...cookieOptions,
-        maxAge: cookieData.ACCESS_TOKEN_AGE,
+        maxAge: parseInt(env.ACCESS_TOKEN_AGE),
       });
       res.cookie('refreshToken', user.refreshToken, {
         ...cookieOptions,
-        maxAge: cookieData.REFRESH_TOKEN_AGE,
+        maxAge: parseInt(env.REFRESH_TOKEN_AGE),
       });
       res.redirect(
         `${env.FRONTEND_URL}/google?id=${encodeURIComponent(user.user.id!)}&name=${encodeURIComponent(user.user.name!)}&email=${encodeURIComponent(user.user.email!)}&role=${encodeURIComponent(user.user.role!)}&responseMessage=${successMessage.SIGNIN_SUCCESS}`,

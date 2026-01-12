@@ -4,15 +4,19 @@ import { createPortal } from 'react-dom';
 import getCroppedImg from '~utils/cropImage';
 import Button from '~components/shared/Button';
 import { LuCircleX } from 'react-icons/lu';
+import { utterToast } from '~utils/utterToast';
+import { errorHandler } from '~utils/errorHandler';
 
 type ImageUploadProps = {
   handleAvatarUpload: (croppedBlob: Blob) => Promise<void>;
   inputRef: React.RefObject<HTMLInputElement | null>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const AvatarUploadModal = ({
   handleAvatarUpload,
   inputRef,
+  setIsLoading,
 }: ImageUploadProps) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -38,12 +42,21 @@ const AvatarUploadModal = ({
   };
 
   const handleUpload = async () => {
-    if (!imageSrc || !croppedAreaPixels) return;
+    try {
+      setIsLoading(true);
 
-    setImageSrc(null);
+      if (!imageSrc || !croppedAreaPixels) return;
 
-    const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
-    handleAvatarUpload(croppedBlob);
+      setImageSrc(null);
+
+      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+
+      await handleAvatarUpload(croppedBlob);
+    } catch (error) {
+      utterToast.error(errorHandler(error));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -51,7 +64,7 @@ const AvatarUploadModal = ({
       <input
         type="file"
         ref={inputRef}
-        accept="image/*"
+        accept="image/jpeg, image/png, image/webp"
         className="hidden"
         onChange={handleFileChange}
       />

@@ -16,3 +16,5 @@ export class TutorMapper {
     };
   }
 }
+
+export type TutorResponseDTO = ReturnType<typeof TutorMapper.toResponse>;

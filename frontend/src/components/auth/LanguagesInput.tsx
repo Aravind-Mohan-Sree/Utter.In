@@ -130,13 +130,13 @@ export const LanguagesInput: React.FC<LanguagesInputProps> = ({
           {languages.map((language) => (
             <div
               key={language}
-              className="inline-flex items-center gap-1 bg-rose-100 text-rose-600 px-3 py-1.5 rounded-full border border-rose-200"
+              className="inline-flex items-center gap-1 bg-rose-100 text-rose-400 px-3 py-1.5 rounded-full border border-rose-200"
             >
               <span className="text-sm font-medium">{language}</span>
               <button
                 type="button"
                 onClick={() => handleRemoveLanguage(language)}
-                className="hover:text-rose-800 ml-1 cursor-pointer"
+                className="hover:text-rose-600 ml-1 cursor-pointer"
                 aria-label={`Remove ${language}`}
               >
                 <BiSolidXCircle />

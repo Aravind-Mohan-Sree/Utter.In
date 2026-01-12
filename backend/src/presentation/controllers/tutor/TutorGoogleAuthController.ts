@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { ITutorGoogleAuthUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
 import { env } from '~config/env';
-import { cookieData } from '~constants/cookieData';
 import { logger } from '~logger/logger';
 import { HttpError } from '~errors/HttpError';
 import { successMessage } from '~constants/successMessage';
@@ -31,11 +30,11 @@ export class TutorGoogleAuthController {
 
       res.cookie('accessToken', tutor.accessToken, {
         ...cookieOptions,
-        maxAge: cookieData.ACCESS_TOKEN_AGE,
+        maxAge: parseInt(env.ACCESS_TOKEN_AGE),
       });
       res.cookie('refreshToken', tutor.refreshToken, {
         ...cookieOptions,
-        maxAge: cookieData.REFRESH_TOKEN_AGE,
+        maxAge: parseInt(env.REFRESH_TOKEN_AGE),
       });
       res.redirect(
         `${env.FRONTEND_URL}/google?id=${encodeURIComponent(tutor.tutor.id!)}&name=${encodeURIComponent(tutor.tutor.name!)}&email=${encodeURIComponent(tutor.tutor.email!)}&role=${encodeURIComponent(tutor.tutor.role!)}&responseMessage=${successMessage.SIGNIN_SUCCESS}`,

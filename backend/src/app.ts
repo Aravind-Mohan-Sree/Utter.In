@@ -14,6 +14,7 @@ import passport from 'passport';
 import '~strategies/googleUserStrategy';
 import '~strategies/googleTutorStrategy';
 import { tutorRouter } from '~routes/tutorRoutes';
+import { adminRouter } from '~routes/adminRoutes';
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ async function startServer() {
 
   app.use('/api/user', userRouter);
   app.use('/api/tutor', tutorRouter);
+  app.use('/api/admin', adminRouter);
 
   app.use(errorHandler);
   app.use(morgan('dev'));
@@ -71,7 +73,7 @@ async function startServer() {
   const port = env.PORT;
 
   app.listen(port, () => {
-    logger.info(`App is running on http://localhost:${port}`);
+    logger.info(`App is running on port ${port}`);
   });
 }
 

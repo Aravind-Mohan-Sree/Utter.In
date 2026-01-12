@@ -1,6 +1,7 @@
 import { IOtpService } from '~service-interfaces/IOtpService';
 import nodemailer from 'nodemailer';
-import { getEmailTemplate } from '~constants/getEmailTemplate';
+import { env } from '~config/env';
+import { otpEmailTemplate } from '~constants/otpEmailTemplate';
 
 export class OtpService implements IOtpService {
   constructor(
@@ -14,8 +15,8 @@ export class OtpService implements IOtpService {
 
   async sendOtp(name: string, email: string, otp: string): Promise<void> {
     const smtpTransport = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587, // or 465 for SSL
+      host: env.NODEMAILER_HOST,
+      port: parseInt(env.NODEMAILER_PORT), // or 465 for SSL
       secure: false, // true if using port 465
       auth: {
         user: this.appEmail,
@@ -26,9 +27,9 @@ export class OtpService implements IOtpService {
     await smtpTransport.sendMail({
       from: this.appEmail,
       to: email,
-      subject: 'OTP from Utter.In',
-      text: `Thank you for choosing Utter.In. Your OTP is ${otp}.`,
-      html: getEmailTemplate(name, otp),
+      subject: 'OTP from Utter',
+      text: `Thank you for choosing Utter. Your OTP is ${otp}.`,
+      html: otpEmailTemplate(name, otp),
     });
   }
 

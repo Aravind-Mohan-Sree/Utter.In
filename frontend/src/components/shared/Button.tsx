@@ -1,29 +1,57 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { LuLoaderCircle } from 'react-icons/lu';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps<T extends unknown[]>
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
   variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'danger';
   fullWidth?: boolean;
-  isLoading?: boolean;
   text?: string;
   icon?: React.ReactNode;
   fontSize?: number;
   size?: number;
+  args?: T;
+  onClick?: (...args: T) => void | Promise<void>;
 }
 
-export default function Button({
+export default function Button<T extends unknown[]>({
   variant = 'primary',
   fullWidth = false,
-  isLoading,
   text,
   icon,
   fontSize = 16,
   size = 2,
   className = '',
+  onClick,
+  args,
   ...props
-}: ButtonProps) {
+}: ButtonProps<T>) {
+  const [isActive, setIsActive] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const handlePress = async () => {
+    if (isActive) return;
+
+    setIsActive(true);
+
+    if (onClick) {
+      await onClick(...(args ?? ([] as unknown as T)));
+    }
+
+    timerRef.current = setTimeout(() => {
+      setIsActive(false);
+    }, 600);
+  };
+
   const baseClasses = `grid items-center justify-center rounded-md bg-gradient-to-r hover:bg-gradient-to-l bg-[length:200%_200%] bg-[position:0%_50%] hover:bg-[position:95%_50%] transition-[background-position] duration-500 ease-out font-medium shadow-sm text-white ${
-    isLoading ? 'cursor-not-allowed' : 'cursor-pointer'
+    isActive ? 'cursor-not-allowed' : 'cursor-pointer'
   }`;
 
   const variants = {
@@ -36,20 +64,23 @@ export default function Button({
     danger: 'from-red-500 to-red-900 hover:to-red-900 hover:from-red-500',
   };
 
-  const widthClass = fullWidth ? 'w-full' : '';
-
   return (
     <button
-      disabled={isLoading ? true : false}
-      className={`${baseClasses} ${variants[variant]} ${widthClass} ${className}`}
+      {...props}
+      type={props.type || 'button'}
+      onClick={handlePress}
+      disabled={isActive || props.disabled}
+      className={`${baseClasses} ${variants[variant]} ${
+        fullWidth ? 'w-full' : ''
+      } ${className}`}
       style={{
         fontSize: `${fontSize}px`,
-        paddingInline: `${4 * (size && size + 1)}px`,
+        paddingInline: `${4 * (size ? size + 1 : size)}px`,
         paddingBlock: `${4 * size}px`,
+        ...props.style,
       }}
-      {...props}
     >
-      {isLoading && (
+      {isActive && (
         <span className="col-start-1 row-start-1 flex items-center justify-center">
           <LuLoaderCircle className="animate-spin w-6 h-6" />
         </span>
@@ -57,7 +88,7 @@ export default function Button({
       <span
         className={`col-start-1 row-start-1 flex items-center justify-center ${
           text && 'space-x-2'
-        } ${isLoading ? 'invisible' : 'visible'}`}
+        } ${isActive ? 'invisible' : 'visible'}`}
       >
         {icon}
         <span>{text}</span>

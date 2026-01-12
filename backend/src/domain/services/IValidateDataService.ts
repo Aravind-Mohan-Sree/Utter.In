@@ -1,5 +1,5 @@
 export interface FileInput {
-  fieldname: number;
+  fieldname: string;
   originalname?: string;
   mimetype: string;
   path: string;
@@ -13,6 +13,7 @@ export interface ValidatedData {
 
 export interface IValidateDataService {
   validateName(name: string): ValidatedData;
+  validateBio(bio: string): ValidatedData;
   validateEmail(email: string): ValidatedData;
   validateKnownLanguages(knownLanguages: string[]): ValidatedData;
   validateExperience(experience: string): ValidatedData;
@@ -20,4 +21,5 @@ export interface IValidateDataService {
   validateCertificate(certificate: FileInput): ValidatedData;
   validatePassword(password: string): ValidatedData;
   validateOtp(otp: string): ValidatedData;
+  validateAvatar(avatar: FileInput): ValidatedData;
 }

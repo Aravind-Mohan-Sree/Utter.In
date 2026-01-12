@@ -14,7 +14,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Utter.In',
+  title: 'Utter',
   description: 'A language sharing platform.',
 };
 

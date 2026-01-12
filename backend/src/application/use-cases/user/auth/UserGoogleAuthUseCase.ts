@@ -1,5 +1,5 @@
 import { IUserGoogleAuthUseCase } from '~use-case-interfaces/user/IUserUseCase';
-import { UserMapper } from '~mappers/UserMapper';
+import { UserMapper, UserResponseDTO } from '~mappers/UserMapper';
 import { errorMessage } from '~constants/errorMessage';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ITokenService } from '~service-interfaces/ITokenService';
@@ -16,7 +16,7 @@ export class UserGoogleAuthUseCase implements IUserGoogleAuthUseCase {
     email: string,
     googleId: string,
   ): Promise<{
-    user: Partial<User>;
+    user: UserResponseDTO;
     accessToken: string;
     refreshToken: string;
   }> {

@@ -1,5 +1,5 @@
 import { IRegisterTutorFromPendingUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
-import { TutorMapper } from '~mappers/TutorMapper';
+import { TutorMapper, TutorResponseDTO } from '~mappers/TutorMapper';
 import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { Tutor } from '~entities/Tutor';
@@ -15,7 +15,7 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
   async execute(email: string): Promise<{
     pendingTutorId: string;
     newTutorId: string;
-    tutor: Partial<Tutor>;
+    tutor: TutorResponseDTO;
   }> {
     const pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
 

@@ -2,6 +2,7 @@ import multer from 'multer';
 import os from 'os';
 
 export interface UploadedFiles {
+  avatar?: Express.Multer.File[];
   introVideo?: Express.Multer.File[];
   certificate?: Express.Multer.File[];
 }
@@ -17,6 +18,7 @@ const upload = multer({
 });
 
 export const uploadMiddleware = upload.fields([
+  { name: 'avatar', maxCount: 1 },
   { name: 'introVideo', maxCount: 1 },
   { name: 'certificate', maxCount: 1 },
 ]);
