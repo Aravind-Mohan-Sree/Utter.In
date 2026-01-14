@@ -12,7 +12,7 @@ export interface IRegisterUserFromPendingUseCase {
   execute(email: string): Promise<UserResponseDTO>;
 }
 
-export interface IUserGoogleAuthUseCase {
+export interface IUserGoogleRegisterUseCase {
   execute(
     email: string,
     googleId: string,

@@ -3,7 +3,7 @@ import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { FetchAdminUsersDTO } from '~dtos/FetchAdminUsersDTO';
 import { logger } from '~logger/logger';
-import { IFetchUsersUseCase } from '~use-case-interfaces/admin/IUsersUseCase';
+import { IFetchUsersUseCase, IToggleStatusUseCase } from '~use-case-interfaces/admin/IUsersUseCase';
 
 interface UserQuery {
   page: string;
@@ -13,7 +13,10 @@ interface UserQuery {
 }
 
 export class UsersController {
-  constructor(private fetchUsersUC: IFetchUsersUseCase) {}
+  constructor(
+    private fetchUsersUC: IFetchUsersUseCase,
+    private toggleStatusUC: IToggleStatusUseCase,
+  ) {}
 
   fetchUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -30,6 +33,20 @@ export class UsersController {
       res.status(httpStatusCode.OK).json({
         message: successMessage.DATA_FETCHED,
         usersData,
+      });
+    } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  };
+
+  toggleStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      await this.toggleStatusUC.execute(id);
+
+      res.status(httpStatusCode.OK).json({
+        message: successMessage.STATUS_UPDATED,
       });
     } catch (error) {
       logger.error(error);

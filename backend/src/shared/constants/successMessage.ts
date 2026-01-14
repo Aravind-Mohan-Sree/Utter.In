@@ -8,5 +8,6 @@ export const successMessage = {
   DATA_FETCHED: 'Data successfully fetched',
   AVATAR_UPLOADED: 'Avatar successfully uploaded',
   AVATAR_DELETED: 'Avatar successfully deleted',
-  PROFILE_UPDATED: 'Profile successfully updated',
+  STATUS_UPDATED: 'Status successfully updated',
+  VERIFIED: 'Successfully verified',
 };

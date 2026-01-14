@@ -16,13 +16,20 @@ export const UserSignupSchema = BaseSchema.pick({
   path: ['confirmPassword'],
 });
 
-export const TutorSignupSchema = BaseSchema.refine(
-  (data) => data.password === data.confirmPassword,
-  {
+export const TutorSignupSchema = BaseSchema.pick({
+  name: true,
+  email: true,
+  languages: true,
+  experience: true,
+  introVideo: true,
+  certificate: true,
+  password: true,
+  confirmPassword: true,
+})
+  .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ['confirmPassword'],
-  },
-)
+  })
   .refine(
     (data) => {
       const video = data.introVideo;

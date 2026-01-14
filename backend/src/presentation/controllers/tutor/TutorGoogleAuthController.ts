@@ -1,23 +1,41 @@
 import { NextFunction, Request, Response } from 'express';
-import { ITutorGoogleAuthUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
+import {
+  ITutorGoogleRegisterUseCase,
+  ITutorGoogleSigninUseCase,
+} from '~use-case-interfaces/tutor/ITutorUseCase';
 import { env } from '~config/env';
 import { logger } from '~logger/logger';
 import { HttpError } from '~errors/HttpError';
 import { successMessage } from '~constants/successMessage';
 
 interface IAuthTutor {
+  name: string;
+  avatar: string;
   email: string;
   googleId: string;
 }
 
 export class TutorGoogleAuthController {
-  constructor(private googleAuth: ITutorGoogleAuthUseCase) {}
+  constructor(
+    private googleRegisterUC: ITutorGoogleRegisterUseCase,
+    private googleSigninUC: ITutorGoogleSigninUseCase,
+  ) {}
 
-  handleSuccess = async (req: Request, res: Response, _next: NextFunction) => {
+  register = async (req: Request, res: Response, _next: NextFunction) => {
+    try {
+      const { name, email, avatar, googleId } = req.user as IAuthTutor;
+      const tutor = await this.googleRegisterUC.execute(email, googleId);
+      
+    } catch (error) {
+      logger.error(error);
+    }
+  };
+
+  signin = async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const { email, googleId } = req.user as IAuthTutor;
 
-      const tutor = await this.googleAuth.execute(email, googleId);
+      const tutor = await this.googleSigninUC.execute(email, googleId);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {

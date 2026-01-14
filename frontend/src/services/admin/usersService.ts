@@ -16,8 +16,18 @@ export const fetchUsers = async (
     });
 
     const res = await axios.get(
-      `${API_ROUTES.ADMIN.FETCH_USERS}?${params.toString()}`,
+      `${API_ROUTES.ADMIN.USERS}?${params.toString()}`,
     );
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const toggleStatus = async (id: string) => {
+  try {
+    const res = await axios.patch(`${API_ROUTES.ADMIN.USERS}/${id}/status`);
 
     return res.data;
   } catch (error) {

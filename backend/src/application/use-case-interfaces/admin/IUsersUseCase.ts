@@ -12,3 +12,7 @@ export interface IFetchUsersUseCase {
     users: UserResponseDTO[];
   }>;
 }
+
+export interface IToggleStatusUseCase {
+  execute(id: string): Promise<void>;
+}

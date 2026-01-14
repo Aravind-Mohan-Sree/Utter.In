@@ -15,21 +15,6 @@ export const getAccountDetails = async (userType: string, email: string) => {
   }
 };
 
-export const fetchAvatar = async (user: { id: string; role: string }) => {
-  try {
-    const avatarUrl =
-      user.role === 'user'
-        ? `${API_ROUTES.USER.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`
-        : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`;
-
-    await axios.head(avatarUrl);
-
-    return avatarUrl;
-  } catch (error) {
-    throw error;
-  }
-};
-
 export const uploadAvatar = async (userType: string, body: object) => {
   try {
     const res = await axios.post(
@@ -94,7 +79,9 @@ export const signout = async (userType: string) => {
     const res = await axios.post(
       userType === 'user'
         ? `${API_ROUTES.USER.SIGNOUT}`
-        : `${API_ROUTES.TUTOR.SIGNOUT}`,
+        : userType === 'tutor'
+        ? `${API_ROUTES.TUTOR.SIGNOUT}`
+        : `${API_ROUTES.ADMIN.SIGNOUT}`,
     );
 
     return res.data;

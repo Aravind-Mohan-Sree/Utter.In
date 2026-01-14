@@ -10,6 +10,7 @@ export class Tutor {
     public role: string,
     public isBlocked: boolean,
     public isVerified: boolean,
+    public certificationType: string | null,
     public rejectionReason: string | null,
     public id?: string,
     public expiresAt?: Date,

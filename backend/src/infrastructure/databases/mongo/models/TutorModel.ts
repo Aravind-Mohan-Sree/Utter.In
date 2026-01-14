@@ -10,6 +10,7 @@ export interface ITutor extends Document {
   role: string;
   isBlocked: boolean;
   isVerified: boolean;
+  certificationType: string | null;
   rejectionReason: string | null;
   googleId: string | null;
   expiresAt: Date;
@@ -28,6 +29,7 @@ const tutorSchema = new Schema<ITutor>(
     role: { type: String, required: true },
     isBlocked: { type: Boolean, required: true },
     isVerified: { type: Boolean, required: true },
+    certificationType: { type: String, default: null },
     rejectionReason: { type: String, default: null },
     googleId: { type: String, default: null },
     expiresAt: { type: Date, default: null, expires: 120 },

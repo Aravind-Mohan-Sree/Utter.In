@@ -11,31 +11,34 @@ export const utterAlert = ({
   confirmText = 'OK',
   cancelText = 'Cancel',
   showCancel = false,
-  onConfirm = () => {},
+  // Add these new props:
+  input = undefined as 'select' | 'text' | undefined,
+  inputOptions = {} as Record<string, string>,
+  inputPlaceholder = 'Select an option',
+  onConfirm = (value?: string) => {},
 }) => {
   return Swal.fire({
     title,
     text,
-    icon: icon as SweetAlertIcon,
+    icon: icon ? (icon as SweetAlertIcon) : undefined,
     showCancelButton: showCancel,
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
+    input,
+    inputOptions,
+    inputPlaceholder,
     customClass: {
       popup: 'custom-popup',
-      title: 'custom-title',
-      htmlContainer: 'custom-text',
-      footer: 'custom-footer',
-      icon: 'custom-icon',
       confirmButton: 'custom-confirm-btn',
       cancelButton: 'custom-cancel-btn',
+      input: 'custom-select-input',
     },
     buttonsStyling: false,
-    backdrop: 'rgba(0,0,0,0.6)',
     allowOutsideClick: false,
     footer,
   }).then((result) => {
     if (result.isConfirmed) {
-      onConfirm();
+      onConfirm(result.value);
     }
   });
 };

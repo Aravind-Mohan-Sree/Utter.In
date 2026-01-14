@@ -12,7 +12,11 @@ import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
 
 type AvatarProps = {
-  user: { name: string; avatarUrl?: string | null; role: 'user' | 'admin' };
+  user: {
+    name: string;
+    avatarUrl: string | null;
+    role: 'user' | 'tutor' | 'admin';
+  };
   size: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   handleAvatarUpload?: (croppedBlob: Blob) => Promise<void>;
   handleAvatarDeletion?: () => Promise<void>;
@@ -36,6 +40,11 @@ const Avatar = ({
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [imgSrc, setImgSrc] = useState(user.avatarUrl || null);
+
+  useEffect(() => {
+    setImgSrc(user.avatarUrl || null);
+  }, [user.avatarUrl]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,13 +87,14 @@ const Avatar = ({
         className={`relative ${sizeClasses[size]} mx-auto rounded-full group overflow-hidden flex items-center justify-center bg-rose-50 border-1 border-rose-200`}
         onClick={() => setIsMenuOpen(!isMenuOpen)}
       >
-        {user.avatarUrl ? (
+        {imgSrc ? (
           <Image
-            src={user.avatarUrl}
+            src={imgSrc}
             alt="avatar"
             width={400}
             height={400}
             className="w-full h-auto max-w-[124px] rounded-full object-cover aspect-square"
+            onError={() => setImgSrc(null)}
           />
         ) : (
           <span
@@ -96,7 +106,7 @@ const Avatar = ({
 
         <div
           className={`absolute inset-0 ${
-            user.role == 'user' || user.avatarUrl
+            user.role === 'user' || user.role === 'tutor' || imgSrc
               ? 'bg-black/40 backdrop-blur-[2px]'
               : ''
           }  flex flex-col items-center justify-center gap-4 transition-all duration-300 rounded-full z-10 ${
@@ -107,7 +117,7 @@ const Avatar = ({
         >
           {isLoading && <LuLoaderCircle className="animate-spin" size={30} />}
 
-          {user.role === 'user' && !isLoading && (
+          {user.role !== 'admin' && !isLoading && (
             <span onClick={(e) => e.stopPropagation()} className="contents">
               <Button
                 variant="outline"
@@ -123,7 +133,7 @@ const Avatar = ({
             </span>
           )}
 
-          {user.avatarUrl && !isLoading && (
+          {imgSrc && !isLoading && (
             <>
               <span onClick={(e) => e.stopPropagation()} className="contents">
                 <Button
@@ -139,7 +149,7 @@ const Avatar = ({
                 />
               </span>
 
-              {user.role === 'user' && (
+              {user.role !== 'admin' && (
                 <span onClick={(e) => e.stopPropagation()} className="contents">
                   <Button
                     variant="outline"
@@ -167,7 +177,7 @@ const Avatar = ({
               onClick={(e) => e.stopPropagation()}
             >
               <Image
-                src={user.avatarUrl as string}
+                src={imgSrc as string}
                 alt="avatar-preview"
                 fill
                 sizes="(max-width: 500px) 80vw, 400px"

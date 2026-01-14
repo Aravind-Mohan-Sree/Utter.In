@@ -5,11 +5,11 @@ import { SearchAndFilter } from '~components/admin/SearchAndFilter';
 import { Card } from '~components/admin/Card';
 import { Pagination } from '~components/shared/Pagination';
 import { MdPeople } from 'react-icons/md';
-import { fetchUsers } from '~services/admin/usersService';
+import { fetchUsers, toggleStatus } from '~services/admin/usersService';
 import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
 import { Dropdown } from '~components/shared/Dropdown';
-import { fetchAvatar } from '~services/shared/managementService';
+import { API_ROUTES } from '~constants/routes';
 
 interface User {
   id: string;
@@ -56,28 +56,16 @@ export default function UsersPage() {
           activeFilter,
         );
 
-        const users = res.usersData.users;
-
-        const avatarResults = await Promise.allSettled(
-          users.map((user: User) =>
-            fetchAvatar({
-              id: user.id,
-              role: user.role,
-            }),
-          ),
-        );
-
-        const usersWithAvatars = users.map((user: User, index: number) => {
-          const result = avatarResults[index];
-          return {
-            ...user,
-            avatarUrl: result.status === 'fulfilled' ? result.value : null,
-          };
-        });
+        const users = res.usersData.users.map((user: User) => ({
+          ...user,
+          avatarUrl: `${API_ROUTES.USER.FETCH_AVATAR}/${
+            user.id
+          }.jpeg?v=${Date.now()}`,
+        }));
 
         setTotalUsersCount(res.usersData.totalUsersCount);
         setFilteredUsersCount(res.usersData.filteredUsersCount);
-        setUsers(usersWithAvatars);
+        setUsers(users);
       } catch (error) {
         utterToast.error(errorHandler(error));
       }
@@ -90,6 +78,22 @@ export default function UsersPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleToggleStatus = async (id: string) => {
+    try {
+      const res = await toggleStatus(id);
+
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === id ? { ...user, isBlocked: !user.isBlocked } : user,
+        ),
+      );
+
+      utterToast.error(res.message);
+    } catch (error) {
+      utterToast.error(errorHandler(error));
+    }
   };
 
   return (
@@ -168,8 +172,8 @@ export default function UsersPage() {
               email={user.email}
               avatarUrl={user.avatarUrl}
               status={user.isBlocked ? 'Blocked' : 'Active'}
-              languages={user.knownLanguages}
-              onToggleStatus={() => {}}
+              knownLanguages={user.knownLanguages}
+              onToggleStatus={handleToggleStatus}
             />
           ))}
         </div>

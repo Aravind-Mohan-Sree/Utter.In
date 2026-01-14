@@ -5,7 +5,7 @@ import { RiVerifiedBadgeFill } from 'react-icons/ri';
 interface ActionButtonsProps {
   variant?: 'toggle' | 'view' | 'verify';
   status?: 'Active' | 'Blocked' | string;
-  verified?: boolean;
+  isVerified?: boolean;
   rejectionReason?: string | null;
   onToggle?: (id: string) => void;
   onEdit?: (id: string) => void;
@@ -18,7 +18,7 @@ interface ActionButtonsProps {
 export const ActionButtons = ({
   variant = 'toggle',
   status,
-  verified,
+  isVerified,
   rejectionReason,
   onToggle,
   onView,
@@ -71,7 +71,7 @@ export const ActionButtons = ({
         rejectionReason
           ? 'hover:bg-gray-50'
           : 'hover:text-amber-500 hover:bg-amber-50'
-      } ${verified ? 'text-amber-500' : 'text-gray-400'}`;
+      } ${isVerified ? 'text-amber-500' : 'text-gray-400'}`;
     }
     return '';
   };

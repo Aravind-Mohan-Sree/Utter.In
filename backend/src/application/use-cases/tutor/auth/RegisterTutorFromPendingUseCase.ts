@@ -33,6 +33,7 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
       false,
       false,
       null,
+      null,
     );
 
     const newTutor = await this.tutorRepo.create(tutor);

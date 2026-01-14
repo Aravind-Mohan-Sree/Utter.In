@@ -19,7 +19,6 @@ import Button from '~components/shared/Button';
 import Loader from '~components/shared/Loader';
 import {
   changePassword,
-  fetchAvatar,
   getAccountDetails,
   removeAvatar,
   signout,
@@ -35,6 +34,7 @@ import {
   tutorProfileUpdateSchema,
   userProfileUpdateSchema,
 } from '~validations/profileSchema';
+import { API_ROUTES } from '~constants/routes';
 
 interface ProfileData {
   name: string;
@@ -93,7 +93,12 @@ export default function ProfilePage() {
   const dispatch = useDispatch();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [formData, setFormData] = useState<ProfileData | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
+    const timestamp = Date.now();
+    return user?.role === 'user'
+      ? `${API_ROUTES.USER.FETCH_AVATAR}/${user?.id}.jpeg?v=${timestamp}`
+      : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user?.id}.jpeg?v=${timestamp}`;
+  });
   const router = useRouter();
   const validationSchema =
     user?.role === 'user' ? userProfileUpdateSchema : tutorProfileUpdateSchema;
@@ -137,20 +142,6 @@ export default function ProfilePage() {
 
     (async () => {
       try {
-        const avatarUrl = await fetchAvatar({ role: user.role, id: user.id });
-
-        setAvatarUrl(avatarUrl);
-      } catch (error) {
-        console.log(error);
-      }
-    })();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    (async () => {
-      try {
         const res = await getAccountDetails(user.role, user.email);
         const data: ProfileData = res.user ?? res.tutor;
 
@@ -175,7 +166,10 @@ export default function ProfilePage() {
       formData.append('avatar', croppedBlob);
 
       const res = await uploadAvatar(user!.role, formData);
-      const avatarUrl = await fetchAvatar({ role: user.role, id: user.id });
+      const avatarUrl =
+        user.role === 'user'
+          ? `${API_ROUTES.USER.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`
+          : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`;
 
       setAvatarUrl(avatarUrl);
       utterToast.success(res.message);
@@ -188,7 +182,7 @@ export default function ProfilePage() {
     try {
       const res = await removeAvatar(user!.role);
 
-      setAvatarUrl('');
+      setAvatarUrl(null);
       utterToast.success(res.message);
     } catch (error) {
       utterToast.error(errorHandler(error));

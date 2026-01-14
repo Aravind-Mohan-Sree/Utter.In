@@ -13,8 +13,10 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       const user = {
-        googleId: profile.id,
+        name: profile.displayName || '',
         email: profile.emails?.[0].value || '',
+        avatar: profile.photos?.[0].value || '',
+        googleId: profile.id,
       };
 
       return done(null, user);

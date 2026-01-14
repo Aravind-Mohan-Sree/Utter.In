@@ -1,146 +1,203 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { SearchAndFilter } from '~components/admin/SearchAndFilter';
-import { Card, TutorCardProps } from '~components/admin/Card';
+import { Card } from '~components/admin/Card';
 import { Pagination } from '~components/shared/Pagination';
+import { MdPeople } from 'react-icons/md';
+import {
+  approve,
+  fetchTutors,
+  reject,
+  toggleStatus,
+} from '~services/admin/tutorsService';
+import { utterToast } from '~utils/utterToast';
+import { errorHandler } from '~utils/errorHandler';
+import { Dropdown } from '~components/shared/Dropdown';
 import { DetailsModal } from '~components/admin/modals';
-import { MdSchool } from 'react-icons/md';
+import { API_ROUTES } from '~constants/routes';
+import { utterSelectAlert } from '~utils/utterSelectAlert';
+
+interface Tutor {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string;
+  introVideoUrl: string;
+  certificateUrl: string;
+  certificationType: string | null;
+  knownLanguages: string[];
+  yearsOfExperience: string;
+  rejectionReason: string | null;
+  bio: string;
+  role: string;
+  isVerified: boolean;
+  isBlocked: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function TutorsPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [itemsOptions] = useState(['3', '6', '9', '15', '21']);
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [totalTutorsCount, setTotalTutorsCount] = useState(0);
+  const [filteredTutorsCount, setFilteredTutorsCount] = useState(0);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [introVideoUrl, setIntroVideoUrl] = useState('');
-  const [certificateUrl, setCertificateUrl] = useState('');
-  const [selectedTutorId, setSelectedTutorId] = useState<number | null>(null);
+  const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
+  const totalPages = Math.ceil(totalTutorsCount / itemsPerPage);
+  const from =
+    totalTutorsCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const to = Math.min(currentPage * itemsPerPage, totalTutorsCount);
 
-  const [tutors, setTutors] = useState([
-    {
-      id: 1,
-      name: 'Rajesh Gupta',
-      email: 'rajesh.gupta@email.com',
-      status: 'Active',
-      verified: true,
-      rejectionReason: null,
-      languages: ['English', 'Hindi'],
-      experience: '0-1',
-      certificateFileName: 'Certificate.pdf',
-    },
-    {
-      id: 2,
-      name: 'Priya Sharma',
-      email: 'priya.sharma@email.com',
-      status: 'Blocked',
-      verified: false,
-      rejectionReason: null,
-      languages: ['Spanish', 'French'],
-      experience: '3-5',
-      certificateFileName: 'Certificate.pdf',
-    },
-    {
-      id: 3,
-      name: 'Amit Kumar',
-      email: 'amit.kumar@email.com',
-      status: 'Active',
-      verified: false,
-      rejectionReason: null,
-      languages: ['Japanese'],
-      experience: '1-3',
-      certificateFileName: 'Certificate.pdf',
-    },
-    {
-      id: 4,
-      name: 'Sneha Mehta',
-      email: 'sneha.mehta@email.com',
-      status: 'Active',
-      verified: false,
-      rejectionReason: 'Incomplete documentation',
-      languages: ['French'],
-      experience: '5+',
-      certificateFileName: 'Certificate.pdf',
-    },
-  ]);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500);
 
-  // Filter logic
-  const filteredTutors = useMemo(() => {
-    return tutors.filter((tutor) => {
-      let matchesFilter = false;
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
-      if (activeFilter === 'All') {
-        matchesFilter = true;
-      } else if (activeFilter === 'Verified') {
-        matchesFilter = tutor.verified === true;
-      } else if (activeFilter === 'Pending') {
-        matchesFilter = tutor.verified === false && !tutor.rejectionReason;
-      } else if (activeFilter === 'Rejected') {
-        matchesFilter =
-          tutor.rejectionReason !== null &&
-          tutor.rejectionReason.trim().length > 0;
-      } else {
-        // For Active/Blocked status filters
-        matchesFilter = tutor.status === activeFilter;
-      }
-
-      const matchesSearch =
-        tutor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tutor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tutor.languages.some((lang) =>
-          lang.toLowerCase().includes(searchQuery.toLowerCase()),
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetchTutors(
+          currentPage,
+          itemsPerPage,
+          debouncedQuery,
+          activeFilter,
         );
 
-      return matchesFilter && matchesSearch;
-    });
-  }, [tutors, activeFilter, searchQuery]);
+        const tutors = res.tutorsData.tutors.map((tutor: Tutor) => ({
+          ...tutor,
+          avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${
+            tutor.id
+          }.jpeg?v=${Date.now()}`,
+          introVideoUrl: `${API_ROUTES.TUTOR.FETCH_VIDEO}/${
+            tutor.id
+          }.mp4?v=${Date.now()}`,
+          certificateUrl: `${API_ROUTES.TUTOR.FETCH_CERTIFICATE}/${
+            tutor.id
+          }.pdf?v=${Date.now()}`,
+        }));
 
-  // Pagination calculation
-  const totalPages = Math.ceil(filteredTutors.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedTutors = filteredTutors.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+        setTotalTutorsCount(res.tutorsData.totalTutorsCount);
+        setFilteredTutorsCount(res.tutorsData.filteredTutorsCount);
+        setTutors(tutors);
+      } catch (error) {
+        utterToast.error(errorHandler(error));
+      }
+    })();
+  }, [debouncedQuery, activeFilter, currentPage, itemsPerPage]);
 
-  const handleViewDetails = (id: number) => {
-    setSelectedTutorId(id);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [tutors]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleViewDetails = (id: string | number) => {
+    setSelectedTutorId(id.toString());
     setIsModalOpen(true);
   };
 
-  const handleToggleStatus = (id: number) => {
-    setTutors((prev) =>
-      prev.map((tutor) =>
-        tutor.id === id
-          ? {
-              ...tutor,
-              status: tutor.status === 'Active' ? 'Blocked' : 'Active',
-            }
-          : tutor,
-      ),
+  const handleToggleStatus = async (id: string) => {
+    try {
+      const res = await toggleStatus(id);
+
+      setTutors((prevTutors) =>
+        prevTutors.map((tutor) =>
+          tutor.id === id ? { ...tutor, isBlocked: !tutor.isBlocked } : tutor,
+        ),
+      );
+
+      utterToast.error(res.message);
+    } catch (error) {
+      utterToast.error(errorHandler(error));
+    }
+  };
+
+  const handleApprove = (id: string) => {
+    const CERTIFICATION_OPTIONS = {
+      TESOL: 'TESOL',
+      CEFR: 'CEFR',
+      'State Licensed': 'State Licensed',
+      Goethe: 'Goethe',
+      PGCHE: 'PGCHE',
+    };
+
+    utterSelectAlert(
+      'Approve Tutor',
+      CERTIFICATION_OPTIONS,
+      'Select Certification Type...',
+      'Confirm Approval',
+      async (certificationType) => {
+        try {
+          const res = await approve(id, certificationType);
+
+          setTutors((prevTutors) =>
+            prevTutors.map((tutor) =>
+              tutor.id === id ? { ...tutor, isVerified: true } : tutor,
+            ),
+          );
+
+          utterToast.success(res.message);
+        } catch (error) {
+          utterToast.error(errorHandler(error));
+        }
+      },
+    );
+  };
+
+  const handleReject = (id: string) => {
+    const reasonsArray = [
+      'Certification document is blurry or unreadable',
+      'Uploaded certificate is expired or invalid',
+      'Introduction video has poor audio or low lighting',
+      'Introduction video content is unprofessional or incomplete',
+      'Certification does not match the subject expertise claimed',
+    ];
+
+    const REJECTION_OPTIONS = Object.fromEntries(
+      reasonsArray.map((r) => [r, r]),
+    );
+
+    utterSelectAlert(
+      'Reject Tutor',
+      REJECTION_OPTIONS,
+      'Select Rejection Reason...',
+      'Confirm Rejection',
+      async (reason) => {
+        try {
+          const res = await reject(id, reason);
+
+          setTutors((prevTutors) =>
+            prevTutors.map((tutor) =>
+              tutor.id === id ? { ...tutor, rejectionReason: reason } : tutor,
+            ),
+          );
+
+          utterToast.info(res.message);
+        } catch (error) {
+          utterToast.error(errorHandler(error));
+        }
+      },
     );
   };
 
   const selectedTutor = tutors.find((t) => t.id === selectedTutorId);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <div className="w-full">
       <SearchAndFilter
         placeholder="Search tutors..."
-        filters={[
-          'All',
-          'Verified',
-          'Pending',
-          'Rejected',
-          'Active',
-          'Blocked',
-        ]}
+        filters={['All', 'Active', 'Blocked']}
         activeFilter={activeFilter}
         onFilterChange={(val) => {
           setActiveFilter(val);
@@ -153,10 +210,44 @@ export default function TutorsPage() {
         }}
       />
 
-      {paginatedTutors.length === 0 ? (
+      <div className="flex flex-col md:flex-row md:items-center gap-6 mb-4 text-black">
+        <div className="flex items-center gap-2">
+          <p className="text-sm">Items per page</p>
+          <Dropdown
+            options={itemsOptions}
+            selected={itemsPerPage.toString()}
+            onSelect={(val) => {
+              setItemsPerPage(+val);
+            }}
+          />
+        </div>
+
+        <p className="text-sm text-black">
+          Showing{' '}
+          <span className="font-medium text-rose-400">
+            {from}-{to}
+          </span>{' '}
+          of{' '}
+          <span className="font-medium text-rose-400">
+            {filteredTutorsCount}
+          </span>{' '}
+          results
+          {filteredTutorsCount !== totalTutorsCount && (
+            <span className="text-black ml-1">
+              (Total{' '}
+              <span className="text-rose-400 font-medium">
+                {totalTutorsCount}
+              </span>{' '}
+              tutors)
+            </span>
+          )}
+        </p>
+      </div>
+
+      {tutors.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="text-gray-400 mb-4">
-            <MdSchool className="mx-auto w-24 h-24" />
+            <MdPeople className="mx-auto w-24 h-24" />
           </div>
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             No tutors found
@@ -169,21 +260,21 @@ export default function TutorsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {paginatedTutors.map((tutor) => (
+          {tutors.map((tutor) => (
             <Card
               key={tutor.id}
               type="tutor"
               id={tutor.id}
               name={tutor.name}
               email={tutor.email}
-              avatarUrl={avatarUrl}
-              status={tutor.status as TutorCardProps['status']}
-              verified={tutor.verified}
+              avatarUrl={tutor.avatarUrl}
+              knownLanguages={tutor.knownLanguages}
+              yearsOfExperience={`${tutor.yearsOfExperience} years experience`}
+              isVerified={tutor.isVerified}
               rejectionReason={tutor.rejectionReason}
-              experience={`${tutor.experience} years experience`}
-              languages={tutor.languages}
-              onToggleStatus={handleToggleStatus}
+              status={tutor.isBlocked ? 'Blocked' : 'Active'}
               onViewDetails={handleViewDetails}
+              onToggleStatus={handleToggleStatus}
             />
           ))}
         </div>
@@ -210,22 +301,16 @@ export default function TutorsPage() {
             id: selectedTutor.id,
             name: selectedTutor.name,
             email: selectedTutor.email,
-            avatarUrl,
-            experience: `${selectedTutor.experience} years experience`,
-            verified: selectedTutor.verified,
-            rejectionReason: selectedTutor.rejectionReason,
+            avatarUrl: selectedTutor.avatarUrl || '',
+            experience: `${selectedTutor.yearsOfExperience} years experience`,
+            verified: selectedTutor.isVerified,
+            rejectionReason: selectedTutor.rejectionReason || null,
           }}
-          introVideoUrl={introVideoUrl}
-          certificateUrl={certificateUrl}
-          certificateFileName={selectedTutor.certificateFileName}
-          onApprove={(id) => {
-            console.log('Approve tutor', id);
-            // Add your approve logic here
-          }}
-          onReject={(id) => {
-            console.log('Reject tutor', id);
-            // Add your reject logic here
-          }}
+          introVideoUrl={selectedTutor.introVideoUrl}
+          certificateUrl={selectedTutor.certificateUrl}
+          certificateType={selectedTutor.certificationType || 'Certificate.pdf'}
+          onApprove={handleApprove}
+          onReject={handleReject}
         />
       )}
     </div>

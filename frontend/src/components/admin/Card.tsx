@@ -7,6 +7,8 @@ import { ActionButtons } from './card-components/ActionButtons';
 import { ReportSection } from './card-components/ReportSection';
 import { HiArrowRight } from 'react-icons/hi';
 import Avatar from '~components/shared/Avatar';
+import Button from '~components/shared/Button';
+import { FiCheckCircle, FiSlash } from 'react-icons/fi';
 
 export type CardType = 'user' | 'tutor' | 'report';
 
@@ -21,7 +23,7 @@ interface UserCardProps extends BaseCardProps {
   email: string;
   avatarUrl: string | null;
   status: 'Active' | 'Blocked';
-  languages: string[];
+  knownLanguages: string[];
   onToggleStatus?: (id: string) => void;
 }
 
@@ -29,14 +31,14 @@ export interface TutorCardProps extends BaseCardProps {
   type: 'tutor';
   name: string;
   email: string;
-  avatarUrl: string | null;
-  status: 'Active' | 'Blocked';
-  verified: boolean;
+  avatarUrl: string;
+  knownLanguages: string[];
+  yearsOfExperience: string;
+  isVerified: boolean;
   rejectionReason: string | null;
-  languages: string[];
-  experience?: string;
-  onToggleStatus?: (id: string) => void;
+  status: 'Active' | 'Blocked';
   onViewDetails?: (id: string) => void;
+  onToggleStatus?: (id: string) => void;
   customActions?: React.ReactNode;
 }
 
@@ -80,7 +82,7 @@ const UserCard = ({
   email,
   avatarUrl,
   status,
-  languages,
+  knownLanguages,
   onToggleStatus,
 }: UserCardProps) => (
   <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all">
@@ -94,17 +96,32 @@ const UserCard = ({
       </div>
     </div>
 
-    {languages && languages.length > 0 && (
-      <LanguageTags languages={languages} variant="default" className="mb-4" />
+    {knownLanguages && knownLanguages.length > 0 && (
+      <LanguageTags
+        knownLanguages={knownLanguages}
+        variant="default"
+        className="mb-4"
+      />
     )}
 
     {onToggleStatus && (
       <div className="flex justify-end pt-3 mt-3 border-t border-gray-200">
-        <ActionButtons
-          variant="toggle"
-          status={status}
-          onToggle={onToggleStatus}
-          itemId={id}
+        <Button
+          variant="outline"
+          icon={
+            status === 'Active' ? (
+              <FiSlash size={22} />
+            ) : (
+              <FiCheckCircle size={22} />
+            )
+          }
+          className={`text-gray-400! h-fit rounded-lg p-1! ${
+            status === 'Active'
+              ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
+              : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
+          }`}
+          onClick={onToggleStatus}
+          args={[id]}
         />
       </div>
     )}
@@ -117,13 +134,13 @@ const TutorCard = ({
   name,
   email,
   avatarUrl,
-  status,
-  verified,
+  knownLanguages,
+  yearsOfExperience,
+  isVerified,
   rejectionReason,
-  languages,
-  experience,
-  onToggleStatus,
+  status,
   onViewDetails,
+  onToggleStatus,
   customActions,
 }: TutorCardProps) => (
   <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all">
@@ -131,14 +148,22 @@ const TutorCard = ({
       <div className="flex gap-3 min-w-0 items-start justify-between">
         <div className="flex gap-3 min-w-0 flex-1">
           <Avatar user={{ name, avatarUrl, role: 'admin' }} size="md" />
-          <UserInfo name={name} email={email} additionalInfo={experience} />
+          <UserInfo
+            name={name}
+            email={email}
+            additionalInfo={yearsOfExperience}
+          />
         </div>
         <StatusBadge status={status} />
       </div>
     </div>
 
-    {languages && languages.length > 0 && (
-      <LanguageTags languages={languages} variant="default" className="mb-4" />
+    {knownLanguages && knownLanguages.length > 0 && (
+      <LanguageTags
+        knownLanguages={knownLanguages}
+        variant="default"
+        className="mb-4"
+      />
     )}
 
     {(onToggleStatus || onViewDetails || customActions) && (
@@ -151,18 +176,29 @@ const TutorCard = ({
               <ActionButtons
                 variant="verify"
                 status={status}
-                verified={verified}
+                isVerified={isVerified}
                 rejectionReason={rejectionReason}
                 onView={onViewDetails}
                 itemId={id}
               />
             )}
             {onToggleStatus && (
-              <ActionButtons
-                variant="toggle"
-                status={status}
-                onToggle={onToggleStatus}
-                itemId={id}
+              <Button
+                variant="outline"
+                icon={
+                  status === 'Active' ? (
+                    <FiSlash size={22} />
+                  ) : (
+                    <FiCheckCircle size={22} />
+                  )
+                }
+                className={`text-gray-400! h-fit rounded-lg p-1! ${
+                  status === 'Active'
+                    ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
+                    : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
+                }`}
+                onClick={onToggleStatus}
+                args={[id]}
               />
             )}
           </>

@@ -8,11 +8,15 @@ import Image from 'next/image';
 import { GoX } from 'react-icons/go';
 import { BiMenu, BiSolidReport } from 'react-icons/bi';
 import { useSelector } from 'react-redux';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { RootState } from '~store/rootReducer';
 import { MdDashboard, MdPeople, MdSchool, MdLogout } from 'react-icons/md';
 import { HiChevronDoubleLeft } from 'react-icons/hi';
 import { IoLanguage } from 'react-icons/io5';
+import { utterToast } from '~utils/utterToast';
+import { useDispatch } from 'react-redux';
+import { signout } from '~services/shared/managementService';
+import { errorHandler } from '~utils/errorHandler';
 
 export function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -24,6 +28,8 @@ export function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const pathname = usePathname();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   const isAdminPath = pathname.startsWith('/admin');
 
@@ -56,6 +62,18 @@ export function Navbar() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isMenuOpen]);
+
+  const handleSignOut = async () => {
+    try {
+      const res = await signout(user!.role);
+
+      utterToast.success(res.message);
+      router.replace(`/admin/signin`);
+      dispatch({ type: 'signout' });
+    } catch (error) {
+      utterToast.error(errorHandler(error));
+    }
+  };
 
   const userLinks = [
     { href: '/', label: 'Home' },
@@ -218,7 +236,10 @@ export function Navbar() {
                 </div>
               </button>
 
-              <button className="flex cursor-pointer items-center gap-3 px-3.5 py-3 text-white bg-red-500 hover:bg-rose-50 hover:text-red-500 rounded-lg transition-colors">
+              <button
+                onClick={handleSignOut}
+                className="flex cursor-pointer items-center gap-3 px-3.5 py-3 text-white bg-red-500 hover:bg-rose-50 hover:text-red-500 rounded-lg transition-colors w-full"
+              >
                 <MdLogout className="text-xl shrink-0" />
                 <div
                   className={`flex transition-all duration-300 ease-in-out overflow-hidden ${

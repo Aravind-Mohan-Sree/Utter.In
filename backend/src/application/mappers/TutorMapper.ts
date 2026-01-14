@@ -12,6 +12,7 @@ export class TutorMapper {
       role: tutor.role,
       isBlocked: tutor.isBlocked,
       isVerified: tutor.isVerified,
+      certificationType: tutor.certificationType,
       rejectionReason: tutor.rejectionReason,
     };
   }

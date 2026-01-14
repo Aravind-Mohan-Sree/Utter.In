@@ -32,7 +32,14 @@ export interface IRegisterTutorFromPendingUseCase {
   }>;
 }
 
-export interface ITutorGoogleAuthUseCase {
+export interface ITutorGoogleRegisterUseCase {
+  execute(
+    name: string,
+    email: string,
+  ): Promise<void>;
+}
+
+export interface ITutorGoogleSigninUseCase {
   execute(
     email: string,
     googleId: string,

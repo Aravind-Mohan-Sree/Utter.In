@@ -82,16 +82,17 @@ export default function Button<T extends unknown[]>({
     >
       {isActive && (
         <span className="col-start-1 row-start-1 flex items-center justify-center">
-          <LuLoaderCircle className="animate-spin w-6 h-6" />
+          <LuLoaderCircle className="animate-spin" size={22} />
         </span>
       )}
+
       <span
-        className={`col-start-1 row-start-1 flex items-center justify-center ${
-          text && 'space-x-2'
-        } ${isActive ? 'invisible' : 'visible'}`}
+        className={`col-start-1 row-start-1 flex items-center justify-center gap-2 ${
+          isActive ? 'invisible' : 'visible'
+        }`}
       >
         {icon}
-        <span>{text}</span>
+        {text && <span>{text}</span>}
       </span>
     </button>
   );

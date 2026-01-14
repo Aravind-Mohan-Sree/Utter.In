@@ -1,8 +1,10 @@
 import { combineReducers, UnknownAction } from '@reduxjs/toolkit';
 import { authReducer } from '~features/authSlice';
+import { tutorReducer } from '~features/tutorSlice';
 
 const appReducer = combineReducers({
   auth: authReducer,
+  tutor: tutorReducer,
 });
 
 export type RootState = ReturnType<typeof appReducer>;

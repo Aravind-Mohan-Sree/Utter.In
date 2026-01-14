@@ -21,7 +21,7 @@ import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
 import { RegisterTutorFromPendingUseCase } from '~use-cases/tutor/auth/RegisterTutorFromPendingUseCase';
 import { RegisterTutorUseCase } from '~use-cases/tutor/auth/RegisterTutorUseCase';
 import { SigninTutorUseCase } from '~use-cases/tutor/auth/SigninTutorUseCase';
-import { TutorGoogleAuthUseCase } from '~use-cases/tutor/auth/TutorGoogleAuthUseCase';
+import { TutorGoogleAuthUseCase } from '~use-cases/tutor/auth/TutorGoogleSigninUseCase';
 import { ForgotPasswordOtpVerifyUseCase } from '~use-cases/tutor/tutor-management/ForgotPasswordOtpVerifyUseCase';
 import { ForgotPasswordUseCase } from '~use-cases/tutor/tutor-management/ForgotPasswordUseCase';
 import { ResetPasswordUseCase } from '~use-cases/tutor/tutor-management/ResetPasswordUseCase';

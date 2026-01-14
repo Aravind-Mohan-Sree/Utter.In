@@ -16,7 +16,41 @@ export const fetchTutors = async (
     });
 
     const res = await axios.get(
-      `${API_ROUTES.ADMIN.FETCH_TUTORS}?${params.toString()}`,
+      `${API_ROUTES.ADMIN.TUTORS}?${params.toString()}`,
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const toggleStatus = async (id: string) => {
+  try {
+    const res = await axios.patch(`${API_ROUTES.ADMIN.TUTORS}/${id}/status`);
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const approve = async (id: string, certificationType: string) => {
+  try {
+    const res = await axios.patch(
+      `${API_ROUTES.ADMIN.TUTORS}/${id}/approve?certificationType=${certificationType}`,
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const reject = async (id: string, rejectionReason: string) => {
+  try {
+    const res = await axios.patch(
+      `${API_ROUTES.ADMIN.TUTORS}/${id}/reject?rejectionReason=${rejectionReason}`,
     );
 
     return res.data;

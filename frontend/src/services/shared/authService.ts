@@ -33,9 +33,7 @@ export const verifyOtp = async (userType: UserType, body: object) => {
 export const signin = async (userType: UserType, body: object) => {
   try {
     const res = await axios.post(
-      userType === 'user'
-        ? API_ROUTES.USER.SIGNIN
-        : API_ROUTES.TUTOR.SIGNIN,
+      userType === 'user' ? API_ROUTES.USER.SIGNIN : API_ROUTES.TUTOR.SIGNIN,
       body,
     );
 

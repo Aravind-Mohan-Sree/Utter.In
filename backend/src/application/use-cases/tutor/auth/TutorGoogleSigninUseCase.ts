@@ -1,4 +1,4 @@
-import { ITutorGoogleAuthUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
+import { ITutorGoogleSigninUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
 import { TutorMapper, TutorResponseDTO } from '~mappers/TutorMapper';
 import { errorMessage } from '~constants/errorMessage';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
@@ -10,7 +10,7 @@ import {
   NotFoundError,
 } from '~errors/HttpError';
 
-export class TutorGoogleAuthUseCase implements ITutorGoogleAuthUseCase {
+export class TutorGoogleSigninUseCase implements ITutorGoogleSigninUseCase {
   constructor(
     private tutorRepo: ITutorRepository,
     private tokenService: ITokenService,

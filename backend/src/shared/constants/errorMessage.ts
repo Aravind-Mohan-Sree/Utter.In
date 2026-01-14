@@ -12,4 +12,6 @@ export const errorMessage = {
   WRONG_PASSWORD: 'Wrong password',
   SOMETHING_WRONG: 'Something went wrong',
   VIDEO: 'Video must be 30 seconds or less',
+  STATUS_NOT_UPDATED: 'Status not updated',
+  VERIFICATION_FAILED: 'Verification failed',
 };

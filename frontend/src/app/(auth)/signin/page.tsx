@@ -121,11 +121,7 @@ const SignIn: React.FC = () => {
         if (message.startsWith('Account under verification')) {
           return router.push('/verification-pending');
         } else if (message.startsWith('Account verification failed')) {
-          return router.push(
-            `/signup?mode=${userType}&email=${encodeURIComponent(
-              formData.email,
-            )}`,
-          );
+          return router.push(`/signup?mode=${userType}`);
         }
 
         setError((prev) => ({ ...prev, ['password']: message }));

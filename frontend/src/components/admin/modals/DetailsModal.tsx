@@ -6,6 +6,7 @@ import { FiFileText } from 'react-icons/fi';
 import { UserInfo } from '../card-components';
 import Avatar from '~components/shared/Avatar';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export type ModalType = 'tutor' | 'report';
 
@@ -23,7 +24,7 @@ interface BaseModalProps {
 interface TutorModalProps extends BaseModalProps {
   type: 'tutor';
   tutor: {
-    id: number;
+    id: string;
     name: string;
     email: string;
     avatarUrl: string;
@@ -31,17 +32,17 @@ interface TutorModalProps extends BaseModalProps {
     verified: boolean;
     rejectionReason: string | null;
   };
-  introVideoUrl?: string;
-  certificateUrl?: string;
-  certificateFileName?: string;
-  onApprove?: (id: number) => void;
-  onReject?: (id: number) => void;
+  introVideoUrl: string;
+  certificateUrl: string;
+  certificateType: string | null;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
 }
 
 interface ReportModalProps extends BaseModalProps {
   type: 'report';
   report: {
-    id: number;
+    id: string;
     reporter: {
       name: string;
       email: string;
@@ -57,8 +58,8 @@ interface ReportModalProps extends BaseModalProps {
     description?: string;
     messages?: Message[];
   };
-  onReject?: (id: number) => void;
-  onResolveAndBlock?: (id: number) => void;
+  onReject?: (id: string) => void;
+  onResolveAndBlock?: (id: string) => void;
 }
 
 type DetailsModalProps = TutorModalProps | ReportModalProps;
@@ -78,7 +79,7 @@ const TutorModalContent = ({
   tutor,
   introVideoUrl,
   certificateUrl,
-  certificateFileName = 'Certificate.pdf',
+  certificateType,
   onApprove,
   onReject,
 }: TutorModalProps) => {
@@ -118,7 +119,7 @@ const TutorModalContent = ({
           <h5 className="text-sm font-semibold text-gray-700 mb-3">
             Intro Video
           </h5>
-          {introVideoUrl ? (
+          {introVideoUrl && !tutor.rejectionReason ? (
             <div className="w-full bg-black rounded-lg overflow-hidden">
               <video
                 src={introVideoUrl}
@@ -141,7 +142,7 @@ const TutorModalContent = ({
           <h5 className="text-sm font-semibold text-gray-700 mb-3">
             Certificate
           </h5>
-          {certificateUrl ? (
+          {certificateUrl && !tutor.rejectionReason ? (
             <Link
               href={certificateUrl}
               target="_blank"
@@ -153,7 +154,7 @@ const TutorModalContent = ({
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">
-                  {certificateFileName}
+                  {certificateType}
                 </p>
                 <p className="text-xs text-gray-500">Click to view</p>
               </div>

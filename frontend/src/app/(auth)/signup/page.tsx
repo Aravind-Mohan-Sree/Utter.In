@@ -9,7 +9,7 @@ import { InputField } from '~components/auth/InputField';
 import { LanguagesInput } from '~components/auth/LanguagesInput';
 import { PasswordInput } from '~components/auth/PasswordInput';
 import { UserTypeToggle } from '~components/auth/UserTypeToggle';
-import { register } from '~services/shared/authService';
+import { googleRegister, register } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
@@ -20,6 +20,8 @@ import { utterAlert } from '~utils/utterAlert';
 import { getAccountDetails } from '~services/shared/managementService';
 import { ExperienceSelector } from '~components/auth/ExperienceSelector';
 import Button from '~components/shared/Button';
+import { Divider } from '~components/auth/Divider';
+import { FaGoogle } from 'react-icons/fa';
 
 type ExperienceLevel = '0-1' | '1-2' | '2-3' | '3-5' | '5-10' | '10+' | '';
 
@@ -113,6 +115,65 @@ const SignUp: React.FC = () => {
     })();
   }, [userType]);
 
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    const updatedFormData = { ...formData, [name]: value };
+
+    setFormData(updatedFormData);
+    setError((prev) => ({
+      ...prev,
+      [name]: validationSchema
+        .safeParse(updatedFormData)
+        .error?.issues.find((ele) => ele.path[0] === name)?.message,
+    }));
+  };
+
+  const handleLanguagesChange = (languages: string[]) => {
+    const updatedFormData = { ...formData, languages };
+    setFormData((prev) => ({ ...prev, languages }));
+    setError((prev) => ({
+      ...prev,
+      ['languages']:
+        validationSchema
+          .safeParse(updatedFormData)
+          .error?.issues.find((ele) => ele.path[0] === 'languages')?.message ??
+        '',
+    }));
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files } = e.target;
+
+    if (!files) return;
+
+    const updatedFormData = { ...formData, [name]: files[0] };
+
+    setFormData(updatedFormData);
+    setError((prev) => ({
+      ...prev,
+      [name]: validationSchema
+        .safeParse(updatedFormData)
+        .error?.issues.find((ele) => ele.path[0] === name)?.message,
+    }));
+
+    if (files[0]) {
+      const file = files[0];
+
+      if (file.type.startsWith('video/')) {
+        const isValid = await validateVideoDuration(file, 31); // limit = 30 seconds
+
+        if (!isValid) {
+          setError((prev) => ({
+            ...prev,
+            ['introVideo']: 'Video must be 30 seconds or less',
+          }));
+        }
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     if (error.introVideo) return;
 
@@ -175,62 +236,14 @@ const SignUp: React.FC = () => {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    const updatedFormData = { ...formData, [name]: value };
-
-    setFormData(updatedFormData);
-    setError((prev) => ({
-      ...prev,
-      [name]: validationSchema
-        .safeParse(updatedFormData)
-        .error?.issues.find((ele) => ele.path[0] === name)?.message,
-    }));
-  };
-
-  const handleLanguagesChange = (languages: string[]) => {
-    const updatedFormData = { ...formData, languages };
-    setFormData((prev) => ({ ...prev, languages }));
-    setError((prev) => ({
-      ...prev,
-      ['languages']:
-        validationSchema
-          .safeParse(updatedFormData)
-          .error?.issues.find((ele) => ele.path[0] === 'languages')?.message ??
-        '',
-    }));
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, files } = e.target;
-
-    if (!files) return;
-
-    const updatedFormData = { ...formData, [name]: files[0] };
-
-    setFormData(updatedFormData);
-    setError((prev) => ({
-      ...prev,
-      [name]: validationSchema
-        .safeParse(updatedFormData)
-        .error?.issues.find((ele) => ele.path[0] === name)?.message,
-    }));
-
-    if (files[0]) {
-      const file = files[0];
-
-      if (file.type.startsWith('video/')) {
-        const isValid = await validateVideoDuration(file, 31); // limit = 30 seconds
-
-        if (!isValid) {
-          setError((prev) => ({
-            ...prev,
-            ['introVideo']: 'Video must be 30 seconds or less',
-          }));
-        }
-      }
+  const onGoogleSignUp = async () => {
+    try {
+      window.location.href =
+        userType === 'user'
+          ? process.env.NEXT_PUBLIC_GOOGLE_USER_URL!
+          : process.env.NEXT_PUBLIC_GOOGLE_TUTOR_URL!;
+    } catch (error) {
+      utterToast.error(errorHandler(error));
     }
   };
 
@@ -367,7 +380,18 @@ const SignUp: React.FC = () => {
                   fullWidth={true}
                   onClick={handleSubmit}
                 />
+
+                {/* Divider */}
+                <Divider text="Or" />
               </form>
+
+              {/* Google Login Button */}
+              <Button
+                text="Continue with Google"
+                icon={<FaGoogle />}
+                fullWidth={true}
+                onClick={onGoogleSignUp}
+              />
             </div>
 
             <AuthFooter
