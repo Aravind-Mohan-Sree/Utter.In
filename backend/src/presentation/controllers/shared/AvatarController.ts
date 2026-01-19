@@ -10,14 +10,19 @@ import {
   IValidateDataService,
 } from '~service-interfaces/IValidateDataService';
 import {
-  IDeleteAvatarUseCase,
-  IUploadAvatarUseCase,
-} from '~use-case-interfaces/shared/IAvatarUseCase';
+  IDeleteFileUseCase,
+  IUploadFileUseCase,
+} from '~use-case-interfaces/shared/IFileUseCase';
+
+interface User {
+  id: string;
+  role: 'user' | 'tutor';
+}
 
 export class AvatarController {
   constructor(
-    private uploadAvatarUC: IUploadAvatarUseCase,
-    private deleteAvatarUC: IDeleteAvatarUseCase,
+    private uploadFile: IUploadFileUseCase,
+    private deleteFile: IDeleteFileUseCase,
     private validator: IValidateDataService,
   ) {}
 
@@ -26,13 +31,14 @@ export class AvatarController {
     const avatar = files.avatar ? files.avatar[0] : null;
 
     try {
-      const { id } = req.user as { id: string };
+      const { id, role } = req.user as User;
       const data = new AvatarDTO(
         { avatar: avatar as FileInput },
         this.validator,
       );
+      const prefix = role === 'user' ? 'users/avatars/' : 'tutors/avatars/';
 
-      await this.uploadAvatarUC.execute(id, data.avatar.path);
+      await this.uploadFile.execute(prefix, id, data.avatar.path, 'image/jpeg');
 
       res
         .status(httpStatusCode.OK)
@@ -49,9 +55,10 @@ export class AvatarController {
 
   deleteAvatar = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.user as { id: string };
+      const { id, role } = req.user as User;
+      const prefix = role === 'user' ? 'users/avatars/' : 'tutors/avatars/';
 
-      await this.deleteAvatarUC.execute(id);
+      await this.deleteFile.execute(prefix, id, 'image/jpeg');
 
       res
         .status(httpStatusCode.OK)

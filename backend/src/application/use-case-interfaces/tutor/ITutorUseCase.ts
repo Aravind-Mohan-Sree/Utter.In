@@ -1,4 +1,5 @@
 import { ChangePasswordDTO } from '~dtos/ChangePasswordDTO';
+import { FinishRegisterTutorDTO } from '~dtos/FinishRegisterTutorDTO';
 import { RegisterTutorDTO } from '~dtos/RegisterTutorDTO';
 import { SigninDTO } from '~dtos/SigninDTO';
 import { TutorProfileUpdateDTO } from '~dtos/TutorProfileUpdateDTO';
@@ -8,20 +9,10 @@ export interface IRegisterTutorUseCase {
   execute(data: RegisterTutorDTO): Promise<string>;
 }
 
-export interface IUploadTutorFilesUseCase {
+export interface IFinishRegisterTutorUseCase {
   execute(
-    email: string,
-    introVideoPath: string,
-    certificatePath: string,
-  ): Promise<void>;
-}
-
-export interface IUpdateTutorFilesUseCase {
-  execute(oldId: string, newId: string): Promise<void>;
-}
-
-export interface IDeleteTutorFilesUseCase {
-  execute(id: string): Promise<void>;
+    data: FinishRegisterTutorDTO,
+  ): Promise<{ oldId: string; newId: string }>;
 }
 
 export interface IRegisterTutorFromPendingUseCase {
@@ -33,10 +24,7 @@ export interface IRegisterTutorFromPendingUseCase {
 }
 
 export interface ITutorGoogleRegisterUseCase {
-  execute(
-    name: string,
-    email: string,
-  ): Promise<void>;
+  execute(name: string, email: string): Promise<string>;
 }
 
 export interface ITutorGoogleSigninUseCase {
@@ -59,7 +47,7 @@ export interface ISigninTutorUseCase {
 }
 
 export interface IGetDataUseCase {
-  execute(email: string): Promise<TutorResponseDTO>;
+  execute(email: string): Promise<TutorResponseDTO | null>;
 }
 
 export interface IUpdateProfileUseCase {

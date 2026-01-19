@@ -3,21 +3,19 @@ import {
   ISendOtpUseCase,
   IVerifyOtpUseCase,
 } from '~use-case-interfaces/shared/IOtpUseCase';
-import {
-  IRegisterTutorFromPendingUseCase,
-  IUpdateTutorFilesUseCase,
-} from '~use-case-interfaces/tutor/ITutorUseCase';
+import { IRegisterTutorFromPendingUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
 import { env } from '~config/env';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { logger } from '~logger/logger';
+import { IUpdateFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
 
 export class OtpController {
   constructor(
     private verifyOtp: IVerifyOtpUseCase,
     private sendOtp: ISendOtpUseCase,
     private registerTutorFromPending: IRegisterTutorFromPendingUseCase,
-    private updateTutorFiles: IUpdateTutorFilesUseCase,
+    private updateFile: IUpdateFileUseCase,
   ) {}
 
   verify = async (req: Request, res: Response, next: NextFunction) => {
@@ -28,7 +26,20 @@ export class OtpController {
 
       const data = await this.registerTutorFromPending.execute(email);
 
-      await this.updateTutorFiles.execute(data.pendingTutorId, data.newTutorId);
+      await this.updateFile.execute(
+        'temp/tutors/videos/',
+        'tutors/videos/',
+        data.pendingTutorId,
+        data.newTutorId,
+        'video/mp4',
+      );
+      await this.updateFile.execute(
+        'temp/tutors/certificates/',
+        'tutors/certificates/',
+        data.pendingTutorId,
+        data.newTutorId,
+        'application/pdf',
+      );
 
       res
         .status(httpStatusCode.OK)

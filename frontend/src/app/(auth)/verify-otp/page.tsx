@@ -9,11 +9,11 @@ import {
 } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
-import { GoBackBtn } from '~components/auth/GoBackBtn';
 import { utterToast } from '~utils/utterToast';
 import bgImage from '../../../../public/bg.webp';
 import Cookies from 'js-cookie';
 import Button from '~components/shared/Button';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const VerifyOtp: React.FC = () => {
   const router = useRouter();
@@ -282,9 +282,17 @@ const VerifyOtp: React.FC = () => {
               />
             </form>
 
-            <GoBackBtn handleGoBack={handleGoBack} />
+            <Button
+              variant="outline"
+              size={0}
+              fontSize={14}
+              icon={<FiArrowLeft />}
+              text="Go Back"
+              className="text-gray-700! hover:text-black! transition-colors mx-auto mt-4"
+              onClick={handleGoBack}
+            />
 
-            <div className="pt-5 text-center text-sm text-gray-500">
+            <div className="mt-6 pt-6 text-center text-sm text-gray-500 border-t border-gray-100">
               <p>
                 Didn&apos;t receive the code? Check your spam folder or request
                 a new one

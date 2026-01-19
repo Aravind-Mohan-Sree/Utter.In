@@ -21,7 +21,7 @@ import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
 import { RegisterTutorFromPendingUseCase } from '~use-cases/tutor/auth/RegisterTutorFromPendingUseCase';
 import { RegisterTutorUseCase } from '~use-cases/tutor/auth/RegisterTutorUseCase';
 import { SigninTutorUseCase } from '~use-cases/tutor/auth/SigninTutorUseCase';
-import { TutorGoogleAuthUseCase } from '~use-cases/tutor/auth/TutorGoogleSigninUseCase';
+import { TutorGoogleSigninUseCase } from '~use-cases/tutor/auth/TutorGoogleSigninUseCase';
 import { ForgotPasswordOtpVerifyUseCase } from '~use-cases/tutor/tutor-management/ForgotPasswordOtpVerifyUseCase';
 import { ForgotPasswordUseCase } from '~use-cases/tutor/tutor-management/ForgotPasswordUseCase';
 import { ResetPasswordUseCase } from '~use-cases/tutor/tutor-management/ResetPasswordUseCase';
@@ -29,17 +29,20 @@ import { SendOtpUseCase } from '~use-cases/tutor/tutor-management/SendOtpUseCase
 import { VerifyOtpUseCase } from '~use-cases/tutor/tutor-management/VerifyOtpUseCase';
 import { uploadMiddleware } from '~middlewares/multer';
 import { VideoMetadataService } from '~concrete-services/VideoMetadataService';
-import { UploadTutorFilesUseCase } from '~use-cases/tutor/tutor-management/UploadTutorFilesUseCase';
 import { S3Service } from '~concrete-services/S3Service';
-import { UpdateTutorFilesUseCase } from '~use-cases/tutor/tutor-management/UpdateTutorFilesUseCase';
 import { GetDataController } from '~controllers/tutor/GetDataController';
 import { GetDataUseCase } from '~use-cases/tutor/tutor-management/GetDataUseCase';
 import { AvatarController } from '~controllers/shared/AvatarController';
-import { UploadAvatarUseCase } from '~use-cases/tutor/tutor-management/UploadAvatarUseCase';
-import { DeleteAvatarUseCase } from '~use-cases/tutor/tutor-management/DeleteAvatarUseCase';
 import { ProfileController } from '~controllers/tutor/ProfileController';
 import { UpdateProfileUseCase } from '~use-cases/tutor/tutor-management/UpdateProfileUseCase';
 import { ChangePasswordUseCase } from '~use-cases/tutor/tutor-management/ChangePasswordUseCase';
+import { AxiosImageGatewayService } from '~concrete-services/AxiosImageGatewayService';
+import { TutorGoogleRegisterUseCase } from '~use-cases/tutor/auth/TutorGoogleRegisterUseCase';
+import { FinishRegisterTutorUseCase } from '~use-cases/tutor/auth/FinishRegisterTutorUseCase';
+import { UploadFileUseCase } from '~use-cases/shared/UploadFileUseCase';
+import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
+import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
+import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
 
 // repositories
 const tutorRepository = new TutorRepository();
@@ -57,12 +60,17 @@ const s3Service = new S3Service({
   accessKeyId: env.AWS_ACCESS_KEY_ID,
   secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
 });
+const axiosImageGatewayService = new AxiosImageGatewayService();
 
 // use-cases
 const registerTutorUseCase = new RegisterTutorUseCase(
   tutorRepository,
   pendingTutorRepository,
   hashService,
+);
+const finishRegisterTutorUseCase = new FinishRegisterTutorUseCase(
+  pendingTutorRepository,
+  tutorRepository,
 );
 const sendOtpUseCase = new SendOtpUseCase(otpService, pendingTutorRepository);
 const verifyOtpUseCase = new VerifyOtpUseCase(
@@ -87,7 +95,10 @@ const resetPasswordUseCase = new ResetPasswordUseCase(
   tutorRepository,
   hashService,
 );
-const tutorGoogleAuthUseCase = new TutorGoogleAuthUseCase(
+const tutorGoogleRegisterUseCase = new TutorGoogleRegisterUseCase(
+  pendingTutorRepository,
+);
+const tutorGoogleSigninUseCase = new TutorGoogleSigninUseCase(
   tutorRepository,
   jwtService,
 );
@@ -96,18 +107,18 @@ const signinTutorUseCase = new SigninTutorUseCase(
   hashService,
   jwtService,
 );
-const uploadTutorFilesUseCase = new UploadTutorFilesUseCase(
-  s3Service,
-  pendingTutorRepository,
-);
-const updateTutorFilesUseCase = new UpdateTutorFilesUseCase(s3Service);
+const uploadFileUseCase = new UploadFileUseCase(s3Service);
+const updateFileUseCase = new UpdateFileUseCase(s3Service);
 const getDataUseCase = new GetDataUseCase(tutorRepository);
-const uploadAvatarUseCase = new UploadAvatarUseCase(s3Service);
-const deleteAvatarUseCase = new DeleteAvatarUseCase(s3Service);
+const deleteFileUseCase = new DeleteFileUseCase(s3Service);
 const updateProfileUseCase = new UpdateProfileUseCase(tutorRepository);
 const changePasswordUseCase = new ChangePasswordUseCase(
   tutorRepository,
   hashService,
+);
+const uploadAvatarUseCase = new UploadAvatarUseCase(
+  s3Service,
+  axiosImageGatewayService,
 );
 
 // shared use cases
@@ -118,17 +129,19 @@ const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
 // controllers
 const authController = new AuthController(
   registerTutorUseCase,
+  finishRegisterTutorUseCase,
   signinTutorUseCase,
   dataValidatorService,
   sendOtpUseCase,
   videoMetadataService,
-  uploadTutorFilesUseCase,
+  uploadFileUseCase,
+  updateFileUseCase,
 );
 const otpController = new OtpController(
   verifyOtpUseCase,
   sendOtpUseCase,
   registerTutorFromPendingUseCase,
-  updateTutorFilesUseCase,
+  updateFileUseCase,
 );
 const forgotPasswordController = new ForgotPasswordController(
   forgotPasswordUseCase,
@@ -138,13 +151,16 @@ const forgotPasswordController = new ForgotPasswordController(
   resetPasswordUseCase,
 );
 const tutorGoogleAuthController = new TutorGoogleAuthController(
-  tutorGoogleAuthUseCase,
+  getDataUseCase,
+  tutorGoogleRegisterUseCase,
+  tutorGoogleSigninUseCase,
+  uploadAvatarUseCase,
 );
 const signoutController = new SignoutController();
 const getDataController = new GetDataController(getDataUseCase);
 const avatarController = new AvatarController(
-  uploadAvatarUseCase,
-  deleteAvatarUseCase,
+  uploadFileUseCase,
+  deleteFileUseCase,
   dataValidatorService,
 );
 const profileController = new ProfileController(
@@ -179,6 +195,7 @@ router.get(
 
 // auth
 router.post('/signup', uploadMiddleware, authController.register);
+router.post('/finish-signup', uploadMiddleware, authController.finishRegister);
 router.post('/signin', authController.signin);
 
 // tutor management

@@ -24,7 +24,3 @@ export interface IApproveUseCase {
 export interface IRejectUseCase {
   execute(id: string, rejectionReason: string): Promise<void>;
 }
-
-export interface IDeleteFilesUseCase {
-  execute(id: string): Promise<void>;
-}

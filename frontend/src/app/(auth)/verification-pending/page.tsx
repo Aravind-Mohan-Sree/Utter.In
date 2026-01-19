@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { GoBackBtn } from '~components/auth/GoBackBtn';
 import { FaCircleCheck } from 'react-icons/fa6';
 import bgImage from '../../../../public/bg.webp';
+import Button from '~components/shared/Button';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const VerificationPending: React.FC = () => {
   const router = useRouter();
@@ -46,8 +47,14 @@ const VerificationPending: React.FC = () => {
               </div>
 
               {/* Login Button */}
-              <GoBackBtn
-                handleGoBack={() => router.push('/signin?mode=tutor')}
+              <Button
+                variant="outline"
+                size={0}
+                fontSize={14}
+                icon={<FiArrowLeft />}
+                text="Go Back"
+                className="text-gray-700! hover:text-black! transition-colors mx-auto mt-4"
+                onClick={() => router.push('/signin?mode=tutor')}
               />
             </div>
           </div>

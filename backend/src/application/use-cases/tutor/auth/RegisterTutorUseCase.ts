@@ -52,6 +52,6 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
     if (!pendingTutor)
       throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    return pendingTutor.email;
+    return pendingTutor.id!;
   }
 }

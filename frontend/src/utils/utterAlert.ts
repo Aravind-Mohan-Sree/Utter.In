@@ -1,18 +1,23 @@
-import Swal, { SweetAlertIcon } from 'sweetalert2';
+import Swal from 'sweetalert2';
 import '../styles/utterAlert.css';
 
-type IconType = 'success' | 'error' | 'warning' | 'info' | 'question';
+type IconType =
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'question'
+  | undefined;
 
 export const utterAlert = ({
   title = 'Alert',
   text = '',
   footer = '',
-  icon = 'info' as IconType,
+  icon = undefined as IconType,
   confirmText = 'OK',
   cancelText = 'Cancel',
   showCancel = false,
-  // Add these new props:
-  input = undefined as 'select' | 'text' | undefined,
+  input = undefined as 'radio' | undefined,
   inputOptions = {} as Record<string, string>,
   inputPlaceholder = 'Select an option',
   onConfirm = (value?: string) => {},
@@ -20,7 +25,7 @@ export const utterAlert = ({
   return Swal.fire({
     title,
     text,
-    icon: icon ? (icon as SweetAlertIcon) : undefined,
+    ...(icon ? { icon: icon as IconType } : {}),
     showCancelButton: showCancel,
     confirmButtonText: confirmText,
     cancelButtonText: cancelText,
@@ -29,13 +34,25 @@ export const utterAlert = ({
     inputPlaceholder,
     customClass: {
       popup: 'custom-popup',
+      icon: 'custom-icon',
+      title: 'custom-title',
+      input: 'custom-radio-group',
+      htmlContainer: 'custom-text',
+      footer: 'custom-footer',
+      validationMessage: 'custom-validation-error',
       confirmButton: 'custom-confirm-btn',
       cancelButton: 'custom-cancel-btn',
-      input: 'custom-select-input',
     },
     buttonsStyling: false,
     allowOutsideClick: false,
     footer,
+    preConfirm: (value) => {
+      if (input && !value) {
+        Swal.showValidationMessage('Please select an option');
+        return false;
+      }
+      return value;
+    },
   }).then((result) => {
     if (result.isConfirmed) {
       onConfirm(result.value);

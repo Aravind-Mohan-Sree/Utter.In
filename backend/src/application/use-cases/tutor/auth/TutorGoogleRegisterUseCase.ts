@@ -5,12 +5,18 @@ import { ITutorGoogleRegisterUseCase } from '~use-case-interfaces/tutor/ITutorUs
 export class TutorGoogleRegisterUseCase implements ITutorGoogleRegisterUseCase {
   constructor(private pendingTutorRepo: IPendingTutorRepository) {}
 
-  async execute(
-    name: string,
-    email: string,
-  ): Promise<void> {
-    const pendingTutor = new PendingTutor(email, name);
+  async execute(name: string, email: string): Promise<string> {
+    let pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
 
-    await this.pendingTutorRepo.create();
+    if (pendingTutor) {
+      await this.pendingTutorRepo.deleteOneByField({
+        email: pendingTutor.email,
+      });
+    }
+
+    pendingTutor = new PendingTutor(email, name);
+    pendingTutor = await this.pendingTutorRepo.create(pendingTutor);
+
+    return pendingTutor.id!;
   }
 }

@@ -3,9 +3,9 @@ import { RegisterTutorDTO } from '~dtos/RegisterTutorDTO';
 import { SigninDTO } from '~dtos/SigninDTO';
 import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import {
+  IFinishRegisterTutorUseCase,
   IRegisterTutorUseCase,
   ISigninTutorUseCase,
-  IUploadTutorFilesUseCase,
 } from '~use-case-interfaces/tutor/ITutorUseCase';
 import { env } from '~config/env';
 import { httpStatusCode } from '~constants/httpStatusCode';
@@ -17,15 +17,22 @@ import { IVideoMetadataService } from '~service-interfaces/IVideoMetadataService
 import { errorMessage } from '~constants/errorMessage';
 import { BadRequestError } from '~errors/HttpError';
 import { unlink } from 'fs/promises';
+import { FinishRegisterTutorDTO } from '~dtos/FinishRegisterTutorDTO';
+import {
+  IUpdateFileUseCase,
+  IUploadFileUseCase,
+} from '~use-case-interfaces/shared/IFileUseCase';
 
 export class AuthController {
   constructor(
     private registerTutor: IRegisterTutorUseCase,
+    private finishRegisterTutor: IFinishRegisterTutorUseCase,
     private signinTutor: ISigninTutorUseCase,
     private validator: IValidateDataService,
     private sendOtp: ISendOtpUseCase,
     private videoMetadataService: IVideoMetadataService,
-    private uploadTutorFiles: IUploadTutorFilesUseCase,
+    private uploadFile: IUploadFileUseCase,
+    private updateFile: IUpdateFileUseCase,
   ) {}
 
   register = async (req: Request, res: Response, next: NextFunction) => {
@@ -47,14 +54,21 @@ export class AuthController {
         throw new BadRequestError(errorMessage.VIDEO);
       }
 
-      const email = await this.registerTutor.execute(data);
+      const id = await this.registerTutor.execute(data);
 
-      await this.uploadTutorFiles.execute(
-        email,
+      await this.uploadFile.execute(
+        'temp/tutors/videos/',
+        id,
         introVideoFile!.path,
-        certificateFile!.path,
+        'video/mp4',
       );
-      await this.sendOtp.execute(email);
+      await this.uploadFile.execute(
+        'temp/tutors/certificates/',
+        id,
+        certificateFile!.path,
+        'application/pdf',
+      );
+      await this.sendOtp.execute(id);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
@@ -70,6 +84,64 @@ export class AuthController {
       res
         .status(httpStatusCode.CREATED)
         .json({ message: successMessage.OTP_SENDED });
+    } catch (error) {
+      if (introVideoFile?.path) {
+        await unlink(introVideoFile.path);
+      }
+
+      if (certificateFile?.path) {
+        await unlink(certificateFile.path);
+      }
+
+      logger.error(error);
+      next(error);
+    }
+  };
+
+  finishRegister = async (req: Request, res: Response, next: NextFunction) => {
+    const files = req.files as UploadedFiles;
+    const introVideoFile = files.introVideo ? files.introVideo[0] : null;
+    const certificateFile = files.certificate ? files.certificate[0] : null;
+
+    try {
+      const { introVideo: _, certificate: __, ...body } = req.body;
+      const data = new FinishRegisterTutorDTO(
+        { introVideo: introVideoFile, certificate: certificateFile, ...body },
+        this.validator,
+      );
+      const duration = await this.videoMetadataService.getDuration(
+        introVideoFile!.path,
+      );
+
+      if (duration >= 31) {
+        throw new BadRequestError(errorMessage.VIDEO);
+      }
+
+      const { oldId, newId } = await this.finishRegisterTutor.execute(data);
+
+      await this.updateFile.execute(
+        'temp/tutors/avatars/',
+        'tutors/avatars/',
+        oldId,
+        newId,
+        'image/jpeg',
+      );
+      await this.uploadFile.execute(
+        'tutors/videos/',
+        newId,
+        introVideoFile!.path,
+        'video/mp4',
+      );
+      await this.uploadFile.execute(
+        'tutors/certificates/',
+        newId,
+        certificateFile!.path,
+        'application/pdf',
+      );
+
+      res
+        .status(httpStatusCode.CREATED)
+        .json({ message: successMessage.SIGNUP_SUCCESS });
     } catch (error) {
       if (introVideoFile?.path) {
         await unlink(introVideoFile.path);

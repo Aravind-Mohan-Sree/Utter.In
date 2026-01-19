@@ -9,19 +9,25 @@ import { InputField } from '~components/auth/InputField';
 import { LanguagesInput } from '~components/auth/LanguagesInput';
 import { PasswordInput } from '~components/auth/PasswordInput';
 import { UserTypeToggle } from '~components/auth/UserTypeToggle';
-import { googleRegister, register } from '~services/shared/authService';
+import { finishSignup, register } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
-import { TutorSignupSchema, UserSignupSchema } from '~validations/AuthSchema';
+import {
+  TutorFinishSignupSchema,
+  TutorSignupSchema,
+  UserFinishSignupSchema,
+  UserSignupSchema,
+} from '~validations/AuthSchema';
 import bgImage from '../../../../public/bg.webp';
 import { validateVideoDuration } from '~validations/validateVideoDuration';
-import { utterAlert } from '~utils/utterAlert';
-import { getAccountDetails } from '~services/shared/managementService';
 import { ExperienceSelector } from '~components/auth/ExperienceSelector';
 import Button from '~components/shared/Button';
 import { Divider } from '~components/auth/Divider';
 import { FaGoogle } from 'react-icons/fa';
+import { useSubmitForm } from '~hooks/useSubmitForm';
+import { FiArrowLeft } from 'react-icons/fi';
+import { utterAlert } from '~utils/utterAlert';
 
 type ExperienceLevel = '0-1' | '1-2' | '2-3' | '3-5' | '5-10' | '10+' | '';
 
@@ -61,7 +67,7 @@ const INITIAL_FORM_DATA: SignUpData = {
 const SignUp: React.FC = () => {
   const searchParams = useSearchParams();
   const USER_TYPE = searchParams.get('mode');
-  const tutorEmail = searchParams.get('email');
+  const responseMessage = searchParams.get('responseMessage');
   const [userType, setUserType] = useState<UserType>(
     (USER_TYPE as UserType) || 'user',
   );
@@ -69,51 +75,48 @@ const SignUp: React.FC = () => {
   const [error, setError] = useState(INITIAL_ERROR_STATE);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [fileName1, setFileName1] = useState<string>('');
+  const [fileName2, setFileName2] = useState<string>('');
   const validationSchema =
     userType === 'user' ? UserSignupSchema : TutorSignupSchema;
+  const finishSignupValidationSchema =
+    userType === 'user' ? UserFinishSignupSchema : TutorFinishSignupSchema;
+  const { handleSubmission } = useSubmitForm(
+    userType,
+    formData,
+    error,
+    setError,
+  );
   const router = useRouter();
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (tutorEmail) {
-          const res = await getAccountDetails('tutor', tutorEmail);
-          const {
-            name,
-            email,
-            knownLanguages,
-            yearsOfExperience,
-            rejectionReason,
-          } = res.tutor;
-
-          setFormData((prev) => ({
-            ...prev,
-            name,
-            email,
-            languages: knownLanguages,
-            experience: yearsOfExperience,
-          }));
-          utterAlert({
-            title: 'Account verification failed',
-            text: `Reason: ${rejectionReason}.`,
-            footer: 'Please signup again',
-            icon: 'info',
-          });
-        }
-      } catch (error) {
-        utterToast.error(errorHandler(error));
-      }
-    })();
-  }, [tutorEmail]);
-
-  useEffect(() => {
     (() => {
+      setFileName1('');
+      setFileName2('');
       setFormData(INITIAL_FORM_DATA);
       setError(INITIAL_ERROR_STATE);
       setShowPassword(false);
       setShowConfirmPassword(false);
+
+      const responseMessage = searchParams.get('responseMessage');
+      const rejectionReason = searchParams.get('rejectionReason');
+      const email = searchParams.get('email') as string;
+
+      if (responseMessage === 'finishSignup') {
+        setFormData((prev) => ({ ...prev, email }));
+      } else if (rejectionReason) {
+        window.history.replaceState(null, '', `/signup?mode=${userType}`);
+
+        utterAlert({
+          icon: 'info',
+          title: 'Account verification failed',
+          text: `Reason: ${rejectionReason}`,
+          footer: 'Please sign up again',
+          confirmText: 'Okay',
+        });
+      }
     })();
-  }, [userType]);
+  }, [searchParams, userType, router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -174,66 +177,18 @@ const SignUp: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (error.introVideo) return;
+  const handleGoBack = () => {
+    router.push(`/signup?mode=${userType}`);
+  };
 
-    const newErrors = validationSchema
-      .safeParse(formData)
-      .error?.issues.reduce<Record<string, string>>((acc, issue) => {
-        const fieldName = issue.path[0];
-
-        if (typeof fieldName === 'string' && fieldName && !acc[fieldName]) {
-          acc[fieldName] = issue.message;
-        }
-
-        return acc;
-      }, {});
-
-    const clearedState = Object.keys(error).reduce<Record<string, string>>(
-      (acc, key) => ({ ...acc, [key]: '' }),
-      {},
+  const onSignup = async () => {
+    await handleSubmission(
+      validationSchema,
+      register,
+      `/verify-otp?mode=${userType}&email=${encodeURIComponent(
+        formData.email,
+      )}`,
     );
-
-    setError((prev) => ({
-      ...prev,
-      ...clearedState,
-      ...newErrors,
-    }));
-
-    if (!newErrors) {
-      const apiFormData = new FormData();
-      const formDataState: SignUpData = formData;
-
-      for (const key in formDataState) {
-        const propKey = key as keyof SignUpData;
-        const value = formDataState[propKey];
-
-        if (propKey === 'introVideo' || propKey === 'certificate') {
-          if (value instanceof File) {
-            apiFormData.append(propKey, value);
-          }
-        } else if (Array.isArray(value)) {
-          value.forEach((item) => {
-            apiFormData.append(`${propKey}[]`, item.toString());
-          });
-        } else {
-          apiFormData.append(propKey, value!.toString());
-        }
-      }
-
-      try {
-        const res = await register(userType, apiFormData);
-
-        utterToast.success(res.message);
-        router.push(
-          `/verify-otp?mode=${userType}&email=${encodeURIComponent(
-            formData.email,
-          )}`,
-        );
-      } catch (error) {
-        utterToast.error(errorHandler(error));
-      }
-    }
   };
 
   const onGoogleSignUp = async () => {
@@ -247,10 +202,20 @@ const SignUp: React.FC = () => {
     }
   };
 
+  const onFinishSignup = async () => {
+    await handleSubmission(
+      finishSignupValidationSchema,
+      finishSignup,
+      userType === 'user' ? `/` : '/verification-pending',
+    );
+  };
+
   const subtitle =
-    userType === 'user'
-      ? 'Create your account to start learning'
-      : 'Create your tutor account to help others learn';
+    responseMessage === 'finishSignup'
+      ? 'Fill in the missing pieces to join our community'
+      : userType === 'user'
+        ? 'Create your account to start learning'
+        : 'Create your tutor account to help others learn';
 
   return (
     <div
@@ -262,40 +227,48 @@ const SignUp: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-white/20 border border-gray-100">
             <div className="mb-6 text-center">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Join Utter.In
+                {responseMessage !== 'finishSignup'
+                  ? 'Join Utter.In'
+                  : 'Finish Sign Up'}
               </h1>
               <p className="text-gray-600">{subtitle}</p>
             </div>
 
             <div className="space-y-6">
-              <UserTypeToggle userType={userType} onChange={setUserType} />
+              {responseMessage !== 'finishSignup' && (
+                <UserTypeToggle userType={userType} onChange={setUserType} />
+              )}
 
               <form className="space-y-6">
                 {/* Name Input */}
-                <InputField
-                  id="name"
-                  label="Full Name"
-                  type="text"
-                  name="name"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  error={error.name}
-                  required={false}
-                />
+                {responseMessage !== 'finishSignup' && (
+                  <>
+                    <InputField
+                      id="name"
+                      label="Full Name"
+                      type="text"
+                      name="name"
+                      placeholder="Enter your full name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      error={error.name}
+                      required={false}
+                    />
 
-                {/* Email Input */}
-                <InputField
-                  id="email"
-                  label="Email Address"
-                  type="text"
-                  name="email"
-                  placeholder="user@example.com"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  error={error.email}
-                  required={false}
-                />
+                    {/* Email Input */}
+                    <InputField
+                      id="email"
+                      label="Email Address"
+                      type="text"
+                      name="email"
+                      placeholder="user@example.com"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      error={error.email}
+                      required={false}
+                    />
+                  </>
+                )}
 
                 {/* Languages Input */}
                 <LanguagesInput
@@ -324,6 +297,8 @@ const SignUp: React.FC = () => {
                         id="intro-video"
                         label="Intro Video (Max 30 sec)"
                         name="introVideo"
+                        filename={fileName1}
+                        setFilename={setFileName1}
                         accept=".mp4"
                         onChange={handleFileChange}
                         error={error.introVideo}
@@ -335,6 +310,8 @@ const SignUp: React.FC = () => {
                         id="certificates"
                         label="Certificate (PDF)"
                         name="certificate"
+                        filename={fileName2}
+                        setFilename={setFileName2}
                         accept=".pdf"
                         onChange={handleFileChange}
                         error={error.certificate}
@@ -345,60 +322,86 @@ const SignUp: React.FC = () => {
                 )}
 
                 {/* Password Input */}
-                <PasswordInput
-                  id="password"
-                  label="Password"
-                  name="password"
-                  placeholder="Create a strong password"
-                  value={formData.password}
-                  showPassword={showPassword}
-                  onChange={handleInputChange}
-                  onToggleShowPassword={() => setShowPassword(!showPassword)}
-                  error={error.password}
-                  required={false}
-                />
+                {responseMessage !== 'finishSignup' && (
+                  <>
+                    <PasswordInput
+                      id="password"
+                      label="Password"
+                      name="password"
+                      placeholder="Create a strong password"
+                      value={formData.password}
+                      showPassword={showPassword}
+                      onChange={handleInputChange}
+                      onToggleShowPassword={() =>
+                        setShowPassword(!showPassword)
+                      }
+                      error={error.password}
+                      required={false}
+                    />
 
-                {/* Confirm Password Input */}
-                <PasswordInput
-                  id="confirm-password"
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  showPassword={showConfirmPassword}
-                  onChange={handleInputChange}
-                  onToggleShowPassword={() =>
-                    setShowConfirmPassword(!showConfirmPassword)
-                  }
-                  error={error.confirmPassword}
-                  required={false}
-                />
+                    {/* Confirm Password Input */}
+                    <PasswordInput
+                      id="confirm-password"
+                      label="Confirm Password"
+                      name="confirmPassword"
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      showPassword={showConfirmPassword}
+                      onChange={handleInputChange}
+                      onToggleShowPassword={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      error={error.confirmPassword}
+                      required={false}
+                    />
+                  </>
+                )}
 
                 {/* Sign Up Button */}
                 <Button
-                  text="Sign Up"
+                  text={responseMessage !== 'finishSignup' ? 'Sign Up' : 'Done'}
                   fullWidth={true}
-                  onClick={handleSubmit}
+                  onClick={
+                    responseMessage !== 'finishSignup'
+                      ? onSignup
+                      : onFinishSignup
+                  }
                 />
 
                 {/* Divider */}
-                <Divider text="Or" />
+                {responseMessage !== 'finishSignup' && <Divider text="Or" />}
               </form>
 
+              {responseMessage === 'finishSignup' && (
+                <Button
+                  variant="outline"
+                  size={0}
+                  fontSize={14}
+                  icon={<FiArrowLeft />}
+                  text="Go Back"
+                  className="text-gray-700! hover:text-black! transition-colors mx-auto mt-4"
+                  onClick={handleGoBack}
+                />
+              )}
+
               {/* Google Login Button */}
-              <Button
-                text="Continue with Google"
-                icon={<FaGoogle />}
-                fullWidth={true}
-                onClick={onGoogleSignUp}
-              />
+              {responseMessage !== 'finishSignup' && (
+                <Button
+                  text="Continue with Google"
+                  icon={<FaGoogle />}
+                  fullWidth={true}
+                  onClick={onGoogleSignUp}
+                />
+              )}
             </div>
 
-            <AuthFooter
-              text="Already have an account?"
-              linkText="Sign in here"
-              userType={userType}
-            />
+            {responseMessage !== 'finishSignup' && (
+              <AuthFooter
+                text="Already have an account?"
+                linkText="Sign in here"
+                userType={userType}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -26,14 +26,21 @@ body {
   font-family: var(--font-poppins), sans-serif;
 }
 
-@layer utilities {
-  input:-webkit-autofill,
+@layer base {
+  input:-webkit-autofill {
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: #364153 !important;
+  }
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     transition: background-color 5000s ease-in-out 0s;
     -webkit-text-fill-color: #364153;
   }
+}
+
+@layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }

@@ -12,10 +12,13 @@ passport.use(
       proxy: true,
     },
     async (accessToken, refreshToken, profile, done) => {
+      const googleUrl = profile.photos?.[0].value || '';
+      const avatarUrl = googleUrl.replace(/s\d+(-c)?/i, 's400');
+
       const user = {
         name: profile.displayName || '',
         email: profile.emails?.[0].value || '',
-        avatar: profile.photos?.[0].value || '',
+        avatarUrl,
         googleId: profile.id,
       };
 

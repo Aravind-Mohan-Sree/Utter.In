@@ -16,7 +16,7 @@ import { errorHandler } from '~utils/errorHandler';
 import { Dropdown } from '~components/shared/Dropdown';
 import { DetailsModal } from '~components/admin/modals';
 import { API_ROUTES } from '~constants/routes';
-import { utterSelectAlert } from '~utils/utterSelectAlert';
+import { utterRadioAlert } from '~utils/utterRadioAlert';
 
 interface Tutor {
   id: string;
@@ -132,11 +132,10 @@ export default function TutorsPage() {
       PGCHE: 'PGCHE',
     };
 
-    utterSelectAlert(
-      'Approve Tutor',
+    utterRadioAlert(
+      'Choose Certification Type',
       CERTIFICATION_OPTIONS,
-      'Select Certification Type...',
-      'Confirm Approval',
+      'Confirm',
       async (certificationType) => {
         try {
           const res = await approve(id, certificationType);
@@ -168,11 +167,10 @@ export default function TutorsPage() {
       reasonsArray.map((r) => [r, r]),
     );
 
-    utterSelectAlert(
-      'Reject Tutor',
+    utterRadioAlert(
+      'Choose Rejection Reason',
       REJECTION_OPTIONS,
-      'Select Rejection Reason...',
-      'Confirm Rejection',
+      'Confirm',
       async (reason) => {
         try {
           const res = await reject(id, reason);

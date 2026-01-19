@@ -10,10 +10,11 @@ import {
   DeleteResult,
   UpdateResult,
   S3Config,
+  ICloudService,
 } from '~service-interfaces/ICloudService';
 import fs from 'fs';
 
-export class S3Service {
+export class S3Service implements ICloudService {
   private s3: S3Client;
   private bucket: string;
 
@@ -57,6 +58,31 @@ export class S3Service {
         },
       };
     } catch (error: unknown) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'S3 upload failed',
+      };
+    }
+  }
+
+  async uploadBuffer(
+    buffer: Buffer,
+    options: UploadOptions = {},
+  ): Promise<UploadResult> {
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: options.key,
+        Body: buffer,
+        ContentType: options.contentType,
+      });
+
+      await this.s3.send(command);
+
+      return {
+        success: true,
+      };
+    } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'S3 upload failed',

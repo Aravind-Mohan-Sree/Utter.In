@@ -1,4 +1,5 @@
 import { ChangePasswordDTO } from '~dtos/ChangePasswordDTO';
+import { FinishRegisterUserDTO } from '~dtos/FinishRegisterUserDTO';
 import { RegisterUserDTO } from '~dtos/RegisterUserDTO';
 import { SigninDTO } from '~dtos/SigninDTO';
 import { UserProfileUpdateDTO } from '~dtos/UserProfileUpdateDTO';
@@ -8,11 +9,24 @@ export interface IRegisterUserUseCase {
   execute(data: RegisterUserDTO): Promise<string>;
 }
 
+export interface IFinishRegisterUserUseCase {
+  execute(data: FinishRegisterUserDTO): Promise<{
+    oldId: string;
+    user: UserResponseDTO;
+    accessToken: string;
+    refreshToken: string;
+  }>;
+}
+
 export interface IRegisterUserFromPendingUseCase {
   execute(email: string): Promise<UserResponseDTO>;
 }
 
 export interface IUserGoogleRegisterUseCase {
+  execute(name: string, email: string): Promise<string>;
+}
+
+export interface IUserGoogleSigninUseCase {
   execute(
     email: string,
     googleId: string,
@@ -32,7 +46,7 @@ export interface ISigninUserUseCase {
 }
 
 export interface IGetDataUseCase {
-  execute(email: string): Promise<UserResponseDTO>;
+  execute(email: string): Promise<UserResponseDTO | null>;
 }
 
 export interface IUpdateProfileUseCase {

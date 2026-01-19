@@ -15,6 +15,21 @@ export const register = async (userType: UserType, body: object) => {
   }
 };
 
+export const finishSignup = async (userType: UserType, body: object) => {
+  try {
+    const res = await axios.post(
+      userType === 'user'
+        ? API_ROUTES.USER.FINISH_SIGNUP
+        : API_ROUTES.TUTOR.FINISH_SIGNUP,
+      body,
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const verifyOtp = async (userType: UserType, body: object) => {
   try {
     const res = await axios.post(

@@ -15,11 +15,10 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     private pendingTutorRepo: IPendingTutorRepository,
   ) {}
 
-  async execute(email: string): Promise<void> {
+  async execute(email: string): Promise<string> {
     const tutor = await this.tutorRepo.findOneByField({ email });
 
     if (!tutor) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
-    if (!tutor.isVerified) throw new BadRequestError(errorMessage.UNVERIFIED);
     if (tutor.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
 
     let pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
@@ -38,6 +37,8 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
 
     pendingTutor = new PendingTutor(email, tutor.name);
 
-    await this.pendingTutorRepo.create(pendingTutor);
+    pendingTutor = await this.pendingTutorRepo.create(pendingTutor);
+
+    return pendingTutor.id!;
   }
 }

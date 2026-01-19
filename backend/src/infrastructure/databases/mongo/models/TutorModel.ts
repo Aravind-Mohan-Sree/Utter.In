@@ -32,7 +32,7 @@ const tutorSchema = new Schema<ITutor>(
     certificationType: { type: String, default: null },
     rejectionReason: { type: String, default: null },
     googleId: { type: String, default: null },
-    expiresAt: { type: Date, default: null, expires: 120 },
+    expiresAt: { type: Date, default: null, expires: 604800 },
   },
   { timestamps: true },
 );

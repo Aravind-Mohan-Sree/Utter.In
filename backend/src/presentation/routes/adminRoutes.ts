@@ -21,10 +21,10 @@ import { ToggleTutorStatusUseCase } from '~use-cases/admin/tutors/ToggleStatusUs
 import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
 import { ApproveUseCase } from '~use-cases/admin/tutors/ApproveUseCase';
 import { RejectUseCase } from '~use-cases/admin/tutors/RejectUseCase';
-import { DeleteFilesUseCase } from '~use-cases/admin/tutors/DeleteFilesUseCase';
 import { S3Service } from '~concrete-services/S3Service';
 import { env } from '~config/env';
 import { SignoutController } from '~controllers/shared/SignoutController';
+import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
 
 // repositories
 const adminRepository = new AdminRepository();
@@ -54,7 +54,7 @@ const toggleUserStatusUseCase = new ToggleUserStatusUseCase(userRepository);
 const toggleTutorStatusUseCase = new ToggleTutorStatusUseCase(tutorRepository);
 const approveUseCase = new ApproveUseCase(tutorRepository);
 const rejectUseCase = new RejectUseCase(tutorRepository);
-const deleteFilesUseCase = new DeleteFilesUseCase(s3Service);
+const deleteFileUseCase = new DeleteFileUseCase(s3Service);
 
 // shared use cases
 const getAdminDataUseCase = new GetEntityDataUseCase<Admin, IAdmin>(
@@ -73,7 +73,7 @@ const tutorsController = new TutorsController(
   toggleTutorStatusUseCase,
   approveUseCase,
   rejectUseCase,
-  deleteFilesUseCase,
+  deleteFileUseCase,
 );
 
 // wire auth middlewares

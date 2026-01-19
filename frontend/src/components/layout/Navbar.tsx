@@ -17,6 +17,7 @@ import { utterToast } from '~utils/utterToast';
 import { useDispatch } from 'react-redux';
 import { signout } from '~services/shared/managementService';
 import { errorHandler } from '~utils/errorHandler';
+import { utterAlert } from '~utils/utterAlert';
 
 export function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -237,7 +238,17 @@ export function Navbar() {
               </button>
 
               <button
-                onClick={handleSignOut}
+                onClick={() =>
+                  utterAlert({
+                    title: 'Are you sure...',
+                    text: 'Do you really want to signout?',
+                    icon: 'question',
+                    confirmText: 'Yes',
+                    cancelText: 'No',
+                    showCancel: true,
+                    onConfirm: handleSignOut,
+                  })
+                }
                 className="flex cursor-pointer items-center gap-3 px-3.5 py-3 text-white bg-red-500 hover:bg-rose-50 hover:text-red-500 rounded-lg transition-colors w-full"
               >
                 <MdLogout className="text-xl shrink-0" />

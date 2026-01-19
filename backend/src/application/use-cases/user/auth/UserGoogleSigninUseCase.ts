@@ -1,4 +1,4 @@
-import { IUserGoogleAuthUseCase } from '~use-case-interfaces/user/IUserUseCase';
+import { IUserGoogleSigninUseCase } from '~use-case-interfaces/user/IUserUseCase';
 import { UserMapper, UserResponseDTO } from '~mappers/UserMapper';
 import { errorMessage } from '~constants/errorMessage';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
@@ -6,7 +6,7 @@ import { ITokenService } from '~service-interfaces/ITokenService';
 import { User } from '~entities/User';
 import { ForbiddenError, NotFoundError } from '~errors/HttpError';
 
-export class UserGoogleAuthUseCase implements IUserGoogleAuthUseCase {
+export class UserGoogleSigninUseCase implements IUserGoogleSigninUseCase {
   constructor(
     private userRepo: IUserRepository,
     private tokenService: ITokenService,

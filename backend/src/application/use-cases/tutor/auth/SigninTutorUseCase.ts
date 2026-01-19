@@ -30,7 +30,10 @@ export class SigninTutorUseCase implements ISigninTutorUseCase {
 
     if (!tutor.isVerified && !tutor.rejectionReason)
       throw new ForbiddenError(errorMessage.UNVERIFIED);
-    if (tutor.rejectionReason) throw new BadRequestError(errorMessage.REJECTED);
+    if (tutor.rejectionReason)
+      throw new BadRequestError(
+        `${errorMessage.REJECTED}-${tutor.rejectionReason}`,
+      );
     if (tutor.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
 
     const valid = await this.hashService.compare(password, tutor.password!);

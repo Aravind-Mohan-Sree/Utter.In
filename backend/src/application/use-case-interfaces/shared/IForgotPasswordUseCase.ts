@@ -1,5 +1,5 @@
 export interface IForgotPasswordUseCase {
-  execute(email: string): Promise<void>;
+  execute(email: string): Promise<string>;
 }
 
 export interface IForgotPasswordOtpVerifyUseCase {

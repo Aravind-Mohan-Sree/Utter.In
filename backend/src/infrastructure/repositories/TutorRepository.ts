@@ -93,6 +93,7 @@ export class TutorRepository
       certificationType: entity.certificationType,
       rejectionReason: entity.rejectionReason,
       googleId: entity.googleId!,
+      expiresAt: entity.expiresAt,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
@@ -115,6 +116,7 @@ export class TutorRepository
       doc.certificationType,
       doc.rejectionReason,
       String(doc._id),
+      doc.expiresAt,
       doc.createdAt,
       doc.updatedAt,
     );

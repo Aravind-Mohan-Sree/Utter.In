@@ -15,8 +15,8 @@ export class SendOtpUseCase implements ISendOtpUseCase {
     private pendingUserRepo: IPendingUserRepository,
   ) {}
 
-  async execute(email: string): Promise<void> {
-    let user = await this.pendingUserRepo.findOneByField({ email });
+  async execute(id: string): Promise<void> {
+    let user = await this.pendingUserRepo.findOneById(id);
 
     if (!user) throw new NotFoundError(errorMessage.OTP_EXPIRED);
 
@@ -37,13 +37,10 @@ export class SendOtpUseCase implements ISendOtpUseCase {
       otp,
     };
 
-    user = await this.pendingUserRepo.updateOneByField(
-      { email },
-      partialPendingUser,
-    );
+    user = await this.pendingUserRepo.updateOneById(id, partialPendingUser);
 
     if (!user) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    await this.otpService.sendOtp(user.name!, email, otp);
+    await this.otpService.sendOtp(user.name!, user.email, otp);
   }
 }

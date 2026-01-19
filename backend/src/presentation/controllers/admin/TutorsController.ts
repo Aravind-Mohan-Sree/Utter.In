@@ -7,11 +7,11 @@ import { RejectTutorDTO } from '~dtos/RejectTutorDTO';
 import { logger } from '~logger/logger';
 import {
   IApproveUseCase,
-  IDeleteFilesUseCase,
   IFetchTutorsUseCase,
   IRejectUseCase,
   IToggleStatusUseCase,
 } from '~use-case-interfaces/admin/ITutorsUseCase';
+import { IDeleteFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
 
 interface TutorQuery {
   page: string;
@@ -26,7 +26,7 @@ export class TutorsController {
     private toggleStatusUC: IToggleStatusUseCase,
     private approveUC: IApproveUseCase,
     private rejectUC: IRejectUseCase,
-    private deleteFilesUC: IDeleteFilesUseCase,
+    private deleteFileUC: IDeleteFileUseCase,
   ) {}
 
   fetchTutors = async (req: Request, res: Response, next: NextFunction) => {
@@ -91,7 +91,12 @@ export class TutorsController {
       });
 
       await this.rejectUC.execute(id, rejectionReason);
-      await this.deleteFilesUC.execute(id);
+      await this.deleteFileUC.execute('tutors/videos/', id, 'video/mp4');
+      await this.deleteFileUC.execute(
+        'tutors/certificates/',
+        id,
+        'application/pdf',
+      );
 
       res.status(httpStatusCode.OK).json({
         message: successMessage.VERIFIED,

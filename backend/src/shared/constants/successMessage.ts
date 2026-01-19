@@ -10,4 +10,5 @@ export const successMessage = {
   AVATAR_DELETED: 'Avatar successfully deleted',
   STATUS_UPDATED: 'Status successfully updated',
   VERIFIED: 'Successfully verified',
+  PROFILE_UPDATED: 'Profile successfully updated',
 };

@@ -7,7 +7,7 @@ export const errorMessage = {
   REJECTED: 'Account verification failed. Please signup again',
   UNVERIFIED: 'Account under verification. Try after sometime',
   UNAUTHORIZED: 'Not authenticated. Please signin',
-  SESSION_EXPIRED: 'Session expired. Please signin',
+  SESSION_EXPIRED: 'Session expired. Please try again',
   FORBIDDEN: 'Access denied due to insufficient permission',
   WRONG_PASSWORD: 'Wrong password',
   SOMETHING_WRONG: 'Something went wrong',

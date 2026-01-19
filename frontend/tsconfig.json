@@ -24,11 +24,13 @@
       "~components/*": ["components/*"],
       "~constants/*": ["constants/*"],
       "~features/*": ["features/*"],
+      "~hooks/*": ["hooks/*"],
       "~services/*": ["services/*"],
       "~store/*": ["store/*"],
+      "~styles/*": ["styles/*"],
       "~types/*": ["types/*"],
       "~utils/*": ["utils/*"],
-      "~validations/*": ["validations/*"],
+      "~validations/*": ["validations/*"]
     }
   },
   "include": [

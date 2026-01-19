@@ -37,7 +37,6 @@ const INITIAL_FORM_DATA: SigninData = {
 const SignIn: React.FC = () => {
   const searchParams = useSearchParams();
   const USER_TYPE = searchParams.get('mode');
-  const tutorEmail = searchParams.get('email');
   const [userType, setUserType] = useState<UserType>(
     (USER_TYPE as UserType) || 'user',
   );
@@ -56,25 +55,25 @@ const SignIn: React.FC = () => {
   }, [userType]);
 
   useEffect(() => {
-    (() => {
-      const responseMessage = searchParams.get('responseMessage');
+    const responseMessage = searchParams.get('responseMessage');
 
-      if (responseMessage) {
-        if (responseMessage.startsWith('Account under verification')) {
-          return router.push('/verification-pending');
-        } else if (responseMessage.startsWith('Account verification failed')) {
-          return router.push(
-            `/signup?mode=${userType}&email=${encodeURIComponent(
-              tutorEmail as string,
-            )}`,
-          );
-        }
+    if (responseMessage) {
+      window.history.replaceState(null, '', `/signin?mode=${userType}`);
 
-        utterToast.info(responseMessage);
-        router.replace('/signin');
+      if (responseMessage.startsWith('Account under verification')) {
+        return router.push('/verification-pending');
+      } else if (responseMessage.startsWith('Account verification failed')) {
+        return router.push(
+          `/signup?mode=${userType}&rejectionReason=${
+            responseMessage.split('-')[1]
+          }`,
+        );
       }
-    })();
-  }, [router, searchParams, userType, tutorEmail]);
+
+      utterToast.info(responseMessage);
+      router.replace('/signin');
+    }
+  }, [router, searchParams, userType]);
 
   const handleSubmit = async () => {
     const newErrors = SigninSchema.safeParse(formData).error?.issues.reduce<
@@ -113,6 +112,7 @@ const SignIn: React.FC = () => {
             role: data.role,
           }),
         );
+
         utterToast.success(res.message);
         router.replace('/');
       } catch (error) {
@@ -121,7 +121,9 @@ const SignIn: React.FC = () => {
         if (message.startsWith('Account under verification')) {
           return router.push('/verification-pending');
         } else if (message.startsWith('Account verification failed')) {
-          return router.push(`/signup?mode=${userType}`);
+          return router.push(
+            `/signup?mode=${userType}&rejectionReason=${message.split('-')[1]}`,
+          );
         }
 
         setError((prev) => ({ ...prev, ['password']: message }));

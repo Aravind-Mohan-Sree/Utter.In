@@ -39,6 +39,7 @@ export class PendingUserRepository
       data.otp,
       data.createdAt,
       data.updatedAt,
+      String(data._id),
     );
   }
 }

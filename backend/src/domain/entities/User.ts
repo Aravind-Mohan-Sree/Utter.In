@@ -11,7 +11,7 @@ export class User {
       currentStreak: number;
       highestStreak: number;
     } | null,
-    public role: string,
+    public role: string,  
     public isBlocked: boolean,
     public id?: string,
     public createdAt?: Date,

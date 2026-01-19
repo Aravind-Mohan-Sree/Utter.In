@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { GoBackBtn } from '~components/auth/GoBackBtn';
 import { InputField } from '~components/auth/InputField';
 import { ForgotPasswordSchema } from '~validations/AuthSchema';
 import bgImage from '../../../../public/bg.webp';
@@ -11,6 +10,7 @@ import { UserType } from '~types/auth/UserType';
 import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
 import Button from '~components/shared/Button';
+import { FiArrowLeft } from 'react-icons/fi';
 
 interface ForgotPasswordData {
   email: string;
@@ -100,17 +100,15 @@ const ForgotPassword: React.FC = () => {
             </form>
 
             {/* Back to Login Link */}
-            <GoBackBtn handleGoBack={handleGoBack} />
-
-            {/* Additional Help Text */}
-            <div className="pt-5 border-gray-100">
-              <div className="text-center text-sm text-gray-500 space-y-2">
-                <p>
-                  Didn&apos;t receive the email? Check your spam folder or try
-                  again
-                </p>
-              </div>
-            </div>
+            <Button
+              variant="outline"
+              size={0}
+              fontSize={14}
+              icon={<FiArrowLeft />}
+              text="Go Back"
+              className="text-gray-700! hover:text-black! transition-colors mx-auto mt-4"
+              onClick={handleGoBack}
+            />
           </div>
         </div>
       </div>

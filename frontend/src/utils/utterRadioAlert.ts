@@ -1,19 +1,15 @@
-import { utterAlert } from "./utterAlert";
+import { utterAlert } from './utterAlert';
 
-// utils/alertHelper.ts
-export const utterSelectAlert = (
+export const utterRadioAlert = (
   title: string,
   options: Record<string, string>,
-  placeholder: string,
   confirmBtnText: string,
-  onConfirm: (selected: string) => void
+  onConfirm: (selected: string) => void,
 ) => {
   utterAlert({
     title,
-    icon: undefined,
-    input: 'select',
+    input: 'radio',
     inputOptions: options,
-    inputPlaceholder: placeholder,
     showCancel: true,
     confirmText: confirmBtnText,
     onConfirm: (value) => {

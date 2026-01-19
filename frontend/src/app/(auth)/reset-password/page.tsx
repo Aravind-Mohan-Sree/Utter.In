@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { PasswordInput } from '~components/auth/PasswordInput';
 import { ResetPasswordSchema } from '~validations/AuthSchema';
 import bgImage from '../../../../public/bg.webp';
-import { GoBackBtn } from '~components/auth/GoBackBtn';
 import { resetPassword } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
 import Button from '~components/shared/Button';
+import { FiArrowLeft } from 'react-icons/fi';
 
 interface ResetPasswordData {
   password: string;
@@ -86,7 +86,7 @@ const ResetPassword: React.FC = () => {
   };
 
   const handleGoBack = () => {
-    router.push('/signin');
+    router.push(`/signin?mode=${userType}`);
   };
 
   return (
@@ -143,7 +143,15 @@ const ResetPassword: React.FC = () => {
             </form>
 
             {/* Go back */}
-            <GoBackBtn handleGoBack={handleGoBack} />
+            <Button
+              variant="outline"
+              size={0}
+              fontSize={14}
+              icon={<FiArrowLeft />}
+              text="Go Back"
+              className="text-gray-700! hover:text-black! transition-colors mx-auto mt-4"
+              onClick={handleGoBack}
+            />
           </div>
         </div>
       </div>

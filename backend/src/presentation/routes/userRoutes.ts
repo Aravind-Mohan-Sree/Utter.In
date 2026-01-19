@@ -21,7 +21,7 @@ import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
 import { RegisterUserFromPendingUseCase } from '~use-cases/user/auth/RegisterUserFromPendingUseCase';
 import { RegisterUserUseCase } from '~use-cases/user/auth/RegisterUserUseCase';
 import { SigninUserUseCase } from '~use-cases/user/auth/SigninUserUseCase';
-import { UserGoogleAuthUseCase } from '~use-cases/user/auth/UserGoogleAuthUseCase';
+import { UserGoogleSigninUseCase } from '~use-cases/user/auth/UserGoogleSigninUseCase';
 import { ForgotPasswordOtpVerifyUseCase } from '~use-cases/user/user-management/ForgotPasswordOtpVerifyUseCase';
 import { ForgotPasswordUseCase } from '~use-cases/user/user-management/ForgotPasswordUseCase';
 import { ResetPasswordUseCase } from '~use-cases/user/user-management/ResetPasswordUseCase';
@@ -32,11 +32,16 @@ import { GetDataController } from '~controllers/user/GetDataController';
 import { GetDataUseCase } from '~use-cases/user/user-management/GetDataUseCase';
 import { AvatarController } from '~controllers/shared/AvatarController';
 import { S3Service } from '~concrete-services/S3Service';
-import { UploadAvatarUseCase } from '~use-cases/user/user-management/UploadAvatarUseCase';
-import { DeleteAvatarUseCase } from '~use-cases/user/user-management/DeleteAvatarUseCase';
 import { UpdateProfileUseCase } from '~use-cases/user/user-management/UpdateProfileUseCase';
 import { ChangePasswordUseCase } from '~use-cases/user/user-management/ChangePasswordUseCase';
 import { ProfileController } from '~controllers/user/ProfileController';
+import { AxiosImageGatewayService } from '~concrete-services/AxiosImageGatewayService';
+import { UserGoogleRegisterUseCase } from '~use-cases/user/auth/UserGoogleRegisterUseCase';
+import { UploadFileUseCase } from '~use-cases/shared/UploadFileUseCase';
+import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
+import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
+import { FinishRegisterUserUseCase } from '~use-cases/user/auth/FinishRegisterUserUseCase';
+import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
 
 // repositories
 const userRepository = new UserRepository();
@@ -53,12 +58,18 @@ const s3Service = new S3Service({
   accessKeyId: env.AWS_ACCESS_KEY_ID,
   secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
 });
+const axiosImageGatewayService = new AxiosImageGatewayService();
 
 // use-cases
 const registerUserUseCase = new RegisterUserUseCase(
   userRepository,
   pendingUserRepository,
   hashService,
+);
+const finishRegisterUserUseCase = new FinishRegisterUserUseCase(
+  pendingUserRepository,
+  userRepository,
+  jwtService,
 );
 const sendOtpUseCase = new SendOtpUseCase(otpService, pendingUserRepository);
 const verifyOtpUseCase = new VerifyOtpUseCase(
@@ -83,7 +94,10 @@ const resetPasswordUseCase = new ResetPasswordUseCase(
   userRepository,
   hashService,
 );
-const userGoogleAuthUseCase = new UserGoogleAuthUseCase(
+const userGoogleRegisterUseCase = new UserGoogleRegisterUseCase(
+  pendingUserRepository,
+);
+const userGoogleSigninUseCase = new UserGoogleSigninUseCase(
   userRepository,
   jwtService,
 );
@@ -93,12 +107,17 @@ const signinUserUseCase = new SigninUserUseCase(
   jwtService,
 );
 const getDataUseCase = new GetDataUseCase(userRepository);
-const uploadAvatarUseCase = new UploadAvatarUseCase(s3Service);
-const deleteAvatarUseCase = new DeleteAvatarUseCase(s3Service);
+const uploadFileUseCase = new UploadFileUseCase(s3Service);
+const updateFileUseCase = new UpdateFileUseCase(s3Service);
+const deleteAvatarUseCase = new DeleteFileUseCase(s3Service);
 const updateProfileUseCase = new UpdateProfileUseCase(userRepository);
 const changePasswordUseCase = new ChangePasswordUseCase(
   userRepository,
   hashService,
+);
+const uploadAvatarUseCase = new UploadAvatarUseCase(
+  s3Service,
+  axiosImageGatewayService,
 );
 
 // shared use cases
@@ -109,9 +128,11 @@ const getUserDataUseCase = new GetEntityDataUseCase<User, IUser>(
 // controllers
 const authController = new AuthController(
   registerUserUseCase,
+  finishRegisterUserUseCase,
   signinUserUseCase,
   dataValidatorService,
   sendOtpUseCase,
+  updateFileUseCase,
 );
 const otpController = new OtpController(
   verifyOtpUseCase,
@@ -126,12 +147,15 @@ const forgotPasswordController = new ForgotPasswordController(
   resetPasswordUseCase,
 );
 const userGoogleAuthController = new UserGoogleAuthController(
-  userGoogleAuthUseCase,
+  getDataUseCase,
+  userGoogleRegisterUseCase,
+  userGoogleSigninUseCase,
+  uploadAvatarUseCase,
 );
 const signoutController = new SignoutController();
 const getDataController = new GetDataController(getDataUseCase);
 const avatarController = new AvatarController(
-  uploadAvatarUseCase,
+  uploadFileUseCase,
   deleteAvatarUseCase,
   dataValidatorService,
 );
@@ -167,6 +191,7 @@ router.get(
 
 // auth
 router.post('/signup', uploadMiddleware, authController.register);
+router.post('/finish-signup', uploadMiddleware, authController.finishRegister);
 router.post('/signin', authController.signin);
 
 // user management
