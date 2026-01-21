@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { errorMessage } from '~constants/errorMessage';
-import { ForbiddenError } from '~errors/HttpError';
+import { UnauthorizedError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
 
 export interface IAuthorize {
@@ -16,7 +16,7 @@ export class Authorize implements IAuthorize {
         const { role } = req.user as { role: string };
 
         if (role !== requiredRole) {
-          throw new ForbiddenError(errorMessage.FORBIDDEN);
+          throw new UnauthorizedError(errorMessage.UNAUTHORIZED);
         }
 
         next();

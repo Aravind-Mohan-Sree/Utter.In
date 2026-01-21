@@ -109,7 +109,7 @@ const Avatar = ({
             user.role === 'user' || user.role === 'tutor' || imgSrc
               ? 'bg-black/40 backdrop-blur-[2px]'
               : ''
-          }  flex flex-col items-center justify-center gap-4 transition-all duration-300 rounded-full z-10 ${
+          }  flex flex-col items-center justify-center gap-4 transition-all duration-200 rounded-full z-10 ${
             isMenuOpen
               ? 'opacity-100 pointer-events-auto'
               : 'opacity-0 pointer-events-none lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto'

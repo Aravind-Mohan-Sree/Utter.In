@@ -10,6 +10,8 @@ import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
 import { Dropdown } from '~components/shared/Dropdown';
 import { API_ROUTES } from '~constants/routes';
+import { RootState } from '~store/rootReducer';
+import { useSelector } from 'react-redux';
 
 interface User {
   id: string;
@@ -34,6 +36,7 @@ export default function UsersPage() {
   const [totalUsersCount, setTotalUsersCount] = useState(0);
   const [filteredUsersCount, setFilteredUsersCount] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
+  const { user } = useSelector((state: RootState) => state.auth);
   const totalPages = Math.ceil(totalUsersCount / itemsPerPage);
   const from = totalUsersCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const to = Math.min(currentPage * itemsPerPage, totalUsersCount);
@@ -47,6 +50,8 @@ export default function UsersPage() {
   }, [searchQuery]);
 
   useEffect(() => {
+    if (!user) return;
+
     (async () => {
       try {
         const res = await fetchUsers(
@@ -70,7 +75,7 @@ export default function UsersPage() {
         utterToast.error(errorHandler(error));
       }
     })();
-  }, [debouncedQuery, activeFilter, currentPage, itemsPerPage]);
+  }, [debouncedQuery, activeFilter, currentPage, itemsPerPage, user]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

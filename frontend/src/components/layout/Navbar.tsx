@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Notification from './Notification';
-import { FaBell, FaChevronDown } from 'react-icons/fa';
+import { FaBell } from 'react-icons/fa';
 import Image from 'next/image';
 import { GoX } from 'react-icons/go';
 import { BiMenu, BiSolidReport } from 'react-icons/bi';
@@ -18,6 +18,7 @@ import { useDispatch } from 'react-redux';
 import { signout } from '~services/shared/managementService';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -68,9 +69,10 @@ export function Navbar() {
     try {
       const res = await signout(user!.role);
 
+      setIsMenuOpen(false);
+      dispatch({ type: 'signout' });
       utterToast.success(res.message);
       router.replace(`/admin/signin`);
-      dispatch({ type: 'signout' });
     } catch (error) {
       utterToast.error(errorHandler(error));
     }
@@ -344,13 +346,11 @@ export function Navbar() {
 
               <div className="flex items-center gap-3 lg:gap-5 lg:pl-4 lg:border-l lg:border-gray-300">
                 {!isAdminPath && userRole !== 'admin' && (
-                  <button className="flex items-center gap-1.5 text-gray-600 hover:text-rose-400 transition-colors cursor-pointer">
-                    <IoLanguage className="text-xl" />
-                    <span className="hidden sm:inline text-xs font-semibold">
-                      EN
-                    </span>
-                    <FaChevronDown className="text-[10px]" />
-                  </button>
+                  <div className="flex items-center gap-1.5 text-gray-600">
+                    <div className="flex items-center">
+                      <LanguageSwitcher />
+                    </div>
+                  </div>
                 )}
 
                 {userRole && userRole !== 'admin' && (

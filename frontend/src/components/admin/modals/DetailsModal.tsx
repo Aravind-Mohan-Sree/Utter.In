@@ -89,10 +89,10 @@ const TutorModalContent = ({
       onClose={onClose}
       title={`${
         tutor.verified
-          ? 'Tutor Verified'
+          ? 'Approved Tutor'
           : tutor.rejectionReason
-          ? 'Tutor Rejected'
-          : 'Tutor Verification'
+            ? 'Rejected Tutor'
+            : 'Tutor Verification'
       }`}
       maxWidth="lg"
     >

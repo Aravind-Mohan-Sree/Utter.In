@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { IGetEntityDataUseCase } from '~use-case-interfaces/shared/IGetEntityDataUseCase';
 import { errorMessage } from '~constants/errorMessage';
-import { ITokenService } from '~service-interfaces/ITokenService';
+import { ITokenService, TokenPayload } from '~service-interfaces/ITokenService';
 import { UnauthorizedError } from '~errors/HttpError';
 import { logger } from '~logger/logger';
 import { env } from '~config/env';
@@ -21,81 +21,79 @@ export class Authenticate<Entity> implements IAuthenticate {
     private getEntity: IGetEntityDataUseCase<Entity>,
   ) {}
 
+  private getCookieOptions() {
+    const isProduction = env.NODE_ENV === 'production';
+    return {
+      httpOnly: true,
+      sameSite: isProduction ? ('none' as const) : ('strict' as const),
+      secure: isProduction,
+      domain: isProduction ? env.COOKIE_DOMAIN : undefined,
+      path: '/',
+    };
+  }
+
   verify = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { accessToken, refreshToken } = req.cookies;
-      const isProduction = env.NODE_ENV === 'production';
+      let accessToken = req.cookies.accessToken;
+      const refreshToken = req.cookies.refreshToken;
+      const cookieOptions = this.getCookieOptions();
 
       if (!accessToken && !refreshToken) {
         throw new UnauthorizedError(errorMessage.SESSION_EXPIRED);
       }
 
+      let payload: TokenPayload = {};
+
       if (accessToken) {
-        const payload = this.tokenService.verifyAuthToken(accessToken);
-        const user = (await this.getEntity.getOneById(
-          payload.id!,
-        )) as IEntityData;
+        try {
+          payload = this.tokenService.verifyAuthToken(accessToken);
+        } catch {
+          if (!refreshToken) {
+            res.clearCookie('accessToken', cookieOptions);
+            throw new UnauthorizedError(errorMessage.SESSION_EXPIRED);
+          }
+          accessToken = null;
+        }
+      }
 
-        if (!user || user.isBlocked) {
-          const cookieOptions = {
-            httpOnly: true,
-            sameSite: isProduction ? 'none' : ('strict' as 'none' | 'strict'),
-            secure: isProduction,
-            domain: isProduction ? env.COOKIE_DOMAIN : undefined,
-            path: '/',
-          };
-
+      if (!accessToken && refreshToken) {
+        try {
+          payload = this.tokenService.verifyRefreshToken(refreshToken);
+        } catch {
           res.clearCookie('accessToken', cookieOptions);
           res.clearCookie('refreshToken', cookieOptions);
-
-          if (!user) {
-            throw new UnauthorizedError(errorMessage.ACCOUNT_NOT_EXISTS);
-          } else {
-            throw new UnauthorizedError(errorMessage.BLOCKED);
-          }
+          throw new UnauthorizedError(errorMessage.SESSION_EXPIRED);
         }
-
-        req.user = {
-          id: user.id,
-          role: payload.role,
-        };
-
-        return next();
-      }
-
-      if (refreshToken) {
-        const payload = this.tokenService.verifyRefreshToken(refreshToken);
-        const cleanPayload = {
+        const newAccessToken = this.tokenService.generateAuthToken({
           id: payload.id,
           role: payload.role,
-        };
-        const newAccessToken =
-          this.tokenService.generateAuthToken(cleanPayload);
-
-        res.cookie('accessToken', newAccessToken, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: isProduction ? 'none' : 'strict',
-          maxAge: parseInt(env.ACCESS_TOKEN_AGE),
-          domain: isProduction ? env.COOKIE_DOMAIN : undefined,
-          path: '/',
         });
 
-        const user = (await this.getEntity.getOneById(
-          payload.id!,
-        )) as IEntityData;
-
-        if (user) {
-          req.user = {
-            id: user.id,
-            role: payload.role,
-          };
-
-          return next();
-        }
-
-        throw new UnauthorizedError(errorMessage.ACCOUNT_NOT_EXISTS);
+        res.cookie('accessToken', newAccessToken, {
+          ...cookieOptions,
+          maxAge: parseInt(env.ACCESS_TOKEN_AGE),
+        });
       }
+
+      const user = (await this.getEntity.getOneById(
+        payload.id!,
+      )) as IEntityData;
+
+      if (!user || user.isBlocked) {
+        res.clearCookie('accessToken', cookieOptions);
+        res.clearCookie('refreshToken', cookieOptions);
+
+        throw new UnauthorizedError(
+          !user ? errorMessage.UNAUTHORIZED : errorMessage.BLOCKED,
+        );
+      }
+
+      req.user = {
+        id: user.id,
+        role: payload.role,
+      };
+
+      return next();
     } catch (error) {
       logger.error(error);
       next(error);

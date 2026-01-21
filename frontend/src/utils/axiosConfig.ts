@@ -1,5 +1,4 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
-import { utterToast } from './utterToast';
 import { store } from '~store/store';
 
 axios.interceptors.request.use(
@@ -18,9 +17,16 @@ axios.interceptors.response.use(
       const responseMessage = error.response?.data?.message;
 
       store.dispatch({ type: 'signout' });
-      utterToast.error(responseMessage || 'Unauthorized access');
-      window.location.href = `/signin?responseMessage=${responseMessage}`;
+
+      if (typeof window !== 'undefined') {
+        const isAdminRoute = window.location.pathname.startsWith('/admin');
+        const target = isAdminRoute ? '/admin/signin' : '/signin';
+        const encoded = encodeURIComponent(String(responseMessage ?? ''));
+
+        window.location.href = `${target}?responseMessage=${encoded}`;
+      }
     }
+
     return Promise.reject(error);
   },
 );

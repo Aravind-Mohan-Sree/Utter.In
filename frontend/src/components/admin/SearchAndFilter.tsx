@@ -3,6 +3,23 @@
 import { FiSearch } from 'react-icons/fi';
 import { Dropdown } from '~components/shared/Dropdown';
 
+type Filter =
+  | 'All'
+  | 'Active'
+  | 'Blocked'
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected';
+
+interface SearchAndFilterProps {
+  placeholder: string;
+  filters: Filter[];
+  activeFilter: string;
+  onFilterChange: (filter: string) => void;
+  searchValue: string;
+  onSearchChange: (val: string) => void;
+}
+
 export const SearchAndFilter = ({
   placeholder,
   filters,
@@ -10,14 +27,7 @@ export const SearchAndFilter = ({
   onFilterChange,
   searchValue,
   onSearchChange,
-}: {
-  placeholder: string;
-  filters: string[];
-  activeFilter: string;
-  onFilterChange: (filter: string) => void;
-  searchValue: string;
-  onSearchChange: (val: string) => void;
-}) => {
+}: SearchAndFilterProps) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div className="relative flex-1 max-w-md">

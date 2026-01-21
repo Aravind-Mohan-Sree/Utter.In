@@ -22,13 +22,18 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('refreshToken')?.value;
   const hasToken = !!token;
+  const sessionExpiredMessage = 'Session expired. Please try again';
+
+  if (pathname.startsWith('/_next')) return NextResponse.next();
 
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin' || pathname === '/admin/') {
       if (hasToken) {
         return NextResponse.redirect(new URL('/admin/dashboard', request.url));
       } else {
-        return NextResponse.redirect(new URL('/admin/signin', request.url));
+        const url = new URL('/admin/signin', request.url);
+        url.searchParams.set('responseMessage', sessionExpiredMessage);
+        return NextResponse.redirect(url);
       }
     }
 
@@ -37,22 +42,33 @@ export function proxy(request: NextRequest) {
     }
 
     if (pathname !== '/admin/signin' && !hasToken) {
-      return NextResponse.redirect(new URL('/admin/signin', request.url));
+      const url = new URL('/admin/signin', request.url);
+      url.searchParams.set('responseMessage', sessionExpiredMessage);
+      return NextResponse.redirect(url);
     }
   }
 
-  if (isPublicRoute(pathname) && hasToken && pathname !== '/admin/signin') {
+  const isGoogleCallback =
+    pathname === '/google' || pathname.startsWith('/google/');
+
+  if (
+    isPublicRoute(pathname) &&
+    hasToken &&
+    pathname !== '/admin/signin' &&
+    !isGoogleCallback
+  ) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
   if (!isPublicRoute(pathname) && !hasToken && !pathname.startsWith('/admin')) {
-    return NextResponse.redirect(new URL('/signin', request.url));
+    const url = new URL('/signin', request.url);
+    url.searchParams.set('responseMessage', sessionExpiredMessage);
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // Matches all paths except system files and public assets
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|public).*)'],
+  matcher: ['/((?!api|_next|favicon.ico|.*\\..*).*)'],
 };

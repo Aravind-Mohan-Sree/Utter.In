@@ -3,8 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LuLoaderCircle } from 'react-icons/lu';
 
-interface ButtonProps<T extends unknown[]>
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
+interface ButtonProps<T extends unknown[]> extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'onClick'
+> {
   variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'danger';
   fullWidth?: boolean;
   text?: string;
@@ -82,12 +84,12 @@ export default function Button<T extends unknown[]>({
     >
       {isActive && (
         <span className="col-start-1 row-start-1 flex items-center justify-center">
-          <LuLoaderCircle className="animate-spin" size={22} />
+          <LuLoaderCircle className="animate-spin p-[0.1px]" size={24} />
         </span>
       )}
 
       <span
-        className={`col-start-1 row-start-1 flex items-center justify-center gap-2 ${
+        className={`col-start-1 row-start-1 flex items-center justify-center gap-2 p-0.5! ${
           isActive ? 'invisible' : 'visible'
         }`}
       >

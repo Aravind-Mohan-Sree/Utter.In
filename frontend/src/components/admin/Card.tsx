@@ -3,12 +3,12 @@
 import { StatusBadge } from './card-components/StatusBadge';
 import { LanguageTags } from './card-components/LanguageTags';
 import { UserInfo } from './card-components/UserInfo';
-import { ActionButtons } from './card-components/ActionButtons';
 import { ReportSection } from './card-components/ReportSection';
 import { HiArrowRight } from 'react-icons/hi';
 import Avatar from '~components/shared/Avatar';
 import Button from '~components/shared/Button';
 import { FiCheckCircle, FiSlash } from 'react-icons/fi';
+import { RiVerifiedBadgeFill } from 'react-icons/ri';
 
 export type CardType = 'user' | 'tutor' | 'report';
 
@@ -115,7 +115,7 @@ const UserCard = ({
               <FiCheckCircle size={22} />
             )
           }
-          className={`text-gray-400! h-fit rounded-lg p-1! ${
+          className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
             status === 'Active'
               ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
               : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
@@ -173,13 +173,16 @@ const TutorCard = ({
         ) : (
           <>
             {onViewDetails && (
-              <ActionButtons
-                variant="verify"
-                status={status}
-                isVerified={isVerified}
-                rejectionReason={rejectionReason}
-                onView={onViewDetails}
-                itemId={id}
+              <Button
+                variant="outline"
+                icon={<RiVerifiedBadgeFill size={23} />}
+                className={`h-fit rounded-lg p-0.5! transition-colors duration-200! ${
+                  rejectionReason
+                    ? 'hover:bg-gray-50!'
+                    : 'hover:text-amber-500! hover:bg-amber-50!'
+                } ${isVerified ? 'text-amber-500!' : 'text-gray-400!'}`}
+                onClick={onViewDetails}
+                args={[id]}
               />
             )}
             {onToggleStatus && (
@@ -192,7 +195,7 @@ const TutorCard = ({
                     <FiCheckCircle size={22} />
                   )
                 }
-                className={`text-gray-400! h-fit rounded-lg p-1! ${
+                className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
                   status === 'Active'
                     ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
                     : 'text-gray-400 hover:text-green-500! hover:bg-green-50'

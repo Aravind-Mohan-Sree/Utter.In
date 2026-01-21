@@ -17,6 +17,8 @@ import { Dropdown } from '~components/shared/Dropdown';
 import { DetailsModal } from '~components/admin/modals';
 import { API_ROUTES } from '~constants/routes';
 import { utterRadioAlert } from '~utils/utterRadioAlert';
+import { RootState } from '~store/rootReducer';
+import { useSelector } from 'react-redux';
 
 interface Tutor {
   id: string;
@@ -47,6 +49,7 @@ export default function TutorsPage() {
   const [totalTutorsCount, setTotalTutorsCount] = useState(0);
   const [filteredTutorsCount, setFilteredTutorsCount] = useState(0);
   const [tutors, setTutors] = useState<Tutor[]>([]);
+  const { user } = useSelector((state: RootState) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
   const totalPages = Math.ceil(totalTutorsCount / itemsPerPage);
@@ -63,6 +66,8 @@ export default function TutorsPage() {
   }, [searchQuery]);
 
   useEffect(() => {
+    if (!user) return;
+
     (async () => {
       try {
         const res = await fetchTutors(
@@ -92,7 +97,7 @@ export default function TutorsPage() {
         utterToast.error(errorHandler(error));
       }
     })();
-  }, [debouncedQuery, activeFilter, currentPage, itemsPerPage]);
+  }, [debouncedQuery, activeFilter, currentPage, itemsPerPage, user]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -142,7 +147,9 @@ export default function TutorsPage() {
 
           setTutors((prevTutors) =>
             prevTutors.map((tutor) =>
-              tutor.id === id ? { ...tutor, isVerified: true } : tutor,
+              tutor.id === id
+                ? { ...tutor, isVerified: true, certificationType }
+                : tutor,
             ),
           );
 
@@ -177,7 +184,15 @@ export default function TutorsPage() {
 
           setTutors((prevTutors) =>
             prevTutors.map((tutor) =>
-              tutor.id === id ? { ...tutor, rejectionReason: reason } : tutor,
+              tutor.id === id
+                ? {
+                    ...tutor,
+                    avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${
+                      tutor.id
+                    }.jpeg?v=${Date.now()}`,
+                    rejectionReason: reason,
+                  }
+                : tutor,
             ),
           );
 
@@ -195,7 +210,14 @@ export default function TutorsPage() {
     <div className="w-full">
       <SearchAndFilter
         placeholder="Search tutors..."
-        filters={['All', 'Active', 'Blocked']}
+        filters={[
+          'All',
+          'Active',
+          'Blocked',
+          'Pending',
+          'Approved',
+          'Rejected',
+        ]}
         activeFilter={activeFilter}
         onFilterChange={(val) => {
           setActiveFilter(val);
@@ -306,7 +328,7 @@ export default function TutorsPage() {
           }}
           introVideoUrl={selectedTutor.introVideoUrl}
           certificateUrl={selectedTutor.certificateUrl}
-          certificateType={selectedTutor.certificationType || 'Certificate.pdf'}
+          certificateType={selectedTutor.certificationType ?? 'Unverified'}
           onApprove={handleApprove}
           onReject={handleReject}
         />

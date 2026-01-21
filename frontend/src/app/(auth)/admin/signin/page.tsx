@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { InputField } from '~components/auth/InputField';
 import { PasswordInput } from '~components/auth/PasswordInput';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SigninSchema } from '~validations/AuthSchema';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
@@ -12,6 +12,7 @@ import { signin } from '~services/admin/authService';
 import { useDispatch } from 'react-redux';
 import { signIn } from '~features/authSlice';
 import Button from '~components/shared/Button';
+import { useEffect } from 'react';
 
 interface SigninData {
   email: string;
@@ -34,6 +35,16 @@ const SignIn: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const responseMessage = searchParams.get('responseMessage');
+    if (!responseMessage) return;
+
+    dispatch({ type: 'signout' });
+    utterToast.info(responseMessage);
+    router.replace('/admin/signin');
+  }, [dispatch, router, searchParams]);
 
   const handleSubmit = async () => {
     const newErrors = SigninSchema.safeParse(formData).error?.issues.reduce<

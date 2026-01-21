@@ -91,6 +91,7 @@ export class TutorsController {
       });
 
       await this.rejectUC.execute(id, rejectionReason);
+      await this.deleteFileUC.execute('tutors/avatars/', id, 'image/jpeg');
       await this.deleteFileUC.execute('tutors/videos/', id, 'video/mp4');
       await this.deleteFileUC.execute(
         'tutors/certificates/',

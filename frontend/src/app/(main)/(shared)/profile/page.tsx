@@ -193,9 +193,9 @@ export default function ProfilePage() {
     try {
       const res = await signout(user!.role);
 
+      dispatch({ type: 'signout' });
       utterToast.success(res.message);
       router.replace(`/signin?mode=${user?.role}`);
-      dispatch({ type: 'signout' });
     } catch (error) {
       utterToast.error(errorHandler(error));
     }

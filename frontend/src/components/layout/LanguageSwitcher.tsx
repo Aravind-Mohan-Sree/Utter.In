@@ -1,92 +1,263 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { parseCookies, setCookie } from 'nookies';
+import { FaChevronDown } from 'react-icons/fa';
+import { IoLanguage } from 'react-icons/io5';
 
-// The following cookie name is important because it's Google-predefined for the translation engine purpose
 const COOKIE_NAME = 'googtrans';
 
-// We should know a predefined nickname of a language and provide its title (the name for displaying)
 interface LanguageDescriptor {
   name: string;
   title: string;
 }
 
-// Types for JS-based declarations in public/assets/scripts/lang-config.js
+interface GoogleTranslationConfig {
+  languages: LanguageDescriptor[];
+  defaultLanguage: string;
+}
+
+interface GoogleTranslateElement {
+  new (options: object, elementId: string): void;
+  InlineLayout: {
+    SIMPLE: number;
+    HORIZONTAL: number;
+    VERTICAL: number;
+  };
+}
+
 declare global {
-  namespace globalThis {
-    let __GOOGLE_TRANSLATION_CONFIG__: {
-      languages: LanguageDescriptor[];
-      defaultLanguage: string;
+  var __GOOGLE_TRANSLATION_CONFIG__: GoogleTranslationConfig | undefined;
+  var google: {
+    translate?: {
+      TranslateElement?: GoogleTranslateElement;
     };
-  }
+  };
 }
 
 const LanguageSwitcher = () => {
   const [currentLanguage, setCurrentLanguage] = useState<string>();
-  const [languageConfig, setLanguageConfig] = useState<any>();
+  const [languageConfig, setLanguageConfig] =
+    useState<GoogleTranslationConfig>();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Initialize translation engine
   useEffect(() => {
-    // 1. Read the cookie
-    const cookies = parseCookies();
-    const existingLanguageCookieValue = cookies[COOKIE_NAME];
+    (() => {
+      const cookies = parseCookies();
+      const existingLanguageCookieValue = cookies[COOKIE_NAME];
+      let languageValue: string | undefined;
 
-    let languageValue;
-    if (existingLanguageCookieValue) {
-      // 2. If the cookie is defined, extract a language nickname from there.
-      const sp = existingLanguageCookieValue.split('/');
-      if (sp.length > 2) {
-        languageValue = sp[2];
+      if (existingLanguageCookieValue) {
+        const sp = existingLanguageCookieValue.split('/');
+        if (sp.length > 2) {
+          languageValue = sp[2];
+        }
       }
-    }
-    // 3. If __GOOGLE_TRANSLATION_CONFIG__ is defined and we still not decided about languageValue - use default one
-    if (global.__GOOGLE_TRANSLATION_CONFIG__ && !languageValue) {
-      languageValue = global.__GOOGLE_TRANSLATION_CONFIG__.defaultLanguage;
-    }
-    if (languageValue) {
-      // 4. Set the current language if we have a related decision.
-      setCurrentLanguage(languageValue);
-    }
-    // 5. Set the language config.
-    if (global.__GOOGLE_TRANSLATION_CONFIG__) {
-      setLanguageConfig(global.__GOOGLE_TRANSLATION_CONFIG__);
+
+      if (globalThis.__GOOGLE_TRANSLATION_CONFIG__) {
+        if (!languageValue) {
+          languageValue =
+            globalThis.__GOOGLE_TRANSLATION_CONFIG__.defaultLanguage;
+        }
+        setLanguageConfig(globalThis.__GOOGLE_TRANSLATION_CONFIG__);
+      }
+
+      if (languageValue) {
+        setCurrentLanguage(languageValue);
+      }
+
+      const checkGoogleTranslate = () => {
+        if (typeof window !== 'undefined' && window.google?.translate) {
+          const currentCookies = parseCookies();
+          const cookieValue = currentCookies[COOKIE_NAME];
+          if (cookieValue) {
+            const sp = cookieValue.split('/');
+            if (sp.length > 2) {
+              const lang = sp[2];
+              setTimeout(() => {
+                const select = document.querySelector(
+                  '.goog-te-combo',
+                ) as HTMLSelectElement;
+                if (select && select.value !== lang) {
+                  select.value = lang;
+                }
+              }, 500);
+            }
+          }
+        }
+      };
+
+      checkGoogleTranslate();
+      const t1 = setTimeout(checkGoogleTranslate, 500);
+      const t2 = setTimeout(checkGoogleTranslate, 1500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    })();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (sessionStorage.getItem('languageChanging') === 'true') {
+      sessionStorage.removeItem('languageChanging');
+      const savedScroll = sessionStorage.getItem('scrollPosition');
+      if (savedScroll) {
+        sessionStorage.removeItem('scrollPosition');
+        setTimeout(() => window.scrollTo(0, parseInt(savedScroll, 10)), 100);
+      }
     }
   }, []);
 
-  // Don't display anything if current language information is unavailable.
-  if (!currentLanguage || !languageConfig) {
-    return null;
-  }
+  useEffect(() => {
+    if (currentLanguage && typeof document !== 'undefined') {
+      document.documentElement.lang = currentLanguage;
+    }
+  }, [currentLanguage]);
 
-  // The following function switches the current language
-  const switchLanguage = (lang: string) => () => {
-    // We just need to set the related cookie and reload the page
-    // "/auto/" prefix is Google's definition as far as a cookie name
-    setCookie(null, COOKIE_NAME, '/auto/' + lang);
-    window.location.reload();
+  if (!currentLanguage || !languageConfig) return null;
+
+  const currentLangName =
+    languageConfig.languages.find((ld) => ld.name === currentLanguage)?.name ||
+    languageConfig.languages[0].name;
+
+  const switchLanguage = (lang: string) => {
+    const cookieValue = `/auto/${lang}`;
+    setCookie(null, COOKIE_NAME, cookieValue, { path: '/' });
+    setCurrentLanguage(lang);
+    setIsOpen(false);
+
+    const scrollPosition = window.scrollY || window.pageYOffset;
+
+    const tryProgrammaticTrigger = () => {
+      let triggered = false;
+      const triggerSelectElement = (select: HTMLSelectElement) => {
+        if (!select) return false;
+        if (select.value !== lang) {
+          select.value = lang;
+          const events = [
+            new Event('change', { bubbles: true, cancelable: true }),
+            new Event('input', { bubbles: true, cancelable: true }),
+          ];
+          events.forEach((event) => select.dispatchEvent(event));
+          return true;
+        }
+        return false;
+      };
+
+      const selectors = [
+        '.goog-te-combo',
+        'select.goog-te-combo',
+        '#google_translate_element select',
+      ];
+      for (const selector of selectors) {
+        const select = document.querySelector(selector) as HTMLSelectElement;
+        if (select && triggerSelectElement(select)) {
+          triggered = true;
+          break;
+        }
+      }
+
+      if (!triggered) {
+        const iframes = document.querySelectorAll('iframe');
+        for (const iframe of Array.from(iframes)) {
+          try {
+            const iframeDoc =
+              iframe.contentDocument || iframe.contentWindow?.document;
+            if (iframeDoc) {
+              for (const selector of selectors) {
+                const iframeSelect = iframeDoc.querySelector(
+                  selector,
+                ) as HTMLSelectElement;
+                if (iframeSelect && triggerSelectElement(iframeSelect)) {
+                  triggered = true;
+                  break;
+                }
+              }
+            }
+          } catch {
+            try {
+              iframe.contentWindow?.postMessage(
+                { type: 'changeLanguage', lang },
+                '*',
+              );
+            } catch {
+              /* empty */
+            }
+          }
+          if (triggered) break;
+        }
+      }
+      return triggered;
+    };
+
+    const immediateSuccess = tryProgrammaticTrigger();
+
+    if (!immediateSuccess) {
+      const checkInterval = setInterval(() => {
+        if (tryProgrammaticTrigger()) {
+          clearInterval(checkInterval);
+          setTimeout(() => window.scrollTo(0, scrollPosition), 100);
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        sessionStorage.setItem('scrollPosition', scrollPosition.toString());
+        sessionStorage.setItem('languageChanging', 'true');
+        window.location.reload();
+      }, 1000);
+    } else {
+      setTimeout(() => window.scrollTo(0, scrollPosition), 100);
+    }
   };
 
   return (
-    <div className="text-center notranslate">
-      {languageConfig.languages.map((ld: LanguageDescriptor, i: number) => (
-        <>
-          {currentLanguage === ld.name ||
-          (currentLanguage === 'auto' &&
-            languageConfig.defaultLanguage === ld) ? (
-            <span key={`l_s_${ld}`} className="mx-3 text-orange-300">
-              {ld.title}
-            </span>
-          ) : (
-            <a
-              key={`l_s_${ld}`}
-              onClick={switchLanguage(ld.name)}
-              className="mx-3 text-blue-300 cursor-pointer hover:underline"
-            >
-              {ld.title}
-            </a>
-          )}
-        </>
-      ))}
+    <div className="notranslate relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 text-gray-600 hover:text-rose-400 transition-colors cursor-pointer"
+      >
+        <IoLanguage className="text-xl" />
+        <span className="text-xs font-semibold">
+          {currentLangName.toUpperCase()}
+        </span>
+        <FaChevronDown
+          className={`text-[10px] transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px] max-h-64 overflow-y-auto">
+          <div className="py-1">
+            {languageConfig.languages.map((ld) => (
+              <button
+                key={ld.name}
+                onClick={() => switchLanguage(ld.name)}
+                className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors ${
+                  currentLanguage === ld.name
+                    ? 'bg-rose-50 text-rose-400'
+                    : 'text-gray-600 hover:bg-rose-50 hover:text-rose-400'
+                }`}
+              >
+                {ld.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,22 +8,23 @@ import { utterToast } from '~utils/utterToast';
 
 const Google = () => {
   const searchParams = useSearchParams();
-  const id = searchParams.get('id') as string;
-  const name = searchParams.get('name') as string;
-  const email = searchParams.get('email') as string;
-  const role = searchParams.get('role') as string;
+  const id = searchParams.get('id');
+  const name = searchParams.get('name');
+  const email = searchParams.get('email');
+  const role = searchParams.get('role');
   const dispatch = useDispatch();
   const router = useRouter();
   const responseMessage = searchParams.get('responseMessage');
 
   useEffect(() => {
-    if (responseMessage) {
-      utterToast.success(responseMessage);
+    if (id && name && email && role) {
       dispatch(signIn({ id, name, email, role }));
     }
 
+    if (responseMessage) utterToast.success(responseMessage);
+
     router.replace('/');
-  }, [dispatch, id, name, email, role, router, responseMessage]);
+  }, [dispatch, email, id, name, role, router, responseMessage]);
   return <div>Redirecting...</div>;
 };
 

@@ -30,7 +30,7 @@ export class TutorRepository
         pipeline.push({ $match: { isBlocked: true } });
       } else if (filter === 'Active') {
         pipeline.push({ $match: { isBlocked: false } });
-      } else if (filter === 'Verified') {
+      } else if (filter === 'Approved') {
         pipeline.push({ $match: { isVerified: true } });
       } else if (filter === 'Pending') {
         pipeline.push({ $match: { isVerified: false, rejectionReason: null } });

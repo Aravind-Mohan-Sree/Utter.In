@@ -58,6 +58,7 @@ const SignIn: React.FC = () => {
     const responseMessage = searchParams.get('responseMessage');
 
     if (responseMessage) {
+      dispatch({ type: 'signout' });
       window.history.replaceState(null, '', `/signin?mode=${userType}`);
 
       if (responseMessage.startsWith('Account under verification')) {
@@ -73,7 +74,7 @@ const SignIn: React.FC = () => {
       utterToast.info(responseMessage);
       router.replace('/signin');
     }
-  }, [router, searchParams, userType]);
+  }, [dispatch, router, searchParams, userType]);
 
   const handleSubmit = async () => {
     const newErrors = SigninSchema.safeParse(formData).error?.issues.reduce<
