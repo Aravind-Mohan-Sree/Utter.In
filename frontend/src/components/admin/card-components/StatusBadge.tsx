@@ -23,10 +23,9 @@ export const StatusBadge = ({
 
   return (
     <span
-      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${getStatusStyles()} ${className}`}
+      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 transition-all ${getStatusStyles()} ${className}`}
     >
       {status}
     </span>
   );
 };
-

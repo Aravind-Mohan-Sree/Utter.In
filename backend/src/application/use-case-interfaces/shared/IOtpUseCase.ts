@@ -1,5 +1,5 @@
 export interface ISendOtpUseCase {
-  execute(id: string): Promise<void>;
+  execute(email: string): Promise<void>;
 }
 
 export interface IVerifyOtpUseCase {

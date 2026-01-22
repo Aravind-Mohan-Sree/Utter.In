@@ -5,11 +5,13 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { User } from '~entities/User';
 import { InternalServerError, NotFoundError } from '~errors/HttpError';
 import { errorMessage } from '~constants/errorMessage';
+import { IMailService } from '~service-interfaces/IMailService';
 
 export class RegisterUserFromPendingUseCase implements IRegisterUserFromPendingUseCase {
   constructor(
     private pendingUserRepo: IPendingUserRepository,
     private userRepo: IUserRepository,
+    private mailService: IMailService,
   ) {}
 
   async execute(email: string): Promise<UserResponseDTO> {
@@ -30,6 +32,8 @@ export class RegisterUserFromPendingUseCase implements IRegisterUserFromPendingU
     );
 
     const newUser = await this.userRepo.create(user);
+
+    await this.mailService.sendWelcome(newUser.name, newUser.email);
 
     if (!newUser) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 

@@ -1,14 +1,14 @@
 import { IForgotPasswordOtpVerifyUseCase } from '~use-case-interfaces/shared/IForgotPasswordUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
-import { IOtpService } from '~service-interfaces/IOtpService';
+import { IMailService } from '~service-interfaces/IMailService';
 import { BadRequestError, NotFoundError } from '~errors/HttpError';
 import { ITokenService } from '~service-interfaces/ITokenService';
 
 export class ForgotPasswordOtpVerifyUseCase implements IForgotPasswordOtpVerifyUseCase {
   constructor(
     private pendingTutorRepo: IPendingTutorRepository,
-    private otpService: IOtpService,
+    private mailService: IMailService,
     private tokenService: ITokenService,
   ) {}
 
@@ -17,7 +17,7 @@ export class ForgotPasswordOtpVerifyUseCase implements IForgotPasswordOtpVerifyU
 
     if (!tutor) throw new NotFoundError(errorMessage.OTP_EXPIRED);
 
-    const verified = this.otpService.verifyOtp(otp, tutor?.otp);
+    const verified = this.mailService.verifyOtp(otp, tutor?.otp as string);
 
     if (!verified) throw new BadRequestError('Invalid OTP');
 

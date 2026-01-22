@@ -3,7 +3,6 @@ import passport from 'passport';
 import { DataValidatorService } from '~concrete-services/DataValidatorService';
 import { HashService } from '~concrete-services/HashService';
 import { JwtService } from '~concrete-services/JwtService';
-import { OtpService } from '~concrete-services/OtpService';
 import { env } from '~config/env';
 import { AuthController } from '~controllers/user/AuthController';
 import { ForgotPasswordController } from '~controllers/shared/ForgotPasswordController';
@@ -42,13 +41,14 @@ import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
 import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
 import { FinishRegisterUserUseCase } from '~use-cases/user/auth/FinishRegisterUserUseCase';
 import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
+import { MailService } from '~concrete-services/MailService';
 
 // repositories
 const userRepository = new UserRepository();
 const pendingUserRepository = new PendingUserRepository();
 
 // services
-const otpService = new OtpService(env.NODEMAILER_USER, env.NODEMAILER_PASS);
+const mailService = new MailService();
 const dataValidatorService = new DataValidatorService();
 const hashService = new HashService();
 const jwtService = new JwtService();
@@ -70,15 +70,17 @@ const finishRegisterUserUseCase = new FinishRegisterUserUseCase(
   pendingUserRepository,
   userRepository,
   jwtService,
+  mailService,
 );
-const sendOtpUseCase = new SendOtpUseCase(otpService, pendingUserRepository);
+const sendOtpUseCase = new SendOtpUseCase(mailService, pendingUserRepository);
 const verifyOtpUseCase = new VerifyOtpUseCase(
-  otpService,
+  mailService,
   pendingUserRepository,
 );
 const registerUserFromPendingUseCase = new RegisterUserFromPendingUseCase(
   pendingUserRepository,
   userRepository,
+  mailService,
 );
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   userRepository,
@@ -86,7 +88,7 @@ const forgotPasswordUseCase = new ForgotPasswordUseCase(
 );
 const forgotPasswordOtpVerifyUseCase = new ForgotPasswordOtpVerifyUseCase(
   pendingUserRepository,
-  otpService,
+  mailService,
   jwtService,
 );
 const resetPasswordUseCase = new ResetPasswordUseCase(

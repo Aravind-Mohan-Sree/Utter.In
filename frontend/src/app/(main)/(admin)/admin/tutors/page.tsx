@@ -36,7 +36,6 @@ interface Tutor {
   isVerified: boolean;
   isBlocked: boolean;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export default function TutorsPage() {
@@ -52,6 +51,7 @@ export default function TutorsPage() {
   const { user } = useSelector((state: RootState) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const totalPages = Math.ceil(totalTutorsCount / itemsPerPage);
   const from =
     totalTutorsCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
@@ -107,8 +107,8 @@ export default function TutorsPage() {
     setCurrentPage(page);
   };
 
-  const handleViewDetails = (id: string | number) => {
-    setSelectedTutorId(id.toString());
+  const handleViewDetails = (id: string) => {
+    setSelectedTutorId(id);
     setIsModalOpen(true);
   };
 
@@ -143,6 +143,8 @@ export default function TutorsPage() {
       'Confirm',
       async (certificationType) => {
         try {
+          setProcessingId(id);
+
           const res = await approve(id, certificationType);
 
           setTutors((prevTutors) =>
@@ -156,6 +158,8 @@ export default function TutorsPage() {
           utterToast.success(res.message);
         } catch (error) {
           utterToast.error(errorHandler(error));
+        } finally {
+          setProcessingId(null);
         }
       },
     );
@@ -180,6 +184,8 @@ export default function TutorsPage() {
       'Confirm',
       async (reason) => {
         try {
+          setProcessingId(id);
+
           const res = await reject(id, reason);
 
           setTutors((prevTutors) =>
@@ -199,6 +205,8 @@ export default function TutorsPage() {
           utterToast.info(res.message);
         } catch (error) {
           utterToast.error(errorHandler(error));
+        } finally {
+          setProcessingId(null);
         }
       },
     );
@@ -288,10 +296,12 @@ export default function TutorsPage() {
               name={tutor.name}
               email={tutor.email}
               avatarUrl={tutor.avatarUrl}
+              joinedAt={tutor.createdAt}
               knownLanguages={tutor.knownLanguages}
               yearsOfExperience={`${tutor.yearsOfExperience} years experience`}
               isVerified={tutor.isVerified}
               rejectionReason={tutor.rejectionReason}
+              isLoading={processingId === tutor.id}
               status={tutor.isBlocked ? 'Blocked' : 'Active'}
               onViewDetails={handleViewDetails}
               onToggleStatus={handleToggleStatus}

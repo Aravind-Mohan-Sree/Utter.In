@@ -5,6 +5,7 @@ import { BadRequestError } from '~errors/HttpError';
 import { UserMapper, UserResponseDTO } from '~mappers/UserMapper';
 import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
+import { IMailService } from '~service-interfaces/IMailService';
 import { ITokenService } from '~service-interfaces/ITokenService';
 import { IFinishRegisterUserUseCase } from '~use-case-interfaces/user/IUserUseCase';
 
@@ -13,6 +14,7 @@ export class FinishRegisterUserUseCase implements IFinishRegisterUserUseCase {
     private pendingUserRepo: IPendingUserRepository,
     private userRepo: IUserRepository,
     private tokenService: ITokenService,
+    private mailService: IMailService,
   ) {}
 
   async execute(data: FinishRegisterUserDTO): Promise<{
@@ -39,6 +41,8 @@ export class FinishRegisterUserUseCase implements IFinishRegisterUserUseCase {
     );
 
     user = await this.userRepo.create(user);
+
+    await this.mailService.sendWelcome(user.name, user.email);
 
     const accessToken = this.tokenService.generateAuthToken({
       id: user.id,

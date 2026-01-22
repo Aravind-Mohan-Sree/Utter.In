@@ -14,7 +14,9 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
     private hashService: IHashService,
   ) {}
 
-  async execute(data: RegisterTutorDTO): Promise<string> {
+  async execute(
+    data: RegisterTutorDTO,
+  ): Promise<{ id: string; email: string }> {
     const tutor = await this.tutorRepo.findOneByField({ email: data.email });
 
     parent: if (tutor) {
@@ -52,6 +54,6 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
     if (!pendingTutor)
       throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    return pendingTutor.id!;
+    return { id: pendingTutor.id!, email: pendingTutor.email };
   }
 }

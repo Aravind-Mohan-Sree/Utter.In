@@ -11,6 +11,7 @@ export class UserMapper {
       role: user.role,
       isBlocked: user.isBlocked,
       streak: user.streak,
+      createdAt: user.createdAt,
     };
   }
 }

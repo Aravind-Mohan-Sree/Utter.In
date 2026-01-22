@@ -35,6 +35,7 @@ import {
   userProfileUpdateSchema,
 } from '~validations/profileSchema';
 import { API_ROUTES } from '~constants/routes';
+import { JoinedDate } from '~components/shared/JoinedDate';
 
 interface ProfileData {
   name: string;
@@ -42,11 +43,12 @@ interface ProfileData {
   bio: string;
   knownLanguages: string[];
   yearsOfExperience: string;
-  certification: string;
+  certificationType: string;
   walletBalance: number;
   currentPassword: string;
   password: string;
   confirmPassword: string;
+  createdAt: string;
 }
 
 const INITIAL_ERROR_STATE = {
@@ -398,6 +400,10 @@ export default function ProfilePage() {
                 <p className="text-gray-600 wrap-anywhere">
                   {profileData?.email}
                 </p>
+                <JoinedDate
+                  date={profileData?.createdAt!}
+                  className="text-xs!"
+                />
               </div>
             </div>
 
@@ -405,7 +411,7 @@ export default function ProfilePage() {
               bio={profileData?.bio}
               languages={profileData?.knownLanguages}
               experience={profileData?.yearsOfExperience}
-              certification={profileData?.certification}
+              certificationType={profileData?.certificationType}
             />
 
             <div className="mt-8 pt-6 border-t border-gray-200">

@@ -40,6 +40,6 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
 
     if (!pendingUser) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    return pendingUser.id!;
+    return pendingUser.email!;
   }
 }

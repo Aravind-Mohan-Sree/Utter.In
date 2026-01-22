@@ -9,6 +9,7 @@ import Avatar from '~components/shared/Avatar';
 import Button from '~components/shared/Button';
 import { FiCheckCircle, FiSlash } from 'react-icons/fi';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
+import { JoinedDate } from '~components/shared/JoinedDate';
 
 export type CardType = 'user' | 'tutor' | 'report';
 
@@ -22,6 +23,7 @@ interface UserCardProps extends BaseCardProps {
   name: string;
   email: string;
   avatarUrl: string | null;
+  joinedAt: Date;
   status: 'Active' | 'Blocked';
   knownLanguages: string[];
   onToggleStatus?: (id: string) => void;
@@ -32,10 +34,12 @@ export interface TutorCardProps extends BaseCardProps {
   name: string;
   email: string;
   avatarUrl: string;
+  joinedAt: Date;
   knownLanguages: string[];
   yearsOfExperience: string;
   isVerified: boolean;
   rejectionReason: string | null;
+  isLoading: boolean;
   status: 'Active' | 'Blocked';
   onViewDetails?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
@@ -81,6 +85,7 @@ const UserCard = ({
   name,
   email,
   avatarUrl,
+  joinedAt,
   status,
   knownLanguages,
   onToggleStatus,
@@ -103,28 +108,31 @@ const UserCard = ({
         className="mb-4"
       />
     )}
+    <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200">
+      <JoinedDate date={joinedAt} />
 
-    {onToggleStatus && (
-      <div className="flex justify-end pt-3 mt-3 border-t border-gray-200">
-        <Button
-          variant="outline"
-          icon={
-            status === 'Active' ? (
-              <FiSlash size={22} />
-            ) : (
-              <FiCheckCircle size={22} />
-            )
-          }
-          className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
-            status === 'Active'
-              ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
-              : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
-          }`}
-          onClick={onToggleStatus}
-          args={[id]}
-        />
-      </div>
-    )}
+      {onToggleStatus && (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            icon={
+              status === 'Active' ? (
+                <FiSlash size={22} />
+              ) : (
+                <FiCheckCircle size={22} />
+              )
+            }
+            className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
+              status === 'Active'
+                ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
+                : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
+            }`}
+            onClick={onToggleStatus}
+            args={[id]}
+          />
+        </div>
+      )}
+    </div>
   </div>
 );
 
@@ -134,10 +142,12 @@ const TutorCard = ({
   name,
   email,
   avatarUrl,
+  joinedAt,
   knownLanguages,
   yearsOfExperience,
   isVerified,
   rejectionReason,
+  isLoading,
   status,
   onViewDetails,
   onToggleStatus,
@@ -166,48 +176,55 @@ const TutorCard = ({
       />
     )}
 
-    {(onToggleStatus || onViewDetails || customActions) && (
-      <div className="flex justify-end gap-2 pt-3 mt-3 border-t border-gray-200">
-        {customActions ? (
-          customActions
-        ) : (
-          <>
-            {onViewDetails && (
-              <Button
-                variant="outline"
-                icon={<RiVerifiedBadgeFill size={23} />}
-                className={`h-fit rounded-lg p-0.5! transition-colors duration-200! ${
-                  rejectionReason
-                    ? 'hover:bg-gray-50!'
-                    : 'hover:text-amber-500! hover:bg-amber-50!'
-                } ${isVerified ? 'text-amber-500!' : 'text-gray-400!'}`}
-                onClick={onViewDetails}
-                args={[id]}
-              />
+    <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200">
+      <JoinedDate date={joinedAt} />
+
+      <div className="flex gap-2">
+        {(onToggleStatus || onViewDetails || customActions) && (
+          <div className="flex justify-end gap-1">
+            {customActions ? (
+              customActions
+            ) : (
+              <>
+                {onViewDetails && (
+                  <Button
+                    variant="outline"
+                    icon={<RiVerifiedBadgeFill size={23} />}
+                    isLoading={isLoading}
+                    className={`h-fit rounded-lg p-0.5! transition-colors duration-200! ${
+                      rejectionReason
+                        ? 'hover:bg-gray-50!'
+                        : 'hover:text-amber-500! hover:bg-amber-50!'
+                    } ${isVerified ? 'text-amber-500!' : 'text-gray-400!'}`}
+                    onClick={onViewDetails}
+                    args={[id]}
+                  />
+                )}
+                {onToggleStatus && (
+                  <Button
+                    variant="outline"
+                    icon={
+                      status === 'Active' ? (
+                        <FiSlash size={22} />
+                      ) : (
+                        <FiCheckCircle size={22} />
+                      )
+                    }
+                    className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
+                      status === 'Active'
+                        ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
+                        : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
+                    }`}
+                    onClick={onToggleStatus}
+                    args={[id]}
+                  />
+                )}
+              </>
             )}
-            {onToggleStatus && (
-              <Button
-                variant="outline"
-                icon={
-                  status === 'Active' ? (
-                    <FiSlash size={22} />
-                  ) : (
-                    <FiCheckCircle size={22} />
-                  )
-                }
-                className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
-                  status === 'Active'
-                    ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
-                    : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
-                }`}
-                onClick={onToggleStatus}
-                args={[id]}
-              />
-            )}
-          </>
+          </div>
         )}
       </div>
-    )}
+    </div>
   </div>
 );
 

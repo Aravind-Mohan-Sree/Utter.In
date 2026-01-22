@@ -54,7 +54,7 @@ export class AuthController {
         throw new BadRequestError(errorMessage.VIDEO);
       }
 
-      const id = await this.registerTutor.execute(data);
+      const { id, email } = await this.registerTutor.execute(data);
 
       await this.uploadFile.execute(
         'temp/tutors/videos/',
@@ -68,7 +68,7 @@ export class AuthController {
         certificateFile!.path,
         'application/pdf',
       );
-      await this.sendOtp.execute(id);
+      await this.sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {

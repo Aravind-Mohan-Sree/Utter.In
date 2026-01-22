@@ -2,11 +2,10 @@
 
 import { BaseModal } from './BaseModal';
 import { HiArrowRight } from 'react-icons/hi';
-import { FiFileText } from 'react-icons/fi';
 import { UserInfo } from '../card-components';
 import Avatar from '~components/shared/Avatar';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { GrCertificate } from 'react-icons/gr';
 
 export type ModalType = 'tutor' | 'report';
 
@@ -150,7 +149,7 @@ const TutorModalContent = ({
               className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                <FiFileText className="text-gray-600" size={24} />
+                <GrCertificate className="text-gray-600" size={24} />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">

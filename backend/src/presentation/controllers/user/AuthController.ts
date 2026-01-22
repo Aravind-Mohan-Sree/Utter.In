@@ -28,9 +28,9 @@ export class AuthController {
   register = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = new RegisterUserDTO(req.body, this.validator);
-      const id = await this.registerUser.execute(data);
+      const email = await this.registerUser.execute(data);
 
-      await this.sendOtp.execute(id);
+      await this.sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {

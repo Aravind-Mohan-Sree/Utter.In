@@ -16,7 +16,7 @@ export default function AdminLayout({
 
   if (isAdmin && isAdminPath) {
     return (
-      <main className="min-h-screen bg-gray-50 pt-16 lg:pt-0 lg:pl-[var(--admin-sidebar-width,256px)] transition-[padding-left] duration-300">
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-rose-50 pt-16 lg:pt-0 lg:pl-[var(--admin-sidebar-width,256px)] transition-[padding-left] duration-300">
         <div className="flex-1 overflow-auto p-6">{children}</div>
       </main>
     );
@@ -24,4 +24,3 @@ export default function AdminLayout({
 
   return <>{children}</>;
 }
-

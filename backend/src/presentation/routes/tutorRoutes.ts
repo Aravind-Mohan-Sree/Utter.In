@@ -3,7 +3,6 @@ import passport from 'passport';
 import { DataValidatorService } from '~concrete-services/DataValidatorService';
 import { HashService } from '~concrete-services/HashService';
 import { JwtService } from '~concrete-services/JwtService';
-import { OtpService } from '~concrete-services/OtpService';
 import { env } from '~config/env';
 import { AuthController } from '~controllers/tutor/AuthController';
 import { ForgotPasswordController } from '~controllers/shared/ForgotPasswordController';
@@ -43,13 +42,14 @@ import { UploadFileUseCase } from '~use-cases/shared/UploadFileUseCase';
 import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
 import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
 import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
+import { MailService } from '~concrete-services/MailService';
 
 // repositories
 const tutorRepository = new TutorRepository();
 const pendingTutorRepository = new PendingTutorRepository();
 
 // services
-const otpService = new OtpService(env.NODEMAILER_USER, env.NODEMAILER_PASS);
+const mailService = new MailService();
 const dataValidatorService = new DataValidatorService();
 const hashService = new HashService();
 const jwtService = new JwtService();
@@ -72,9 +72,9 @@ const finishRegisterTutorUseCase = new FinishRegisterTutorUseCase(
   pendingTutorRepository,
   tutorRepository,
 );
-const sendOtpUseCase = new SendOtpUseCase(otpService, pendingTutorRepository);
+const sendOtpUseCase = new SendOtpUseCase(mailService, pendingTutorRepository);
 const verifyOtpUseCase = new VerifyOtpUseCase(
-  otpService,
+  mailService,
   pendingTutorRepository,
 );
 const registerTutorFromPendingUseCase = new RegisterTutorFromPendingUseCase(
@@ -87,7 +87,7 @@ const forgotPasswordUseCase = new ForgotPasswordUseCase(
 );
 const forgotPasswordOtpVerifyUseCase = new ForgotPasswordOtpVerifyUseCase(
   pendingTutorRepository,
-  otpService,
+  mailService,
   jwtService,
 );
 const resetPasswordUseCase = new ResetPasswordUseCase(

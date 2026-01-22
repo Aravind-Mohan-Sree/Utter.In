@@ -12,7 +12,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { SigninSchema } from '~validations/AuthSchema';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
-import bgImage from '../../../../public/bg.webp';
 import { signin } from '~services/shared/authService';
 import { useDispatch } from 'react-redux';
 import { signIn } from '~features/authSlice';
@@ -166,7 +165,7 @@ const SignIn: React.FC = () => {
   return (
     <div
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
-      style={{ backgroundImage: `url(${bgImage.src})` }}
+      style={{ backgroundImage: "url('/bg.webp')" }}
     >
       {/* Main Content */}
       <div className="relative flex min-h-screen items-center justify-center p-4 pt-20">

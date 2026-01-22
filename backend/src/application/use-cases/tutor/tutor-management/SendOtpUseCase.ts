@@ -1,7 +1,7 @@
 import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
-import { IOtpService } from '~service-interfaces/IOtpService';
+import { IMailService } from '~service-interfaces/IMailService';
 import { PendingTutor } from '~entities/PendingTutor';
 import {
   BadRequestError,
@@ -11,12 +11,12 @@ import {
 
 export class SendOtpUseCase implements ISendOtpUseCase {
   constructor(
-    private otpService: IOtpService,
+    private mailService: IMailService,
     private pendingTutorRepo: IPendingTutorRepository,
   ) {}
 
-  async execute(id: string): Promise<void> {
-    let tutor = await this.pendingTutorRepo.findOneById(id);
+  async execute(email: string): Promise<void> {
+    let tutor = await this.pendingTutorRepo.findOneByField({ email });
 
     if (!tutor) throw new NotFoundError(errorMessage.OTP_EXPIRED);
 
@@ -31,16 +31,19 @@ export class SendOtpUseCase implements ISendOtpUseCase {
         throw new BadRequestError('Please wait 60 sec before resend');
     }
 
-    otp = this.otpService.createOtp();
+    otp = this.mailService.generateOtp();
 
     const partialPendingTutor: Partial<PendingTutor> = {
       otp,
     };
 
-    tutor = await this.pendingTutorRepo.updateOneById(id, partialPendingTutor);
+    tutor = await this.pendingTutorRepo.updateOneByField(
+      { email },
+      partialPendingTutor,
+    );
 
     if (!tutor) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    await this.otpService.sendOtp(tutor.name!, tutor.email, otp);
+    await this.mailService.sendOtp(tutor.name!, tutor.email, otp);
   }
 }

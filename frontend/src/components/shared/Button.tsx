@@ -13,6 +13,7 @@ interface ButtonProps<T extends unknown[]> extends Omit<
   icon?: React.ReactNode;
   fontSize?: number;
   size?: number;
+  isLoading?: boolean;
   args?: T;
   onClick?: (...args: T) => void | Promise<void>;
 }
@@ -24,6 +25,7 @@ export default function Button<T extends unknown[]>({
   icon,
   fontSize = 16,
   size = 2,
+  isLoading,
   className = '',
   onClick,
   args,
@@ -53,7 +55,7 @@ export default function Button<T extends unknown[]>({
   };
 
   const baseClasses = `grid items-center justify-center rounded-md bg-gradient-to-r hover:bg-gradient-to-l bg-[length:200%_200%] bg-[position:0%_50%] hover:bg-[position:95%_50%] transition-[background-position] duration-500 ease-out font-medium shadow-sm text-white ${
-    isActive ? 'cursor-not-allowed' : 'cursor-pointer'
+    isActive || isLoading ? 'cursor-not-allowed' : 'cursor-pointer'
   }`;
 
   const variants = {
@@ -71,7 +73,7 @@ export default function Button<T extends unknown[]>({
       {...props}
       type={props.type || 'button'}
       onClick={handlePress}
-      disabled={isActive || props.disabled}
+      disabled={isActive || isLoading || props.disabled}
       className={`${baseClasses} ${variants[variant]} ${
         fullWidth ? 'w-full' : ''
       } ${className}`}
@@ -82,7 +84,7 @@ export default function Button<T extends unknown[]>({
         ...props.style,
       }}
     >
-      {isActive && (
+      {(isActive || isLoading) && (
         <span className="col-start-1 row-start-1 flex items-center justify-center">
           <LuLoaderCircle className="animate-spin p-[0.1px]" size={24} />
         </span>
@@ -90,7 +92,7 @@ export default function Button<T extends unknown[]>({
 
       <span
         className={`col-start-1 row-start-1 flex items-center justify-center gap-2 p-0.5! ${
-          isActive ? 'invisible' : 'visible'
+          isActive || isLoading ? 'invisible' : 'visible'
         }`}
       >
         {icon}

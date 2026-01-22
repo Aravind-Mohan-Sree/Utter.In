@@ -14,6 +14,7 @@ export class TutorMapper {
       isVerified: tutor.isVerified,
       certificationType: tutor.certificationType,
       rejectionReason: tutor.rejectionReason,
+      createdAt: tutor.createdAt,
     };
   }
 }

@@ -10,8 +10,7 @@ import {
 import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
-import bgImage from '../../../../public/bg.webp';
-import Cookies from 'js-cookie';
+import { parseCookies } from 'nookies';
 import Button from '~components/shared/Button';
 import { FiArrowLeft } from 'react-icons/fi';
 
@@ -20,11 +19,13 @@ const VerifyOtp: React.FC = () => {
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
 
   const [timer, setTimer] = useState<number>(() => {
-    const cookie = Cookies.get('otp');
-    if (!cookie) return 60;
+    const cookies = parseCookies();
+    const otp = cookies.otp;
+
+    if (!otp) return 60;
 
     const now = Date.now();
-    const then = parseInt(cookie);
+    const then = parseInt(otp);
     const coolDownSec = 60;
     const timeDifferenceSec = Math.floor((now - then) / 1000);
 
@@ -204,7 +205,7 @@ const VerifyOtp: React.FC = () => {
   return (
     <div
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
-      style={{ backgroundImage: `url(${bgImage.src})` }}
+      style={{ backgroundImage: "url('/bg.webp')" }}
     >
       <div className="relative flex min-h-screen items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">

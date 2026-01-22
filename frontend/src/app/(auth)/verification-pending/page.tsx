@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { FaCircleCheck } from 'react-icons/fa6';
-import bgImage from '../../../../public/bg.webp';
 import Button from '~components/shared/Button';
 import { FiArrowLeft } from 'react-icons/fi';
 
@@ -12,7 +11,7 @@ const VerificationPending: React.FC = () => {
   return (
     <div
       className="min-h-screen w-full bg-cover bg-center bg-no-repeat bg-gradient-to-br from-blue-50 to-purple-50 bg-fixed"
-      style={{ backgroundImage: `url(${bgImage.src})` }}
+      style={{ backgroundImage: "url('/bg.webp')" }}
     >
       <div className="relative flex min-h-screen items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">

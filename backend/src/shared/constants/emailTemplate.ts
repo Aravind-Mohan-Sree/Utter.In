@@ -1,4 +1,4 @@
-export const otpEmailTemplate = (name: string, otp: string) => {
+export const emailTemplate = (name: string, body: string, otp?: string) => {
   const html = `
   <!doctype html>
   <html xmlns="http://www.w3.org/1999/xhtml">
@@ -53,10 +53,10 @@ export const otpEmailTemplate = (name: string, otp: string) => {
                   </tr>
                   <tr>
                     <td style="padding-bottom:25px; font-size:15px; color:#ffffff;">
-                      Please verify your email with the OTP given below.
+                      ${body}
                     </td>
                   </tr>
-                  <tr>
+                  <tr style="${otp ? 'display: table-row' : 'display: none'}"> 
                     <td style="padding-bottom:30px;">
                       <table border="0" cellpadding="0" cellspacing="0" role="presentation">
                         <tr>

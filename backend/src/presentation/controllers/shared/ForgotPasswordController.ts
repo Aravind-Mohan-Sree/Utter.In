@@ -34,8 +34,8 @@ export class ForgotPasswordController {
       if (!validatedEmail.success)
         throw new BadRequestError(validatedEmail.message);
 
-      const id = await this.forgotPassword.execute(email);
-      await this.sendOtp.execute(id);
+      await this.forgotPassword.execute(email);
+      await this.sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {

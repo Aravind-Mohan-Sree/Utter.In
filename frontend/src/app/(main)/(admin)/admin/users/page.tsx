@@ -23,7 +23,6 @@ interface User {
   role: string;
   isBlocked: boolean;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export default function UsersPage() {
@@ -176,6 +175,7 @@ export default function UsersPage() {
               name={user.name}
               email={user.email}
               avatarUrl={user.avatarUrl}
+              joinedAt={user.createdAt}
               status={user.isBlocked ? 'Blocked' : 'Active'}
               knownLanguages={user.knownLanguages}
               onToggleStatus={handleToggleStatus}

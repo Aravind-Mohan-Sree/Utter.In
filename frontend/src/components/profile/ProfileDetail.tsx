@@ -4,14 +4,14 @@ interface ProfileDetailProps {
   bio?: string;
   languages?: string[];
   experience?: string;
-  certification?: string;
+  certificationType?: string;
 }
 
 export default function ProfileDetail({
   bio,
   languages,
   experience,
-  certification,
+  certificationType,
 }: ProfileDetailProps) {
   return (
     <div className="space-y-6">
@@ -51,7 +51,7 @@ export default function ProfileDetail({
         </div>
       )}
 
-      {certification && (
+      {certificationType && (
         <div>
           <h4 className="text-lg font-semibold text-gray-800 mb-2">
             Certification
@@ -63,8 +63,8 @@ export default function ProfileDetail({
             </div>
             {/* Text Content */}
             <div className="flex-1">
-              <div className="font-semibold text-gray-900 text-sm leading-tight">
-                {certification}
+              <div className="font-semibold text-rose-400 text-sm leading-tight">
+                {certificationType}
               </div>
             </div>
           </div>

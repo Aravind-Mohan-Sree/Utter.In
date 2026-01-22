@@ -1,7 +1,7 @@
 import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
-import { IOtpService } from '~service-interfaces/IOtpService';
+import { IMailService } from '~service-interfaces/IMailService';
 import { PendingUser } from '~entities/PendingUser';
 import {
   BadRequestError,
@@ -11,12 +11,12 @@ import {
 
 export class SendOtpUseCase implements ISendOtpUseCase {
   constructor(
-    private otpService: IOtpService,
+    private mailService: IMailService,
     private pendingUserRepo: IPendingUserRepository,
   ) {}
 
-  async execute(id: string): Promise<void> {
-    let user = await this.pendingUserRepo.findOneById(id);
+  async execute(email: string): Promise<void> {
+    let user = await this.pendingUserRepo.findOneByField({ email });
 
     if (!user) throw new NotFoundError(errorMessage.OTP_EXPIRED);
 
@@ -31,16 +31,19 @@ export class SendOtpUseCase implements ISendOtpUseCase {
         throw new BadRequestError('Please wait 60 sec before resend');
     }
 
-    otp = this.otpService.createOtp();
+    otp = this.mailService.generateOtp();
 
     const partialPendingUser: Partial<PendingUser> = {
       otp,
     };
 
-    user = await this.pendingUserRepo.updateOneById(id, partialPendingUser);
+    user = await this.pendingUserRepo.updateOneByField(
+      { email },
+      partialPendingUser,
+    );
 
     if (!user) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
-    await this.otpService.sendOtp(user.name!, user.email, otp);
+    await this.mailService.sendOtp(user.name!, user.email, otp);
   }
 }

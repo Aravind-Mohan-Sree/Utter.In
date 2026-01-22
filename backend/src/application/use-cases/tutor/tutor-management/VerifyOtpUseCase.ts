@@ -1,12 +1,12 @@
 import { IVerifyOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
-import { IOtpService } from '~service-interfaces/IOtpService';
+import { IMailService } from '~service-interfaces/IMailService';
 import { BadRequestError, NotFoundError } from '~errors/HttpError';
 
 export class VerifyOtpUseCase implements IVerifyOtpUseCase {
   constructor(
-    private otpService: IOtpService,
+    private mailService: IMailService,
     private pendingTutorRepo: IPendingTutorRepository,
   ) {}
 
@@ -15,7 +15,7 @@ export class VerifyOtpUseCase implements IVerifyOtpUseCase {
 
     if (!tutor) throw new NotFoundError(errorMessage.OTP_EXPIRED);
 
-    const verified = this.otpService.verifyOtp(otp, tutor?.otp);
+    const verified = this.mailService.verifyOtp(otp, tutor?.otp as string);
 
     if (!verified) throw new BadRequestError('Invalid OTP');
 

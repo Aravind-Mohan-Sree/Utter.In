@@ -25,6 +25,7 @@ import { S3Service } from '~concrete-services/S3Service';
 import { env } from '~config/env';
 import { SignoutController } from '~controllers/shared/SignoutController';
 import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
+import { MailService } from '~concrete-services/MailService';
 
 // repositories
 const adminRepository = new AdminRepository();
@@ -32,6 +33,7 @@ const userRepository = new UserRepository();
 const tutorRepository = new TutorRepository();
 
 // services
+const mailService = new MailService();
 const dataValidatorService = new DataValidatorService();
 const hashService = new HashService();
 const jwtService = new JwtService();
@@ -52,8 +54,8 @@ const fetchUsersUseCase = new FetchUsersUseCase(userRepository);
 const fetchTutorsUseCase = new FetchTutorsUseCase(tutorRepository);
 const toggleUserStatusUseCase = new ToggleUserStatusUseCase(userRepository);
 const toggleTutorStatusUseCase = new ToggleTutorStatusUseCase(tutorRepository);
-const approveUseCase = new ApproveUseCase(tutorRepository);
-const rejectUseCase = new RejectUseCase(tutorRepository);
+const approveUseCase = new ApproveUseCase(tutorRepository, mailService);
+const rejectUseCase = new RejectUseCase(tutorRepository, mailService);
 const deleteFileUseCase = new DeleteFileUseCase(s3Service);
 
 // shared use cases

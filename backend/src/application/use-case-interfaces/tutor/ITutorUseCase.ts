@@ -6,7 +6,7 @@ import { TutorProfileUpdateDTO } from '~dtos/TutorProfileUpdateDTO';
 import { TutorResponseDTO } from '~mappers/TutorMapper';
 
 export interface IRegisterTutorUseCase {
-  execute(data: RegisterTutorDTO): Promise<string>;
+  execute(data: RegisterTutorDTO): Promise<{ id: string; email: string }>;
 }
 
 export interface IFinishRegisterTutorUseCase {
