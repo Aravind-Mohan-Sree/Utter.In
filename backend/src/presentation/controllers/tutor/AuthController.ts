@@ -5,6 +5,7 @@ import { ISendOtpUseCase } from '~use-case-interfaces/shared/IOtpUseCase';
 import {
   IFinishRegisterTutorUseCase,
   IRegisterTutorUseCase,
+  IResubmitAccountUseCase,
   ISigninTutorUseCase,
 } from '~use-case-interfaces/tutor/ITutorUseCase';
 import { env } from '~config/env';
@@ -22,11 +23,13 @@ import {
   IUpdateFileUseCase,
   IUploadFileUseCase,
 } from '~use-case-interfaces/shared/IFileUseCase';
+import { resubmitAccountDTO } from '~dtos/resubmitAccountDTO';
 
 export class AuthController {
   constructor(
     private registerTutor: IRegisterTutorUseCase,
     private finishRegisterTutor: IFinishRegisterTutorUseCase,
+    private resubmitAccountUseCase: IResubmitAccountUseCase,
     private signinTutor: ISigninTutorUseCase,
     private validator: IValidateDataService,
     private sendOtp: ISendOtpUseCase,
@@ -142,6 +145,74 @@ export class AuthController {
       res
         .status(httpStatusCode.CREATED)
         .json({ message: successMessage.SIGNUP_SUCCESS });
+    } catch (error) {
+      if (introVideoFile?.path) {
+        await unlink(introVideoFile.path);
+      }
+
+      if (certificateFile?.path) {
+        await unlink(certificateFile.path);
+      }
+
+      logger.error(error);
+      next(error);
+    }
+  };
+
+  resubmitAccount = async (req: Request, res: Response, next: NextFunction) => {
+    const files = req.files as UploadedFiles;
+    const introVideoFile = files.introVideo ? files.introVideo[0] : null;
+    const certificateFile = files.certificate ? files.certificate[0] : null;
+
+    try {
+      const { introVideo: _, certificate: __, ...body } = req.body;
+      const data = new resubmitAccountDTO(
+        { introVideo: introVideoFile, certificate: certificateFile, ...body },
+        this.validator,
+      );
+
+      if (introVideoFile) {
+        const duration = await this.videoMetadataService.getDuration(
+          introVideoFile!.path,
+        );
+
+        if (duration >= 31) {
+          throw new BadRequestError(errorMessage.VIDEO);
+        }
+      }
+
+      const { oldId, newId, googleId } =
+        await this.resubmitAccountUseCase.execute(data);
+
+      if (googleId) {
+        await this.updateFile.execute(
+          'temp/rejected-tutors/avatars/',
+          'tutors/avatars/',
+          oldId,
+          newId,
+          'image/jpeg',
+        );
+      }
+
+      await this.updateFile.execute(
+        introVideoFile
+          ? 'temp/rejected-tutors/certificates/'
+          : 'temp/rejected-tutors/videos/',
+        introVideoFile ? 'tutors/certificates/' : 'tutors/videos/',
+        oldId,
+        newId,
+        introVideoFile ? 'application/pdf' : 'video/mp4',
+      );
+      await this.uploadFile.execute(
+        introVideoFile ? 'tutors/videos/' : 'tutors/certificates/',
+        oldId,
+        introVideoFile ? introVideoFile.path : certificateFile!.path,
+        introVideoFile ? 'video/mp4' : 'application/pdf',
+      );
+
+      res
+        .status(httpStatusCode.OK)
+        .json({ message: successMessage.ACCOUNT_RESUBMITTED });
     } catch (error) {
       if (introVideoFile?.path) {
         await unlink(introVideoFile.path);

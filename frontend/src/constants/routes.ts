@@ -1,7 +1,7 @@
 export const API_ROUTES = {
   USER: {
     SIGNUP: '/user/signup',
-    FINISH_SIGNUP: '/user/finish-signup',
+    FINISH_SIGNUP: '/user/finish-signup',    
     VERIFY_OTP: '/user/verify-otp',
     VERIFY_EMAIL: '/user/verify-email',
     RESEND_OTP: '/user/resend-otp',
@@ -20,6 +20,7 @@ export const API_ROUTES = {
   TUTOR: {
     SIGNUP: '/tutor/signup',
     FINISH_SIGNUP: '/tutor/finish-signup',
+    RESUBMIT_ACCOUNT: '/tutor/resubmit-account',
     VERIFY_OTP: '/tutor/verify-otp',
     VERIFY_EMAIL: '/tutor/verify-email',
     RESEND_OTP: '/tutor/resend-otp',

@@ -9,5 +9,6 @@ export class PendingTutor {
     public createdAt?: Date,
     public updatedAt?: Date,
     public id?: string,
+    public googleId?: string,
   ) {}
 }

@@ -167,15 +167,15 @@ export default function TutorsPage() {
 
   const handleReject = (id: string) => {
     const reasonsArray = [
-      'Certification document is blurry or unreadable',
-      'Uploaded certificate is expired or invalid',
-      'Introduction video has poor audio or low lighting',
-      'Introduction video content is unprofessional or incomplete',
-      'Certification does not match the subject expertise claimed',
+      'cert/Certification document is blurry or unreadable',
+      'cert/Uploaded certificate is expired or invalid',
+      'video/Introduction video has poor audio or low lighting',
+      'video/Introduction video content is unprofessional or incomplete',
+      'cert/Certification does not match the subject expertise claimed',
     ];
 
     const REJECTION_OPTIONS = Object.fromEntries(
-      reasonsArray.map((r) => [r, r]),
+      reasonsArray.map((r) => [r, r.split('/')[1]]),
     );
 
     utterRadioAlert(

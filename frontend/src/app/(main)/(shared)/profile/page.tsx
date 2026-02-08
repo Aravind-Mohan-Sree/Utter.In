@@ -84,6 +84,7 @@ interface AbuseReport {
 }
 
 export default function ProfilePage() {
+  const [isEditMode, setIsEditMode] = useState(false);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isAbuseReportsModalOpen, setIsAbuseReportsModalOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -365,7 +366,10 @@ export default function ProfilePage() {
       setShowConfirmNewPassword(false);
       utterToast.success(res.message);
     } catch (error) {
-      utterToast.error(errorHandler(error));
+      setError((prev) => ({
+        ...prev,
+        ['confirmPassword']: errorHandler(error),
+      }));
     }
   };
 
@@ -378,7 +382,10 @@ export default function ProfilePage() {
       )}
 
       <main className="pt-20 px-4 pb-6 max-w-7xl mx-auto">
-        <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div
+          className={`relative grid grid-cols-1 gap-8 items-start ${isEditMode ? 'lg:grid-cols-2' : 'max-w-3xl mx-auto'
+            }`}
+        >
           <AbstractShapesBackground />
 
           <div className="bg-white/20 rounded-2xl shadow-lg p-6 h-fit backdrop-blur-xs">
@@ -433,6 +440,11 @@ export default function ProfilePage() {
 
             <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
               <Button
+                text={isEditMode ? 'Close Edit' : 'Edit Profile'}
+                variant="secondary"
+                onClick={() => setIsEditMode(!isEditMode)}
+              />
+              <Button
                 text="Abuse Reports"
                 variant="secondary"
                 onClick={() => setIsAbuseReportsModalOpen(true)}
@@ -455,114 +467,117 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-white/20 rounded-2xl shadow-lg p-6 backdrop-blur-xs">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
-              <p className="text-gray-600">
-                Update your personal information and preferences
-              </p>
-            </div>
+          {isEditMode && (
+            <div className="bg-white/20 rounded-2xl shadow-lg p-6 backdrop-blur-xs">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
+                <p className="text-gray-600">
+                  Update your personal information and preferences
+                </p>
+              </div>
 
-            <form>
-              <div className="space-y-6">
-                <InputField
-                  id="name"
-                  label="Full Name"
-                  type="text"
-                  name="name"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  error={error.name}
-                  required={false}
-                />
-
-                <TextAreaInput
-                  id="bio"
-                  label="Bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  placeholder="Tell us about yourself..."
-                  rows={4}
-                  error={error.bio}
-                />
-
-                <LanguagesInput
-                  languages={formData.knownLanguages}
-                  onLanguagesChange={handleLanguagesChange}
-                  maxLanguages={3}
-                  error={error.languages}
-                />
-
-                {profileData?.yearsOfExperience && (
-                  <ExperienceSelector
-                    id="experience"
-                    value={formData.yearsOfExperience}
+              <form>
+                <div className="space-y-6">
+                  <InputField
+                    id="name"
+                    label="Full Name"
+                    type="text"
+                    name="name"
+                    placeholder="Enter your full name"
+                    value={formData.name}
                     onChange={handleInputChange}
-                    error={error.experience}
+                    error={error.name}
+                    required={false}
                   />
-                )}
 
-                <Button text="Update" onClick={handleProfileUpdate} />
-              </div>
-            </form>
+                  <TextAreaInput
+                    id="bio"
+                    label="Bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    placeholder="Tell us about yourself..."
+                    rows={4}
+                    error={error.bio}
+                  />
 
-            <form className="mt-6 pt-6 border-t border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                Change Password
-              </h4>
-              <div className="space-y-4">
-                <PasswordInput
-                  id="currentPassword"
-                  label="Current Password"
-                  name="currentPassword"
-                  placeholder="Enter current password"
-                  value={formData.currentPassword}
-                  showPassword={showCurrentPassword}
-                  onChange={handlePasswordInput}
-                  onToggleShowPassword={() =>
-                    setShowCurrentPassword(!showCurrentPassword)
-                  }
-                  error={error.currentPassword}
-                  required={false}
-                />
+                  <LanguagesInput
+                    languages={formData.knownLanguages}
+                    onLanguagesChange={handleLanguagesChange}
+                    maxLanguages={3}
+                    error={error.languages}
+                  />
 
-                <PasswordInput
-                  id="password"
-                  label="New Password"
-                  name="password"
-                  placeholder="Enter new password"
-                  value={formData.password}
-                  showPassword={showNewPassword}
-                  onChange={handlePasswordInput}
-                  onToggleShowPassword={() =>
-                    setShowNewPassword(!showNewPassword)
-                  }
-                  error={error.password}
-                  required={false}
-                />
+                  {profileData?.yearsOfExperience && (
+                    <ExperienceSelector
+                      id="experience"
+                      value={formData.yearsOfExperience}
+                      onChange={handleInputChange}
+                      error={error.experience}
+                    />
+                  )}
 
-                <PasswordInput
-                  id="confirmPassword"
-                  label="Confirm New Password"
-                  name="confirmPassword"
-                  placeholder="Confirm new password"
-                  value={formData.confirmPassword}
-                  showPassword={showConfirmNewPassword}
-                  onChange={handlePasswordInput}
-                  onToggleShowPassword={() =>
-                    setShowConfirmNewPassword(!showConfirmNewPassword)
-                  }
-                  error={error.confirmPassword}
-                  required={false}
-                />
-
-                <div className="pt-2">
-                  <Button text="Change" onClick={handleChangePassword} />
+                  <Button text="Update" onClick={handleProfileUpdate} />
                 </div>
-              </div>
-            </form>
-          </div>
+              </form>
+
+              <form className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                  Change Password
+                </h4>
+                <div className="space-y-4">
+                  <PasswordInput
+                    id="currentPassword"
+                    label="Current Password"
+                    name="currentPassword"
+                    placeholder="Enter current password"
+                    value={formData.currentPassword}
+                    showPassword={showCurrentPassword}
+                    onChange={handlePasswordInput}
+                    onToggleShowPassword={() =>
+                      setShowCurrentPassword(!showCurrentPassword)
+                    }
+                    error={error.currentPassword}
+                    required={false}
+                  />
+
+                  <PasswordInput
+                    id="password"
+                    label="New Password"
+                    name="password"
+                    placeholder="Enter new password"
+                    value={formData.password}
+                    showPassword={showNewPassword}
+                    onChange={handlePasswordInput}
+                    onToggleShowPassword={() =>
+                      setShowNewPassword(!showNewPassword)
+                    }
+                    error={error.password}
+                    required={false}
+                  />
+
+                  <PasswordInput
+                    id="confirmPassword"
+                    label="Confirm New Password"
+                    name="confirmPassword"
+                    placeholder="Confirm new password"
+                    value={formData.confirmPassword}
+                    showPassword={showConfirmNewPassword}
+                    onChange={handlePasswordInput}
+                    onToggleShowPassword={() =>
+                      setShowConfirmNewPassword(!showConfirmNewPassword)
+                    }
+                    error={error.confirmPassword}
+                    required={false}
+                  />
+
+                  <div className="pt-2">
+                    <Button text="Change" onClick={handleChangePassword} />
+                  </div>
+                </div>
+              </form>
+            </div>
+          )}
+
         </div>
       </main>
 

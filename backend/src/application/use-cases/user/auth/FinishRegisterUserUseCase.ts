@@ -34,7 +34,7 @@ export class FinishRegisterUserUseCase implements IFinishRegisterUserUseCase {
       knownLanguages,
       'I am a Philologist!',
       ' ',
-      null,
+      pendingUser.googleId!,
       { lastActive: null, currentStreak: 0, highestStreak: 0 },
       'user',
       false,

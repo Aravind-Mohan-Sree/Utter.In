@@ -32,7 +32,7 @@ export class SigninTutorUseCase implements ISigninTutorUseCase {
       throw new ForbiddenError(errorMessage.UNVERIFIED);
     if (tutor.rejectionReason)
       throw new BadRequestError(
-        `${errorMessage.REJECTED}-${tutor.rejectionReason}`,
+        `${errorMessage.REJECTED}-${tutor.rejectionReason}/${tutor.email}`,
       );
     if (tutor.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
 

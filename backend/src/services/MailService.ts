@@ -50,7 +50,7 @@ export class MailService implements IMailService {
       text: `Please sign in to know more`,
       html: emailTemplate(
         name,
-        `The verification process for your account is now complete. Please sign in to <a href="${websiteLink}" style="font-weight: bold;">Utter</a> to know more.`,
+        `The verification process is now complete. Please <a href="${websiteLink}" style="font-weight: bold;">sign in</a> to know more.`,
       ),
     });
   }

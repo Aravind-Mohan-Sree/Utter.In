@@ -21,6 +21,7 @@ export class PendingUserRepository
       knownLanguages: entity.knownLanguages!,
       password: entity.password!,
       otp: entity.otp!,
+      googleId: entity.googleId,
       createdAt: entity.createdAt!,
       updatedAt: entity.updatedAt!,
     };
@@ -40,6 +41,7 @@ export class PendingUserRepository
       data.createdAt,
       data.updatedAt,
       String(data._id),
+      data.googleId,
     );
   }
 }

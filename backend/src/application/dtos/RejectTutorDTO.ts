@@ -7,11 +7,11 @@ export class RejectTutorDTO {
 
   constructor(data: { id: string; rejectionReason: string }) {
     const rejectionReasons = [
-      'Certification document is blurry or unreadable',
-      'Uploaded certificate is expired or invalid',
-      'Introduction video has poor audio or low lighting',
-      'Introduction video content is unprofessional or incomplete',
-      'Certification does not match the subject expertise claimed',
+      'cert/Certification document is blurry or unreadable',
+      'cert/Uploaded certificate is expired or invalid',
+      'video/Introduction video has poor audio or low lighting',
+      'video/Introduction video content is unprofessional or incomplete',
+      'cert/Certification does not match the subject expertise claimed',
     ];
 
     if (!rejectionReasons.includes(data.rejectionReason.trim()))

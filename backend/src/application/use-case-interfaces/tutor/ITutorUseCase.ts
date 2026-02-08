@@ -1,6 +1,7 @@
 import { ChangePasswordDTO } from '~dtos/ChangePasswordDTO';
 import { FinishRegisterTutorDTO } from '~dtos/FinishRegisterTutorDTO';
 import { RegisterTutorDTO } from '~dtos/RegisterTutorDTO';
+import { resubmitAccountDTO } from '~dtos/resubmitAccountDTO';
 import { SigninDTO } from '~dtos/SigninDTO';
 import { TutorProfileUpdateDTO } from '~dtos/TutorProfileUpdateDTO';
 import { TutorResponseDTO } from '~mappers/TutorMapper';
@@ -15,6 +16,12 @@ export interface IFinishRegisterTutorUseCase {
   ): Promise<{ oldId: string; newId: string }>;
 }
 
+export interface IResubmitAccountUseCase {
+  execute(
+    data: resubmitAccountDTO,
+  ): Promise<{ oldId: string; newId: string; googleId: string }>;
+}
+
 export interface IRegisterTutorFromPendingUseCase {
   execute(email: string): Promise<{
     pendingTutorId: string;
@@ -24,7 +31,7 @@ export interface IRegisterTutorFromPendingUseCase {
 }
 
 export interface ITutorGoogleRegisterUseCase {
-  execute(name: string, email: string): Promise<string>;
+  execute(name: string, email: string, googleId: string): Promise<string>;
 }
 
 export interface ITutorGoogleSigninUseCase {

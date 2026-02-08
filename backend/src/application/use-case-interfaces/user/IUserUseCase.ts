@@ -23,7 +23,7 @@ export interface IRegisterUserFromPendingUseCase {
 }
 
 export interface IUserGoogleRegisterUseCase {
-  execute(name: string, email: string): Promise<string>;
+  execute(name: string, email: string, googleId: string): Promise<string>;
 }
 
 export interface IUserGoogleSigninUseCase {

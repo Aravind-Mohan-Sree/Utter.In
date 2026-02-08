@@ -5,7 +5,11 @@ import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRep
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IHashService } from '~service-interfaces/IHashService';
 import { PendingTutor } from '~entities/PendingTutor';
-import { ConflictError, InternalServerError } from '~errors/HttpError';
+import {
+  BadRequestError,
+  ConflictError,
+  InternalServerError,
+} from '~errors/HttpError';
 
 export class RegisterTutorUseCase implements IRegisterTutorUseCase {
   constructor(
@@ -19,11 +23,11 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
   ): Promise<{ id: string; email: string }> {
     const tutor = await this.tutorRepo.findOneByField({ email: data.email });
 
-    parent: if (tutor) {
+    if (tutor) {
       if (tutor.rejectionReason) {
-        await this.tutorRepo.deleteOneById(tutor.id!);
-
-        break parent;
+        throw new BadRequestError(
+          `${errorMessage.REJECTED}-${tutor.rejectionReason}/${tutor.email}`,
+        );
       }
 
       throw new ConflictError(errorMessage.ACCOUNT_EXISTS);

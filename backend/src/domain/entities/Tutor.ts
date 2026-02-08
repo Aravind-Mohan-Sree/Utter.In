@@ -13,7 +13,7 @@ export class Tutor {
     public certificationType: string | null,
     public rejectionReason: string | null,
     public id?: string,
-    public expiresAt?: Date,
+    public expiresAt?: Date | null,
     public createdAt?: Date,
     public updatedAt?: Date,
   ) {}

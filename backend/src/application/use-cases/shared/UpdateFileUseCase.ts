@@ -16,10 +16,10 @@ export class UpdateFileUseCase implements IUpdateFileUseCase {
     newFilename: string,
     contentType: ContentType,
   ): Promise<void> {
-    const FromKey = `${oldPrefix}${oldFilename}.${contentType.split('/')[1]}`;
-    const ToKey = `${newPrefix}${newFilename}.${contentType.split('/')[1]}`;
+    const fromKey = `${oldPrefix}${oldFilename}.${contentType.split('/')[1]}`;
+    const toKey = `${newPrefix}${newFilename}.${contentType.split('/')[1]}`;
 
-    const updateResult = await this.cloudService.update(FromKey, ToKey);
+    const updateResult = await this.cloudService.update(fromKey, toKey);
 
     if (!updateResult.success)
       throw new InternalServerError(updateResult.error);

@@ -43,10 +43,8 @@ export class TutorGoogleSigninUseCase implements ITutorGoogleSigninUseCase {
     if (!tutor?.isVerified && !tutor?.rejectionReason)
       throw new ForbiddenError(errorMessage.UNVERIFIED);
     if (tutor?.rejectionReason) {
-      await this.tutorRepo.deleteOneById(tutor.id!);
-
       throw new BadRequestError(
-        `${errorMessage.REJECTED}-${tutor.rejectionReason}`,
+        `${errorMessage.REJECTED}-${tutor.rejectionReason}/${tutor.email}`,
       );
     }
     if (tutor?.isBlocked) {

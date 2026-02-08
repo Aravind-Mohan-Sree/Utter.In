@@ -6,6 +6,7 @@ export interface IPendingUser extends Document {
   knownLanguages: string[];
   password: string;
   otp?: string;
+  googleId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +18,7 @@ const pendingUserSchema = new Schema<IPendingUser>(
     knownLanguages: { type: [String], default: null },
     password: { type: String, default: null },
     otp: { type: String, default: null },
+    googleId: { type: String, default: null },
     updatedAt: { type: Date, default: Date.now, expires: 120 },
   },
   { timestamps: true },

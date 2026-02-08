@@ -15,7 +15,7 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     private pendingUserRepo: IPendingUserRepository,
   ) {}
 
-  async execute(email: string): Promise<string> {
+  async execute(email: string): Promise<void> {
     const user = await this.userRepo.findOneByField({ email });
 
     if (!user) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
@@ -36,8 +36,6 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
 
     pendingUser = new PendingUser(email, user.name);
 
-    pendingUser = await this.pendingUserRepo.create(pendingUser);
-
-    return pendingUser.id!;
+    await this.pendingUserRepo.create(pendingUser);
   }
 }

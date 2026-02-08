@@ -5,12 +5,15 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
+    "build": "run-s build:tsc build:alias",
+    "build:tsc": "tsc -p tsconfig.build.json",
+    "build:alias": "tsc-alias -p tsconfig.build.json",
     "start": "node dist/app.js",
-    "dev": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/app.ts",
+    "dev": "run-s lint dev:server --continue-on-error",
+    "dev:server": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/app.ts",
     "check": "tsc --noEmit --project tsconfig.json",
-    "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +35,7 @@
     "eslint": "^8.57.1",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.5.0",
+    "npm-run-all": "^4.1.5",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.16",

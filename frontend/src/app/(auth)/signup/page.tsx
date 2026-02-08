@@ -14,6 +14,8 @@ import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
 import {
+  resubmitCertSchema,
+  resubmitVideoSchema,
   TutorFinishSignupSchema,
   TutorSignupSchema,
   UserFinishSignupSchema,
@@ -27,6 +29,7 @@ import { FaGoogle } from 'react-icons/fa';
 import { useSubmitForm } from '~hooks/useSubmitForm';
 import { FiArrowLeft } from 'react-icons/fi';
 import { utterAlert } from '~utils/utterAlert';
+import { resubmitAccount } from '~services/tutor/managementService';
 
 type ExperienceLevel = '0-1' | '1-2' | '2-3' | '3-5' | '5-10' | '10+' | '';
 
@@ -67,6 +70,8 @@ const SignUp: React.FC = () => {
   const searchParams = useSearchParams();
   const USER_TYPE = searchParams.get('mode');
   const responseMessage = searchParams.get('responseMessage');
+  const rejectionReason = searchParams.get('rejectionReason');
+  const [requiredData, setRequiredData] = useState<string | null>(null);
   const [userType, setUserType] = useState<UserType>(
     (USER_TYPE as UserType) || 'user',
   );
@@ -80,6 +85,9 @@ const SignUp: React.FC = () => {
     userType === 'user' ? UserSignupSchema : TutorSignupSchema;
   const finishSignupValidationSchema =
     userType === 'user' ? UserFinishSignupSchema : TutorFinishSignupSchema;
+  const resubmitValidationSchema =
+    requiredData === 'video' ? resubmitVideoSchema : resubmitCertSchema;
+    console.log(resubmitValidationSchema);
   const { handleSubmission } = useSubmitForm(
     userType,
     formData,
@@ -92,25 +100,28 @@ const SignUp: React.FC = () => {
     (() => {
       setFileName1('');
       setFileName2('');
+      setRequiredData('');
       setFormData(INITIAL_FORM_DATA);
       setError(INITIAL_ERROR_STATE);
       setShowPassword(false);
       setShowConfirmPassword(false);
 
-      const responseMessage = searchParams.get('responseMessage');
-      const rejectionReason = searchParams.get('rejectionReason');
-      const email = searchParams.get('email') as string;
-
       if (responseMessage === 'finishSignup') {
+        const email = searchParams.get('email') as string;
+
         setFormData((prev) => ({ ...prev, email }));
       } else if (rejectionReason) {
-        window.history.replaceState(null, '', `/signup?mode=${userType}`);
+        const [requiredData, reason, email] = rejectionReason.split(
+          '/',
+        ) as string[];
 
+        setRequiredData(requiredData);
+        setFormData((prev) => ({ ...prev, email }));
         utterAlert({
           icon: 'info',
-          title: 'Account verification failed',
-          text: `Reason: ${rejectionReason}`,
-          footer: 'Please sign up again',
+          title: 'Account Rejected',
+          text: `Reason: ${reason}`,
+          footer: `Please re-submit ${requiredData === 'video' ? requiredData : 'certificate'}`,
           confirmText: 'Okay',
         });
       }
@@ -209,8 +220,17 @@ const SignUp: React.FC = () => {
     );
   };
 
-  const subtitle =
-    responseMessage === 'finishSignup'
+  const onResubmit = async () => {
+    await handleSubmission(
+      resubmitValidationSchema,
+      resubmitAccount,
+      '/verification-pending',
+    );
+  };
+
+  const subtitle = rejectionReason
+    ? 'Please re-submit required data'
+    : responseMessage === 'finishSignup'
       ? 'Fill in the missing pieces to join our community'
       : userType === 'user'
         ? 'Create your account to start learning'
@@ -226,65 +246,71 @@ const SignUp: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-white/20 border border-gray-100">
             <div className="mb-6 text-center">
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                {responseMessage !== 'finishSignup'
-                  ? 'Join Utter.In'
-                  : 'Finish Sign Up'}
+                {rejectionReason
+                  ? 'Re-Submit'
+                  : responseMessage === 'finishSignup'
+                    ? ' Finish Sign Up'
+                    : 'Join Utter'}
               </h1>
               <p className="text-gray-600">{subtitle}</p>
             </div>
 
             <div className="space-y-6">
-              {responseMessage !== 'finishSignup' && (
+              {responseMessage !== 'finishSignup' && !rejectionReason && (
                 <UserTypeToggle userType={userType} onChange={setUserType} />
               )}
 
               <form className="space-y-6">
                 {/* Name Input */}
-                {responseMessage !== 'finishSignup' && (
+                {!rejectionReason && (
                   <>
-                    <InputField
-                      id="name"
-                      label="Full Name"
-                      type="text"
-                      name="name"
-                      placeholder="Enter your full name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      error={error.name}
-                      required={false}
+                    {responseMessage !== 'finishSignup' && !rejectionReason && (
+                      <>
+                        <InputField
+                          id="name"
+                          label="Full Name"
+                          type="text"
+                          name="name"
+                          placeholder="Enter your full name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          error={error.name}
+                          required={false}
+                        />
+
+                        {/* Email Input */}
+                        <InputField
+                          id="email"
+                          label="Email Address"
+                          type="text"
+                          name="email"
+                          placeholder="user@example.com"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          error={error.email}
+                          required={false}
+                        />
+                      </>
+                    )}
+
+                    {/* Languages Input */}
+                    <LanguagesInput
+                      languages={formData.languages}
+                      onLanguagesChange={handleLanguagesChange}
+                      maxLanguages={3}
+                      error={error.languages}
                     />
 
-                    {/* Email Input */}
-                    <InputField
-                      id="email"
-                      label="Email Address"
-                      type="text"
-                      name="email"
-                      placeholder="user@example.com"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      error={error.email}
-                      required={false}
-                    />
+                    {/* Experience Field (Tutor only) */}
+                    {userType === 'tutor' && (
+                      <ExperienceSelector
+                        id="experience"
+                        value={formData.experience}
+                        onChange={handleInputChange}
+                        error={error.experience}
+                      />
+                    )}
                   </>
-                )}
-
-                {/* Languages Input */}
-                <LanguagesInput
-                  languages={formData.languages}
-                  onLanguagesChange={handleLanguagesChange}
-                  maxLanguages={3}
-                  error={error.languages}
-                />
-
-                {/* Experience Field (Tutor only) */}
-                {userType === 'tutor' && (
-                  <ExperienceSelector
-                    id="experience"
-                    value={formData.experience}
-                    onChange={handleInputChange}
-                    error={error.experience}
-                  />
                 )}
 
                 {/* Tutor-specific fields */}
@@ -292,36 +318,40 @@ const SignUp: React.FC = () => {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Intro Video Upload */}
-                      <FileUpload
-                        id="intro-video"
-                        label="Intro Video (Max 30 sec)"
-                        name="introVideo"
-                        filename={fileName1}
-                        setFilename={setFileName1}
-                        accept=".mp4"
-                        onChange={handleFileChange}
-                        error={error.introVideo}
-                        Icon={FaFileVideo}
-                      />
+                      {(!requiredData || requiredData === 'video') && (
+                        <FileUpload
+                          id="intro-video"
+                          label="Intro Video (Max 30 sec)"
+                          name="introVideo"
+                          filename={fileName1}
+                          setFilename={setFileName1}
+                          accept=".mp4"
+                          onChange={handleFileChange}
+                          error={error.introVideo}
+                          Icon={FaFileVideo}
+                        />
+                      )}
 
                       {/* Certificates Upload */}
-                      <FileUpload
-                        id="certificates"
-                        label="Certificate (PDF)"
-                        name="certificate"
-                        filename={fileName2}
-                        setFilename={setFileName2}
-                        accept=".pdf"
-                        onChange={handleFileChange}
-                        error={error.certificate}
-                        Icon={FaRegFilePdf}
-                      />
+                      {(!requiredData || requiredData === 'cert') && (
+                        <FileUpload
+                          id="certificates"
+                          label="Certificate (PDF)"
+                          name="certificate"
+                          filename={fileName2}
+                          setFilename={setFileName2}
+                          accept=".pdf"
+                          onChange={handleFileChange}
+                          error={error.certificate}
+                          Icon={FaRegFilePdf}
+                        />
+                      )}
                     </div>
                   </div>
                 )}
 
                 {/* Password Input */}
-                {responseMessage !== 'finishSignup' && (
+                {!rejectionReason && responseMessage !== 'finishSignup' && (
                   <>
                     <PasswordInput
                       id="password"
@@ -358,20 +388,28 @@ const SignUp: React.FC = () => {
 
                 {/* Sign Up Button */}
                 <Button
-                  text={responseMessage !== 'finishSignup' ? 'Sign Up' : 'Done'}
+                  text={
+                    !rejectionReason && responseMessage !== 'finishSignup'
+                      ? 'Sign Up'
+                      : 'Done'
+                  }
                   fullWidth={true}
                   onClick={
-                    responseMessage !== 'finishSignup'
-                      ? onSignup
-                      : onFinishSignup
+                    rejectionReason
+                      ? onResubmit
+                      : responseMessage === 'finishSignup'
+                        ? onFinishSignup
+                        : onSignup
                   }
                 />
 
                 {/* Divider */}
-                {responseMessage !== 'finishSignup' && <Divider text="Or" />}
+                {!rejectionReason && responseMessage !== 'finishSignup' && (
+                  <Divider text="Or" />
+                )}
               </form>
 
-              {responseMessage === 'finishSignup' && (
+              {(rejectionReason || responseMessage === 'finishSignup') && (
                 <Button
                   variant="outline"
                   size={0}
@@ -384,7 +422,7 @@ const SignUp: React.FC = () => {
               )}
 
               {/* Google Login Button */}
-              {responseMessage !== 'finishSignup' && (
+              {!rejectionReason && responseMessage !== 'finishSignup' && (
                 <Button
                   text="Continue with Google"
                   icon={<FaGoogle />}
@@ -394,7 +432,7 @@ const SignUp: React.FC = () => {
               )}
             </div>
 
-            {responseMessage !== 'finishSignup' && (
+            {!rejectionReason && responseMessage !== 'finishSignup' && (
               <AuthFooter
                 text="Already have an account?"
                 linkText="Sign in here"

@@ -43,6 +43,7 @@ import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
 import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
 import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
 import { MailService } from '~concrete-services/MailService';
+import { ResubmitAccountUseCase } from '~use-cases/tutor/auth/ResubmitAccountUseCase';
 
 // repositories
 const tutorRepository = new TutorRepository();
@@ -72,6 +73,7 @@ const finishRegisterTutorUseCase = new FinishRegisterTutorUseCase(
   pendingTutorRepository,
   tutorRepository,
 );
+const resubmitAccountUseCase = new ResubmitAccountUseCase(tutorRepository);
 const sendOtpUseCase = new SendOtpUseCase(mailService, pendingTutorRepository);
 const verifyOtpUseCase = new VerifyOtpUseCase(
   mailService,
@@ -130,6 +132,7 @@ const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
 const authController = new AuthController(
   registerTutorUseCase,
   finishRegisterTutorUseCase,
+  resubmitAccountUseCase,
   signinTutorUseCase,
   dataValidatorService,
   sendOtpUseCase,
@@ -196,6 +199,11 @@ router.get(
 // auth
 router.post('/signup', uploadMiddleware, authController.register);
 router.post('/finish-signup', uploadMiddleware, authController.finishRegister);
+router.patch(
+  '/resubmit-account',
+  uploadMiddleware,
+  authController.resubmitAccount,
+);
 router.post('/signin', authController.signin);
 
 // tutor management

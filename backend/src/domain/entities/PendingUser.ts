@@ -8,5 +8,6 @@ export class PendingUser {
     public createdAt?: Date,
     public updatedAt?: Date,
     public id?: string,
+    public googleId?: string,
   ) {}
 }

@@ -5,15 +5,24 @@ import { IUserGoogleRegisterUseCase } from '~use-case-interfaces/user/IUserUseCa
 export class UserGoogleRegisterUseCase implements IUserGoogleRegisterUseCase {
   constructor(private pendingUserRepo: IPendingUserRepository) {}
 
-  async execute(name: string, email: string): Promise<string> {
+  async execute(
+    name: string,
+    email: string,
+    googleId: string,
+  ): Promise<string> {
     let pendingUser = await this.pendingUserRepo.findOneByField({ email });
 
     if (pendingUser) {
       await this.pendingUserRepo.deleteOneByField({ email: pendingUser.email });
     }
 
-    pendingUser = new PendingUser(email, name);
-    pendingUser = await this.pendingUserRepo.create(pendingUser);
+    const user: PendingUser = {
+      name,
+      email,
+      googleId,
+    };
+
+    pendingUser = await this.pendingUserRepo.create(user);
 
     return pendingUser.id!;
   }

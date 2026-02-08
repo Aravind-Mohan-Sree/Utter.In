@@ -88,7 +88,7 @@ export function Navbar() {
   ];
 
   const tutorLinks = [
-    { href: '/home', label: 'Home' },
+    { href: '/', label: 'Home' },
     { href: '/create-sessions', label: 'Create Sessions' },
     { href: '/sessions', label: `Sessions`, badge: sessionCount },
     { href: '/profile', label: 'Profile' },

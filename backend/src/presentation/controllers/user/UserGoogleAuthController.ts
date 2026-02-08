@@ -31,7 +31,7 @@ export class UserGoogleAuthController {
       const user = await this.getDataUC.execute(email);
 
       if (!user) {
-        const id = await this.googleRegisterUC.execute(name, email);
+        const id = await this.googleRegisterUC.execute(name, email, googleId);
 
         await this.uploadAvatar.execute('temp/users/avatars/', id, avatarUrl);
 

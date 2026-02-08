@@ -1,5 +1,6 @@
 export const successMessage = {
   SIGNUP_SUCCESS: 'Signup successful',
+  ACCOUNT_RESUBMITTED: 'Account resubmission successful',
   SIGNIN_SUCCESS: 'Signin successful',
   SIGNOUT_SUCCESS: 'Signout successful',
   OTP_SENDED: 'OTP sended',

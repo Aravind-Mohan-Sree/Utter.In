@@ -5,7 +5,6 @@ interface JoinedDateProps {
 
 export const JoinedDate = ({ date, className = '' }: JoinedDateProps) => {
   const formatDate = (dateInput: string | Date) => {
-    console.log(dateInput);
     const d = new Date(dateInput);
     const day = d.getDate();
     const month = d.toLocaleString('en-US', { month: 'short' });

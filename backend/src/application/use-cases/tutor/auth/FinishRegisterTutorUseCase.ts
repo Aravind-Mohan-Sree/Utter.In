@@ -27,7 +27,7 @@ export class FinishRegisterTutorUseCase implements IFinishRegisterTutorUseCase {
       yearsOfExperience,
       'I am a Philologist!',
       ' ',
-      null,
+      pendingTutor.googleId!,
       'tutor',
       false,
       false,

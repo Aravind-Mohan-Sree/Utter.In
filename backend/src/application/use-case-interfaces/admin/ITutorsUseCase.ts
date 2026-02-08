@@ -22,5 +22,5 @@ export interface IApproveUseCase {
 }
 
 export interface IRejectUseCase {
-  execute(id: string, rejectionReason: string): Promise<void>;
+  execute(id: string, rejectionReason: string): Promise<string | null>;
 }

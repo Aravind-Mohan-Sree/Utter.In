@@ -22,6 +22,7 @@ export class PendingTutorRepository
       yearsOfExperience: entity.yearsOfExperience!,
       password: entity.password!,
       otp: entity.otp!,
+      googleId: entity.googleId,
       createdAt: entity.createdAt!,
       updatedAt: entity.updatedAt!,
     };
@@ -42,6 +43,7 @@ export class PendingTutorRepository
       data.createdAt,
       data.updatedAt,
       String(data._id),
+      data.googleId,
     );
   }
 }

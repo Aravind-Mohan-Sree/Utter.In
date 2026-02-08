@@ -93,7 +93,15 @@ export const useSubmitForm = <
       const message: string = errorHandler(err);
 
       if (message.startsWith('Session expired'))
-        router.replace(`/signup?mode=${userType}`);
+        return router.replace(`/signup?mode=${userType}`);
+
+      if (message.startsWith('Account verification failed')) {
+        return router.push(
+          `/signup?mode=${userType}&rejectionReason=${encodeURIComponent(
+            message.split('-')[1],
+          )}`,
+        );
+      }
 
       utterToast.error(message);
     }

@@ -11,7 +11,10 @@ import {
   IRejectUseCase,
   IToggleStatusUseCase,
 } from '~use-case-interfaces/admin/ITutorsUseCase';
-import { IDeleteFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
+import {
+  IDeleteFileUseCase,
+  IUpdateFileUseCase,
+} from '~use-case-interfaces/shared/IFileUseCase';
 
 interface TutorQuery {
   page: string;
@@ -26,6 +29,7 @@ export class TutorsController {
     private toggleStatusUC: IToggleStatusUseCase,
     private approveUC: IApproveUseCase,
     private rejectUC: IRejectUseCase,
+    private updateFileUC: IUpdateFileUseCase,
     private deleteFileUC: IDeleteFileUseCase,
   ) {}
 
@@ -89,14 +93,33 @@ export class TutorsController {
         id: req.params.id as string,
         rejectionReason: req.query.rejectionReason as string,
       });
+      const dueToVideo = rejectionReason.split('/')[0] === 'video';
 
-      await this.rejectUC.execute(id, rejectionReason);
-      await this.deleteFileUC.execute('tutors/avatars/', id, 'image/jpeg');
-      await this.deleteFileUC.execute('tutors/videos/', id, 'video/mp4');
-      await this.deleteFileUC.execute(
-        'tutors/certificates/',
+      const googleId = await this.rejectUC.execute(id, rejectionReason);
+
+      if (googleId) {
+        await this.updateFileUC.execute(
+          'tutors/avatars/',
+          'temp/rejected-tutors/avatars/',
+          id,
+          id,
+          'image/jpeg',
+        );
+      }
+
+      await this.updateFileUC.execute(
+        dueToVideo ? 'tutors/certificates/' : 'tutors/videos/',
+        dueToVideo
+          ? 'temp/rejected-tutors/certificates/'
+          : 'temp/rejected-tutors/videos/',
         id,
-        'application/pdf',
+        id,
+        dueToVideo ? 'application/pdf' : 'video/mp4',
+      );
+      await this.deleteFileUC.execute(
+        dueToVideo ? 'tutors/videos/' : 'tutors/certificates/',
+        id,
+        dueToVideo ? 'video/mp4' : 'application/pdf',
       );
 
       res.status(httpStatusCode.OK).json({

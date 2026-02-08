@@ -9,10 +9,10 @@ export class RejectUseCase implements IRejectUseCase {
     private mailService: IMailService,
   ) {}
 
-  async execute(id: string, rejectionReason: string): Promise<void> {
+  async execute(id: string, rejectionReason: string): Promise<string | null> {
     const tutor = await this.tutorRepo.findOneById(id);
 
-    if (!tutor) return;
+    if (!tutor) return null;
 
     const partialTutor: Partial<Tutor> = {
       rejectionReason,
@@ -21,5 +21,7 @@ export class RejectUseCase implements IRejectUseCase {
 
     await this.mailService.sendVerificationUpdate(tutor.name, tutor.email);
     await this.tutorRepo.updateOneById(id, partialTutor);
+
+    return tutor.googleId;
   }
 }

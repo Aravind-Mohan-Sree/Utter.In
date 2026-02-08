@@ -60,7 +60,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  if (!isPublicRoute(pathname) && !hasToken && !pathname.startsWith('/admin')) {
+  if (
+    !isPublicRoute(pathname) &&
+    !hasToken &&
+    !pathname.startsWith('/admin') &&
+    pathname !== '/'
+  ) {
     const url = new URL('/signin', request.url);
     url.searchParams.set('responseMessage', sessionExpiredMessage);
     return NextResponse.redirect(url);

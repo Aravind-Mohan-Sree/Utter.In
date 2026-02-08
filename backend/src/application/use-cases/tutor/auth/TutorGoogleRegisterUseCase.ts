@@ -5,7 +5,11 @@ import { ITutorGoogleRegisterUseCase } from '~use-case-interfaces/tutor/ITutorUs
 export class TutorGoogleRegisterUseCase implements ITutorGoogleRegisterUseCase {
   constructor(private pendingTutorRepo: IPendingTutorRepository) {}
 
-  async execute(name: string, email: string): Promise<string> {
+  async execute(
+    name: string,
+    email: string,
+    googleId: string,
+  ): Promise<string> {
     let pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
 
     if (pendingTutor) {
@@ -14,8 +18,13 @@ export class TutorGoogleRegisterUseCase implements ITutorGoogleRegisterUseCase {
       });
     }
 
-    pendingTutor = new PendingTutor(email, name);
-    pendingTutor = await this.pendingTutorRepo.create(pendingTutor);
+    const tutor: PendingTutor = {
+      name,
+      email,
+      googleId,
+    };
+
+    pendingTutor = await this.pendingTutorRepo.create(tutor);
 
     return pendingTutor.id!;
   }

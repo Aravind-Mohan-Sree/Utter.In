@@ -1,5 +1,7 @@
+'use client';
+
 import Cropper, { Area } from 'react-easy-crop';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import getCroppedImg from '~utils/cropImage';
 import Button from '~components/shared/Button';
@@ -22,6 +24,23 @@ const AvatarUploadModal = ({
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (imageSrc && croppedAreaPixels) {
+      const timer = setTimeout(() => {
+        setZoom(zoom + 0.0000001);
+        setTimeout(() => setZoom(zoom), 50);
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }
+  }, [crop, imageSrc, zoom, croppedAreaPixels]);
 
   const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
@@ -33,6 +52,7 @@ const AvatarUploadModal = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
     const reader = new FileReader();
@@ -42,22 +62,28 @@ const AvatarUploadModal = ({
   };
 
   const handleUpload = async () => {
+    if (!imageSrc || !croppedAreaPixels) return;
+
     try {
       setIsLoading(true);
-
-      if (!imageSrc || !croppedAreaPixels) return;
-
       setImageSrc(null);
 
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
 
-      await handleAvatarUpload(croppedBlob);
+      if (croppedBlob) {
+        await handleAvatarUpload(croppedBlob);
+        setImageSrc(null);
+        setZoom(1);
+        setCrop({ x: 0, y: 0 });
+      }
     } catch (error) {
       utterToast.error(errorHandler(error));
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <>
@@ -71,53 +97,70 @@ const AvatarUploadModal = ({
 
       {imageSrc &&
         createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-rose-100/30 backdrop-blur-md p-1">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div
-              className="relative w-[428px] bg-white border-2 rounded-xl p-3"
+              className="relative w-full max-w-[450px] bg-white rounded-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <Button
-                className="absolute top-3.5 right-3"
-                icon={
-                  <LuCircleX className="text-rose-400 hover:text-rose-600" />
-                }
-                fontSize={30}
-                size={0}
-                variant="outline"
-                onClick={() => {
-                  setImageSrc(null);
-                }}
-              />
-
-              {/* Helper Text */}
-              <ul className="text-black text-xs pb-2 space-y-1">
-                <li>• Mouse wheel / pinch to zoom</li>
-                <li>• Drag to reposition</li>
-                <li>• Double tap to center</li>
-              </ul>
-
-              {/* Crop Area */}
-              <div
-                className="relative w-full h-[400px]"
-                onDoubleClick={handleDoubleTap}
-              >
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={1}
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                  onCropComplete={onCropComplete}
-                  cropShape={'round'}
-                />
+              <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 className="font-semibold text-gray-800">Edit Avatar</h3>
+                <button
+                  onClick={() => setImageSrc(null)}
+                  className="text-gray-400 hover:text-rose-400 transition-colors cursor-pointer"
+                >
+                  <LuCircleX size={24} />
+                </button>
               </div>
 
-              <Button
-                className="mx-auto mt-3"
-                text="Upload"
-                onClick={handleUpload}
-              />
+              <div className="p-4">
+                <ul className="text-[11px] text-gray-500 mb-4 grid grid-cols-1 gap-1 bg-gray-50 p-2 rounded-lg">
+                  <li>• Drag to move</li>
+                  <li>• Double click to center</li>
+                </ul>
+
+                <div
+                  className="relative w-full h-[350px] bg-gray-200 rounded-lg overflow-hidden border"
+                  onDoubleClick={handleDoubleTap}
+                >
+                  <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    zoomWithScroll={false}
+                    onCropComplete={onCropComplete}
+                    cropShape="round"
+                    showGrid={false}
+                  />
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3">
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs font-medium text-gray-400">
+                      Zoom
+                    </span>
+                    <input
+                      type="range"
+                      value={zoom}
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      aria-labelledby="Zoom"
+                      onChange={(e) => setZoom(Number(e.target.value))}
+                      className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-rose-400"
+                    />
+                  </div>
+
+                  <Button
+                    text="Upload"
+                    fullWidth
+                    onClick={handleUpload}
+                    className="mt-2 shadow-lg shadow-rose-200"
+                  />
+                </div>
+              </div>
             </div>
           </div>,
           document.body,

@@ -64,9 +64,9 @@ const SignIn: React.FC = () => {
         return router.push('/verification-pending');
       } else if (responseMessage.startsWith('Account verification failed')) {
         return router.push(
-          `/signup?mode=${userType}&rejectionReason=${
-            responseMessage.split('-')[1]
-          }`,
+          `/signup?mode=${userType}&rejectionReason=${encodeURIComponent(
+            responseMessage.split('-')[1],
+          )}`,
         );
       }
 
