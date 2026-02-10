@@ -29,13 +29,14 @@ import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
+import { BiCamera, BiTime } from 'react-icons/bi';
 import {
   changePasswordSchema,
   tutorProfileUpdateSchema,
   userProfileUpdateSchema,
 } from '~validations/profileSchema';
 import { API_ROUTES } from '~constants/routes';
-import { JoinedDate } from '~components/shared/JoinedDate';
+import { DateAndTime } from '~components/shared/DateAndTime';
 
 interface ProfileData {
   name: string;
@@ -48,7 +49,7 @@ interface ProfileData {
   currentPassword: string;
   password: string;
   confirmPassword: string;
-  createdAt: string;
+  createdAt: string | Date;
 }
 
 const INITIAL_ERROR_STATE = {
@@ -381,13 +382,13 @@ export default function ProfilePage() {
         <Notification onClose={() => setShowNotifications(false)} />
       )}
 
-      <main className="pt-20 px-4 pb-6 max-w-7xl mx-auto">
+      <AbstractShapesBackground />
+
+      <main className="pt-24 px-4 pb-6 max-w-7xl mx-auto">
         <div
           className={`relative grid grid-cols-1 gap-8 items-start ${isEditMode ? 'lg:grid-cols-2' : 'max-w-3xl mx-auto'
             }`}
         >
-          <AbstractShapesBackground />
-
           <div className="bg-white/20 rounded-2xl shadow-lg p-6 h-fit backdrop-blur-xs">
             <div className="flex items-center gap-4 mb-6">
               <Avatar
@@ -407,10 +408,7 @@ export default function ProfilePage() {
                 <p className="text-gray-600 wrap-anywhere">
                   {profileData?.email}
                 </p>
-                <JoinedDate
-                  date={profileData?.createdAt!}
-                  className="text-xs!"
-                />
+                <DateAndTime date={profileData?.createdAt || new Date()} />
               </div>
             </div>
 

@@ -44,10 +44,16 @@ import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
 import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
 import { MailService } from '~concrete-services/MailService';
 import { ResubmitAccountUseCase } from '~use-cases/tutor/auth/ResubmitAccountUseCase';
+import { SessionRepository } from '~concrete-repositories/SessionRepository';
+import { CreateSessionUseCase } from '~use-cases/tutor/session/CreateSessionUseCase';
+import { GetSessionsUseCase } from '~use-cases/tutor/session/GetSessionsUseCase';
+import { CancelSessionUseCase } from '~use-cases/tutor/session/CancelSessionUseCase';
+import { SessionController } from '~controllers/tutor/SessionController';
 
 // repositories
 const tutorRepository = new TutorRepository();
 const pendingTutorRepository = new PendingTutorRepository();
+const sessionRepository = new SessionRepository();
 
 // services
 const mailService = new MailService();
@@ -122,6 +128,9 @@ const uploadAvatarUseCase = new UploadAvatarUseCase(
   s3Service,
   axiosImageGatewayService,
 );
+const createSessionUseCase = new CreateSessionUseCase(sessionRepository);
+const getSessionsUseCase = new GetSessionsUseCase(sessionRepository);
+const cancelSessionUseCase = new CancelSessionUseCase(sessionRepository);
 
 // shared use cases
 const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
@@ -170,6 +179,11 @@ const profileController = new ProfileController(
   updateProfileUseCase,
   changePasswordUseCase,
   dataValidatorService,
+);
+const sessionController = new SessionController(
+  createSessionUseCase,
+  getSessionsUseCase,
+  cancelSessionUseCase
 );
 
 // wire auth middlewares
@@ -234,5 +248,10 @@ router.patch(
   auth.verify(),
   profileController.changePassword,
 );
+
+// Session Management
+router.post('/create-session', auth.verify(), sessionController.createSession);
+router.get('/get-sessions', auth.verify(), sessionController.getSessions);
+router.delete('/cancel-session/:sessionId', auth.verify(), sessionController.cancelSession);
 
 export const tutorRouter = router;

@@ -9,9 +9,10 @@ import Avatar from '~components/shared/Avatar';
 import Button from '~components/shared/Button';
 import { FiCheckCircle, FiSlash } from 'react-icons/fi';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
-import { JoinedDate } from '~components/shared/JoinedDate';
+import { DateAndTime } from '~components/shared/DateAndTime';
+import { BiTime } from 'react-icons/bi';
 
-export type CardType = 'user' | 'tutor' | 'report';
+export type CardType = 'user' | 'tutor' | 'report' | 'session';
 
 interface BaseCardProps {
   id: string;
@@ -65,7 +66,18 @@ interface ReportCardProps extends BaseCardProps {
   onViewDetails?: (id: string) => void;
 }
 
-type CardProps = UserCardProps | TutorCardProps | ReportCardProps;
+export interface SessionCardProps extends BaseCardProps {
+  type: 'session';
+  title: string;
+  subtitle: string;
+  date: string | Date;
+  time: string;
+  language: string;
+  status?: 'Available' | 'Booked';
+  onCancel?: (id: string) => void;
+}
+
+type CardProps = UserCardProps | TutorCardProps | ReportCardProps | SessionCardProps;
 
 export const Card = (props: CardProps) => {
   if (props.type === 'report') {
@@ -74,6 +86,10 @@ export const Card = (props: CardProps) => {
 
   if (props.type === 'tutor') {
     return <TutorCard {...props} />;
+  }
+
+  if (props.type === 'session') {
+    return <SessionCard {...props} />;
   }
 
   return <UserCard {...props} />;
@@ -109,7 +125,7 @@ const UserCard = ({
       />
     )}
     <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200">
-      <JoinedDate date={joinedAt} />
+      <DateAndTime date={joinedAt} label="Joined" />
 
       {onToggleStatus && (
         <div className="flex justify-end">
@@ -122,11 +138,10 @@ const UserCard = ({
                 <FiCheckCircle size={22} />
               )
             }
-            className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
-              status === 'Active'
-                ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
-                : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
-            }`}
+            className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${status === 'Active'
+              ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
+              : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
+              }`}
             onClick={onToggleStatus}
             args={[id]}
           />
@@ -177,7 +192,7 @@ const TutorCard = ({
     )}
 
     <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200">
-      <JoinedDate date={joinedAt} />
+      <DateAndTime date={joinedAt} label="Joined" />
 
       <div className="flex gap-2">
         {(onToggleStatus || onViewDetails || customActions) && (
@@ -191,11 +206,10 @@ const TutorCard = ({
                     variant="outline"
                     icon={<RiVerifiedBadgeFill size={23} />}
                     isLoading={isLoading}
-                    className={`h-fit rounded-lg p-0.5! transition-colors duration-200! ${
-                      rejectionReason
-                        ? 'hover:bg-gray-50!'
-                        : 'hover:text-amber-500! hover:bg-amber-50!'
-                    } ${isVerified ? 'text-amber-500!' : 'text-gray-400!'}`}
+                    className={`h-fit rounded-lg p-0.5! transition-colors duration-200! ${rejectionReason
+                      ? 'hover:bg-gray-50!'
+                      : 'hover:text-amber-500! hover:bg-amber-50!'
+                      } ${isVerified ? 'text-amber-500!' : 'text-gray-400!'}`}
                     onClick={onViewDetails}
                     args={[id]}
                   />
@@ -210,11 +224,10 @@ const TutorCard = ({
                         <FiCheckCircle size={22} />
                       )
                     }
-                    className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${
-                      status === 'Active'
-                        ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
-                        : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
-                    }`}
+                    className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! ${status === 'Active'
+                      ? 'text-gray-400 hover:text-red-500! hover:bg-red-50'
+                      : 'text-gray-400 hover:text-green-500! hover:bg-green-50'
+                      }`}
                     onClick={onToggleStatus}
                     args={[id]}
                   />
@@ -244,11 +257,10 @@ const ReportCard = ({
     <div className="flex items-center justify-between mb-4">
       {channel && (
         <span
-          className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${
-            channel === 'chat'
-              ? 'bg-blue-100 text-blue-600'
-              : 'bg-purple-100 text-purple-600'
-          }`}
+          className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${channel === 'chat'
+            ? 'bg-blue-100 text-blue-600'
+            : 'bg-purple-100 text-purple-600'
+            }`}
         >
           {channel.charAt(0).toUpperCase() + channel.slice(1)}
         </span>
@@ -300,5 +312,53 @@ const ReportCard = ({
         View Details
       </button>
     )}
+  </div>
+);
+
+const SessionCard = ({
+  id,
+  title,
+  subtitle,
+  date,
+  time,
+  language,
+  status = 'Available',
+  onCancel
+}: SessionCardProps) => (
+  <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all relative group">
+    <div className="flex justify-between items-start mb-2">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="text-lg font-semibold text-gray-900 leading-none">{title}</h3>
+        </div>
+        <p className="text-sm text-gray-500 font-medium">{subtitle}</p>
+      </div>
+      <StatusBadge status={status} variant={status === 'Available' ? 'green' : 'blue'} />
+    </div>
+
+    <div className="mb-3">
+      <LanguageTags knownLanguages={[language]} variant="rose" />
+    </div>
+
+    <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+      <DateAndTime
+        date={date}
+        label="Scheduled for"
+        showTime={true}
+        time={time}
+      />
+
+      {onCancel && (
+        <Button
+          variant="outline"
+          icon={
+            <FiSlash size={22} />
+          }
+          className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! text-gray-400 hover:text-red-500! hover:bg-red-50`}
+          onClick={onCancel}
+          args={[id]}
+        />
+      )}
+    </div>
   </div>
 );

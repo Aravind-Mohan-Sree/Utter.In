@@ -1,7 +1,7 @@
 export const API_ROUTES = {
   USER: {
     SIGNUP: '/user/signup',
-    FINISH_SIGNUP: '/user/finish-signup',    
+    FINISH_SIGNUP: '/user/finish-signup',
     VERIFY_OTP: '/user/verify-otp',
     VERIFY_EMAIL: '/user/verify-email',
     RESEND_OTP: '/user/resend-otp',
@@ -37,6 +37,9 @@ export const API_ROUTES = {
     UPDATE_PROFILE: '/tutor/update-profile',
     CHANGE_PASSWORD: '/tutor/change-password',
     SIGNOUT: '/tutor/signout',
+    CREATE_SESSION: '/tutor/create-session',
+    GET_SESSIONS: '/tutor/get-sessions',
+    CANCEL_SESSION: '/tutor/cancel-session',
   },
   ADMIN: {
     SIGNIN: '/admin/signin',
