@@ -6,8 +6,7 @@ import { Document, PipelineStage } from 'mongoose';
 
 export class UserRepository
   extends BaseRepository<User, IUser>
-  implements IUserRepository
-{
+  implements IUserRepository {
   constructor() {
     super(UserModel);
   }
@@ -47,7 +46,7 @@ export class UserRepository
       });
     }
 
-    // Fetch data and total count simultaneously
+    // Fetch data and filtered count simultaneously
     pipeline.push({
       $facet: {
         metadata: [{ $count: 'total' }],

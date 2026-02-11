@@ -14,17 +14,17 @@ export interface ISession extends Document {
 }
 
 const sessionSchema = new Schema<ISession>(
-    {
-        tutorId: { type: Schema.Types.ObjectId, ref: 'tutors', required: true },
-        scheduledAt: { type: Date, required: true },
-        duration: { type: Number, required: true },
-        language: { type: String, required: true },
-        topic: { type: String, required: true },
-        price: { type: Number, required: true },
-        status: { type: String, required: true, default: 'Available' },
-        expiresAt: { type: Date, required: true, index: { expireAfterSeconds: 0 } },
-    },
-    { timestamps: true },
+  {
+    tutorId: { type: Schema.Types.ObjectId, ref: 'tutors', required: true },
+    scheduledAt: { type: Date, required: true },
+    duration: { type: Number, required: true },
+    language: { type: String, required: true },
+    topic: { type: String, required: true },
+    price: { type: Number, required: true },
+    status: { type: String, required: true, default: 'Available' },
+    expiresAt: { type: Date, required: true, index: { expireAfterSeconds: 0 } },
+  },
+  { timestamps: true },
 );
 
 export const SessionModel = mongoose.model<ISession>('sessions', sessionSchema);

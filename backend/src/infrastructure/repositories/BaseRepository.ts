@@ -1,11 +1,11 @@
 import mongoose, { Document, Model, UpdateQuery } from 'mongoose';
-import { IBaseRepository } from '~repository-interfaces/IBaseRepository';
+import { IBaseRepository, FilterQuery } from '~repository-interfaces/IBaseRepository';
 
 export abstract class BaseRepository<
   Entity,
   ModelSchema,
 > implements IBaseRepository<Entity, ModelSchema> {
-  constructor(protected model: Model<ModelSchema & Document>) {}
+  constructor(protected model: Model<ModelSchema & Document>) { }
 
   async create(entity: Entity): Promise<Entity> {
     const schemaData = this.toSchema(entity);
@@ -22,16 +22,16 @@ export abstract class BaseRepository<
     return this.toEntity(doc);
   }
 
-  async findOneByField(filter: Partial<ModelSchema>): Promise<Entity | null> {
-    const doc = await this.model.findOne(filter);
+  async findOneByField(filter: FilterQuery<ModelSchema>): Promise<Entity | null> {
+    const doc = await this.model.findOne(filter as FilterQuery<ModelSchema & Document>);
 
     if (!doc) return null;
 
     return this.toEntity(doc);
   }
 
-  async findAllByField(filter: Partial<ModelSchema>): Promise<Entity[] | null> {
-    const docs = await this.model.find(filter);
+  async findAllByField(filter: FilterQuery<ModelSchema>): Promise<Entity[] | null> {
+    const docs = await this.model.find(filter as FilterQuery<ModelSchema & Document>);
 
     if (docs.length === 0) return null;
 
@@ -47,7 +47,7 @@ export abstract class BaseRepository<
       id,
       {
         $set: schemaData,
-      } as UpdateQuery<Partial<ModelSchema> & Document>,
+      } as UpdateQuery<ModelSchema & Document>,
       { new: true },
     );
 
@@ -55,15 +55,15 @@ export abstract class BaseRepository<
   }
 
   async updateOneByField(
-    filter: Partial<ModelSchema>,
+    filter: FilterQuery<ModelSchema>,
     entity: Partial<Entity>,
   ): Promise<Entity | null> {
     const schemaData = this.toSchema(entity);
     const doc = await this.model.findOneAndUpdate(
-      filter,
+      filter as NonNullable<FilterQuery<ModelSchema & Document>>,
       {
         $set: schemaData,
-      } as UpdateQuery<Partial<ModelSchema> & Document>,
+      } as UpdateQuery<ModelSchema & Document>,
       { new: true },
     );
 
@@ -71,20 +71,20 @@ export abstract class BaseRepository<
   }
 
   async updateAllByField(
-    filter: Partial<ModelSchema>,
+    filter: FilterQuery<ModelSchema>,
     entity: Partial<Entity>,
   ): Promise<boolean> {
     const schemaData = this.toSchema(entity);
 
-    const result = await this.model.updateMany(filter, {
+    const result = await this.model.updateMany(filter as NonNullable<FilterQuery<ModelSchema & Document>>, {
       $set: schemaData,
-    } as UpdateQuery<Partial<ModelSchema> & Document>);
+    } as UpdateQuery<ModelSchema & Document>);
 
     return result.acknowledged;
   }
 
-  async delete(filter: Partial<ModelSchema>): Promise<void | boolean> {
-    const result = await this.model.deleteMany(filter);
+  async delete(filter: FilterQuery<ModelSchema>): Promise<void | boolean> {
+    const result = await this.model.deleteMany(filter as NonNullable<FilterQuery<ModelSchema & Document>>);
 
     return result.acknowledged;
   }
@@ -92,15 +92,15 @@ export abstract class BaseRepository<
   async deleteOneById(id: string): Promise<void | boolean> {
     const result = await this.model.deleteOne({
       _id: new mongoose.Types.ObjectId(id),
-    });
+    } as FilterQuery<ModelSchema & Document>);
 
     return result.acknowledged;
   }
 
   async deleteOneByField(
-    filter: Partial<ModelSchema>,
+    filter: FilterQuery<ModelSchema>,
   ): Promise<void | boolean> {
-    const result = await this.model.deleteOne(filter);
+    const result = await this.model.deleteOne(filter as NonNullable<FilterQuery<ModelSchema & Document>>);
 
     return result.acknowledged;
   }

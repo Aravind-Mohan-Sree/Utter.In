@@ -12,4 +12,6 @@ export const successMessage = {
   STATUS_UPDATED: 'Status successfully updated',
   VERIFIED: 'Successfully verified',
   PROFILE_UPDATED: 'Profile successfully updated',
+  ORDER_CREATED: 'Order created successfully',
+  BOOKING_SUCCESS: 'Booking successful',
 };

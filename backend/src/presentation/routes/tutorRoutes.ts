@@ -183,7 +183,7 @@ const profileController = new ProfileController(
 const sessionController = new SessionController(
   createSessionUseCase,
   getSessionsUseCase,
-  cancelSessionUseCase
+  cancelSessionUseCase,
 );
 
 // wire auth middlewares

@@ -15,6 +15,7 @@ import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
 import { Dropdown } from '~components/shared/Dropdown';
 import { DetailsModal } from '~components/admin/modals';
+import { ResultsSummary } from '~components/shared/ResultsSummary';
 import { API_ROUTES } from '~constants/routes';
 import { utterRadioAlert } from '~utils/utterRadioAlert';
 import { RootState } from '~store/rootReducer';
@@ -52,10 +53,10 @@ export default function TutorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const totalPages = Math.ceil(totalTutorsCount / itemsPerPage);
+  const totalPages = Math.ceil(filteredTutorsCount / itemsPerPage);
   const from =
-    totalTutorsCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const to = Math.min(currentPage * itemsPerPage, totalTutorsCount);
+    filteredTutorsCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const to = Math.min(currentPage * itemsPerPage, filteredTutorsCount);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -79,15 +80,12 @@ export default function TutorsPage() {
 
         const tutors = res.tutorsData.tutors.map((tutor: Tutor) => ({
           ...tutor,
-          avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${
-            tutor.id
-          }.jpeg?v=${Date.now()}`,
-          introVideoUrl: `${API_ROUTES.TUTOR.FETCH_VIDEO}/${
-            tutor.id
-          }.mp4?v=${Date.now()}`,
-          certificateUrl: `${API_ROUTES.TUTOR.FETCH_CERTIFICATE}/${
-            tutor.id
-          }.pdf?v=${Date.now()}`,
+          avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${tutor.id
+            }.jpeg?v=${Date.now()}`,
+          introVideoUrl: `${API_ROUTES.TUTOR.FETCH_VIDEO}/${tutor.id
+            }.mp4?v=${Date.now()}`,
+          certificateUrl: `${API_ROUTES.TUTOR.FETCH_CERTIFICATE}/${tutor.id
+            }.pdf?v=${Date.now()}`,
         }));
 
         setTotalTutorsCount(res.tutorsData.totalTutorsCount);
@@ -192,12 +190,11 @@ export default function TutorsPage() {
             prevTutors.map((tutor) =>
               tutor.id === id
                 ? {
-                    ...tutor,
-                    avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${
-                      tutor.id
+                  ...tutor,
+                  avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${tutor.id
                     }.jpeg?v=${Date.now()}`,
-                    rejectionReason: reason,
-                  }
+                  rejectionReason: reason,
+                }
                 : tutor,
             ),
           );
@@ -238,39 +235,15 @@ export default function TutorsPage() {
         }}
       />
 
-      <div className="flex flex-col md:flex-row md:items-center gap-6 mb-4 text-black">
-        <div className="flex items-center gap-2">
-          <p className="text-sm">Items per page</p>
-          <Dropdown
-            options={itemsOptions}
-            selected={itemsPerPage.toString()}
-            onSelect={(val) => {
-              setItemsPerPage(+val);
-            }}
-          />
-        </div>
-
-        <p className="text-sm text-black">
-          Showing{' '}
-          <span className="font-medium text-rose-400">
-            {from}-{to}
-          </span>{' '}
-          of{' '}
-          <span className="font-medium text-rose-400">
-            {filteredTutorsCount}
-          </span>{' '}
-          results
-          {filteredTutorsCount !== totalTutorsCount && (
-            <span className="text-black ml-1">
-              (Total{' '}
-              <span className="text-rose-400 font-medium">
-                {totalTutorsCount}
-              </span>{' '}
-              tutors)
-            </span>
-          )}
-        </p>
-      </div>
+      <ResultsSummary
+        from={from}
+        to={to}
+        filteredCount={filteredTutorsCount}
+        totalCount={totalTutorsCount}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={setItemsPerPage}
+        itemsOptions={itemsOptions}
+      />
 
       {tutors.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4">

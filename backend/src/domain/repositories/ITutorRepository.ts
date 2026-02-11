@@ -8,6 +8,9 @@ export interface ITutorRepository extends IBaseRepository<Tutor, ITutor> {
     limit: number,
     query: string,
     filter: string,
+    sort?: string,
+    language?: string,
+    isAdmin?: boolean,
   ): Promise<{
     totalTutorsCount: number;
     filteredTutorsCount: number;

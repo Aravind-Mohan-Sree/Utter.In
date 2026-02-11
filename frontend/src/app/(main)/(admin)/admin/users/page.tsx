@@ -36,9 +36,9 @@ export default function UsersPage() {
   const [filteredUsersCount, setFilteredUsersCount] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
   const { user } = useSelector((state: RootState) => state.auth);
-  const totalPages = Math.ceil(totalUsersCount / itemsPerPage);
-  const from = totalUsersCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const to = Math.min(currentPage * itemsPerPage, totalUsersCount);
+  const totalPages = Math.ceil(filteredUsersCount / itemsPerPage);
+  const from = filteredUsersCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const to = Math.min(currentPage * itemsPerPage, filteredUsersCount);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -62,9 +62,8 @@ export default function UsersPage() {
 
         const users = res.usersData.users.map((user: User) => ({
           ...user,
-          avatarUrl: `${API_ROUTES.USER.FETCH_AVATAR}/${
-            user.id
-          }.jpeg?v=${Date.now()}`,
+          avatarUrl: `${API_ROUTES.USER.FETCH_AVATAR}/${user.id
+            }.jpeg?v=${Date.now()}`,
         }));
 
         setTotalUsersCount(res.usersData.totalUsersCount);

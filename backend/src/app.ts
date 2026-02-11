@@ -1,5 +1,7 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
 import { connectDB } from '~connect-db/connection';
 import { errorHandler } from '~middlewares/errorHandler';
 import { env } from '~config/env';
@@ -15,8 +17,6 @@ import '~strategies/googleUserStrategy';
 import '~strategies/googleTutorStrategy';
 import { tutorRouter } from '~routes/tutorRoutes';
 import { adminRouter } from '~routes/adminRoutes';
-
-dotenv.config();
 
 async function startServer() {
   const app = express();

@@ -1,5 +1,15 @@
 import express from 'express';
 import passport from 'passport';
+import { BookingController } from '~controllers/user/BookingController';
+import { CreateBookingOrderUseCase } from '~use-cases/user/booking/CreateBookingOrderUseCase';
+import { VerifyPaymentAndBookUseCase } from '~use-cases/user/booking/VerifyPaymentAndBookUseCase';
+import { RazorpayService } from '~concrete-services/RazorpayService';
+import { BookingRepository } from '~concrete-repositories/BookingRepository';
+import { FetchTutorsUseCase } from '~use-cases/user/tutors/FetchTutorsUseCase';
+import { GetTutorSessionsUseCase } from '~use-cases/user/tutors/GetTutorSessionsUseCase';
+import { TutorsController } from '~controllers/user/TutorsController';
+import { TutorRepository } from '~concrete-repositories/TutorRepository';
+import { SessionRepository } from '~concrete-repositories/SessionRepository';
 import { DataValidatorService } from '~concrete-services/DataValidatorService';
 import { HashService } from '~concrete-services/HashService';
 import { JwtService } from '~concrete-services/JwtService';
@@ -16,6 +26,8 @@ import { Authenticate } from '~middlewares/Authenticate';
 import { AuthMiddlewareBundler } from '~middlewares/AuthMiddlewareBundler';
 import { Authorize } from '~middlewares/Authorize';
 import { IUser } from '~models/UserModel';
+import { Tutor } from '~entities/Tutor';
+import { ITutor } from '~models/TutorModel';
 import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
 import { RegisterUserFromPendingUseCase } from '~use-cases/user/auth/RegisterUserFromPendingUseCase';
 import { RegisterUserUseCase } from '~use-cases/user/auth/RegisterUserUseCase';
@@ -44,8 +56,12 @@ import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
 import { MailService } from '~concrete-services/MailService';
 
 // repositories
+// repositories
 const userRepository = new UserRepository();
 const pendingUserRepository = new PendingUserRepository();
+const tutorRepository = new TutorRepository();
+const sessionRepository = new SessionRepository();
+const bookingRepository = new BookingRepository();
 
 // services
 const mailService = new MailService();
@@ -59,6 +75,7 @@ const s3Service = new S3Service({
   secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
 });
 const axiosImageGatewayService = new AxiosImageGatewayService();
+const razorpayService = new RazorpayService();
 
 // use-cases
 const registerUserUseCase = new RegisterUserUseCase(
@@ -127,6 +144,19 @@ const getUserDataUseCase = new GetEntityDataUseCase<User, IUser>(
   userRepository,
 );
 
+const fetchTutorsUseCase = new FetchTutorsUseCase(tutorRepository);
+const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
+  tutorRepository,
+);
+const getTutorSessionsUseCase = new GetTutorSessionsUseCase(sessionRepository);
+
+const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService);
+const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
+  bookingRepository,
+  sessionRepository,
+  razorpayService,
+);
+
 // controllers
 const authController = new AuthController(
   registerUserUseCase,
@@ -155,6 +185,15 @@ const userGoogleAuthController = new UserGoogleAuthController(
   uploadAvatarUseCase,
 );
 const signoutController = new SignoutController();
+const tutorsController = new TutorsController(
+  fetchTutorsUseCase,
+  getTutorDataUseCase,
+  getTutorSessionsUseCase,
+);
+const bookingController = new BookingController(
+  createBookingOrderUseCase,
+  verifyPaymentAndBookUseCase,
+);
 const getDataController = new GetDataController(getDataUseCase);
 const avatarController = new AvatarController(
   uploadFileUseCase,
@@ -224,5 +263,14 @@ router.patch(
   auth.verify(),
   profileController.changePassword,
 );
+
+// tutors
+router.get('/tutors', auth.verify(), tutorsController.fetchTutors);
+router.get('/tutors/:id', auth.verify(), tutorsController.getTutorDetails);
+router.get('/tutors/:id/sessions', auth.verify(), tutorsController.getTutorSessions);
+
+// booking
+router.post('/book/order', auth.verify(), bookingController.createOrder);
+router.post('/book/verify', auth.verify(), bookingController.verifyPayment);
 
 export const userRouter = router;

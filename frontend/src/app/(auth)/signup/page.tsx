@@ -87,7 +87,6 @@ const SignUp: React.FC = () => {
     userType === 'user' ? UserFinishSignupSchema : TutorFinishSignupSchema;
   const resubmitValidationSchema =
     requiredData === 'video' ? resubmitVideoSchema : resubmitCertSchema;
-    console.log(resubmitValidationSchema);
   const { handleSubmission } = useSubmitForm(
     userType,
     formData,

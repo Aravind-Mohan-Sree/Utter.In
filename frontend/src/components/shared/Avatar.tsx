@@ -20,6 +20,7 @@ type AvatarProps = {
   size: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   handleAvatarUpload?: (croppedBlob: Blob) => Promise<void>;
   handleAvatarDeletion?: () => Promise<void>;
+  editable?: boolean;
 };
 
 const Avatar = ({
@@ -27,6 +28,7 @@ const Avatar = ({
   size,
   handleAvatarUpload,
   handleAvatarDeletion,
+  editable = true,
 }: AvatarProps) => {
   const sizeClasses = {
     sm: 'w-10 h-10 text-base',
@@ -84,8 +86,8 @@ const Avatar = ({
   return (
     <div className="relative" ref={containerRef}>
       <div
-        className={`relative ${sizeClasses[size]} mx-auto rounded-full group overflow-hidden flex items-center justify-center bg-rose-50 border-1 border-rose-200`}
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className={`relative ${sizeClasses[size]} mx-auto rounded-full group overflow-hidden flex items-center justify-center bg-rose-50 border-1 border-rose-200 ${(editable || imgSrc) ? 'cursor-pointer' : ''}`}
+        onClick={() => (editable || imgSrc) && setIsMenuOpen(!isMenuOpen)}
       >
         {imgSrc ? (
           <Image
@@ -105,19 +107,17 @@ const Avatar = ({
         )}
 
         <div
-          className={`absolute inset-0 ${
-            user.role === 'user' || user.role === 'tutor' || imgSrc
-              ? 'bg-black/40 backdrop-blur-[2px]'
-              : ''
-          }  flex flex-col items-center justify-center gap-4 transition-all duration-200 rounded-full z-10 ${
-            isMenuOpen
+          className={`absolute inset-0 ${user.role === 'user' || user.role === 'tutor' || imgSrc
+            ? 'bg-black/40 backdrop-blur-[2px]'
+            : ''
+            }  flex flex-col items-center justify-center gap-4 transition-all duration-200 rounded-full z-10 ${isMenuOpen
               ? 'opacity-100 pointer-events-auto'
               : 'opacity-0 pointer-events-none lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto'
-          } ${isLoading && 'opacity-100'}`}
+            } ${isLoading && 'opacity-100'}`}
         >
           {isLoading && <LuLoaderCircle className="animate-spin" size={30} />}
 
-          {user.role !== 'admin' && !isLoading && (
+          {user.role !== 'admin' && !isLoading && editable && (
             <span onClick={(e) => e.stopPropagation()} className="contents">
               <Button
                 variant="outline"
@@ -149,7 +149,7 @@ const Avatar = ({
                 />
               </span>
 
-              {user.role !== 'admin' && (
+              {user.role !== 'admin' && editable && (
                 <span onClick={(e) => e.stopPropagation()} className="contents">
                   <Button
                     variant="outline"

@@ -10,13 +10,14 @@ import Button from '~components/shared/Button';
 import { FiCheckCircle, FiSlash } from 'react-icons/fi';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
 import { DateAndTime } from '~components/shared/DateAndTime';
-import { BiTime } from 'react-icons/bi';
+import { TbBrandBooking } from 'react-icons/tb';
 
 export type CardType = 'user' | 'tutor' | 'report' | 'session';
 
 interface BaseCardProps {
   id: string;
   type: CardType;
+  className?: string;
 }
 
 interface UserCardProps extends BaseCardProps {
@@ -43,8 +44,11 @@ export interface TutorCardProps extends BaseCardProps {
   isLoading: boolean;
   status: 'Active' | 'Blocked';
   onViewDetails?: (id: string) => void;
+  onBook?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
   customActions?: React.ReactNode;
+  hideStatus?: boolean;
+  viewDetailsIcon?: React.ReactNode;
 }
 
 interface ReportCardProps extends BaseCardProps {
@@ -75,6 +79,8 @@ export interface SessionCardProps extends BaseCardProps {
   language: string;
   status?: 'Available' | 'Booked';
   onCancel?: (id: string) => void;
+  onBook?: (id: string) => void;
+  price?: number;
 }
 
 type CardProps = UserCardProps | TutorCardProps | ReportCardProps | SessionCardProps;
@@ -105,8 +111,9 @@ const UserCard = ({
   status,
   knownLanguages,
   onToggleStatus,
+  className,
 }: UserCardProps) => (
-  <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all">
+  <div className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all ${className || ''}`}>
     <div className="mb-4">
       <div className="flex gap-3 min-w-0 items-start justify-between">
         <div className="flex gap-3 min-w-0 flex-1">
@@ -165,10 +172,14 @@ const TutorCard = ({
   isLoading,
   status,
   onViewDetails,
+  onBook,
   onToggleStatus,
   customActions,
+  hideStatus,
+  viewDetailsIcon,
+  className,
 }: TutorCardProps) => (
-  <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all">
+  <div className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all ${className || ''}`}>
     <div className="mb-4">
       <div className="flex gap-3 min-w-0 items-start justify-between">
         <div className="flex gap-3 min-w-0 flex-1">
@@ -179,7 +190,7 @@ const TutorCard = ({
             additionalInfo={yearsOfExperience}
           />
         </div>
-        <StatusBadge status={status} />
+        {!hideStatus && <StatusBadge status={status} />}
       </div>
     </div>
 
@@ -195,16 +206,25 @@ const TutorCard = ({
       <DateAndTime date={joinedAt} label="Joined" />
 
       <div className="flex gap-2">
-        {(onToggleStatus || onViewDetails || customActions) && (
+        {(onToggleStatus || onViewDetails || onBook || customActions) && (
           <div className="flex justify-end gap-1">
             {customActions ? (
               customActions
             ) : (
               <>
+                {onBook && (
+                  <Button
+                    variant="outline"
+                    icon={<TbBrandBooking size={22} />}
+                    className="h-fit rounded-lg p-0.5! transition-colors duration-200! text-rose-500! hover:bg-rose-50!"
+                    onClick={onBook}
+                    args={[id]}
+                  />
+                )}
                 {onViewDetails && (
                   <Button
                     variant="outline"
-                    icon={<RiVerifiedBadgeFill size={23} />}
+                    icon={viewDetailsIcon || <RiVerifiedBadgeFill size={23} />}
                     isLoading={isLoading}
                     className={`h-fit rounded-lg p-0.5! transition-colors duration-200! ${rejectionReason
                       ? 'hover:bg-gray-50!'
@@ -251,8 +271,9 @@ const ReportCard = ({
   abuseType,
   channel,
   onViewDetails,
+  className,
 }: ReportCardProps) => (
-  <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all">
+  <div className={`bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all ${className || ''}`}>
     {/* Header with Channel Badge and Status */}
     <div className="flex items-center justify-between mb-4">
       {channel && (
@@ -323,9 +344,12 @@ const SessionCard = ({
   time,
   language,
   status = 'Available',
-  onCancel
+  onCancel,
+  onBook,
+  price,
+  className,
 }: SessionCardProps) => (
-  <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all relative group">
+  <div className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all relative group ${className || ''}`}>
     <div className="flex justify-between items-start mb-2">
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -333,11 +357,15 @@ const SessionCard = ({
         </div>
         <p className="text-sm text-gray-500 font-medium">{subtitle}</p>
       </div>
-      <StatusBadge status={status} variant={status === 'Available' ? 'green' : 'blue'} />
+      {price !== undefined && (
+        <div className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-sm font-bold">
+          ₹{price}
+        </div>
+      )}
     </div>
 
     <div className="mb-3">
-      <LanguageTags knownLanguages={[language]} variant="rose" />
+      <LanguageTags knownLanguages={[language]} variant="default" />
     </div>
 
     <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
@@ -356,6 +384,17 @@ const SessionCard = ({
           }
           className={`text-gray-400! h-fit rounded-lg p-0.5! transition-colors duration-200! text-gray-400 hover:text-red-500! hover:bg-red-50`}
           onClick={onCancel}
+          args={[id]}
+        />
+      )}
+      {onBook && (
+        <Button
+          variant="outline"
+          icon={
+            <TbBrandBooking size={25} />
+          }
+          className={`text-rose-500! h-fit rounded-lg p-0.5! transition-colors duration-200! hover:bg-rose-50`}
+          onClick={onBook}
           args={[id]}
         />
       )}

@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { LuCalendar, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 import { Card } from '~components/admin/Card';
 import { utterToast } from '~utils/utterToast';
-import Loader from './Loader';
 
 export interface Session {
     id: string;
@@ -13,14 +12,16 @@ export interface Session {
     date: string;
     status: string;
     scheduledAt: string;
+    price: number;
 }
 
 interface SessionListProps {
     sessions: Session[];
     selectedDate: string;
     setSelectedDate: (date: string) => void;
-    userType: 'tutor' | 'user'; // 'tutor' can cancel, 'user' can book (future)
+    userType: 'tutor' | 'user';
     onAction?: (sessionId: string) => void;
+    onBook?: (sessionId: string) => void;
     loading?: boolean;
     minDate?: string;
     maxDate?: string;
@@ -32,6 +33,7 @@ export default function SessionList({
     setSelectedDate,
     userType,
     onAction,
+    onBook,
     loading = false,
     minDate,
     maxDate
@@ -74,7 +76,7 @@ export default function SessionList({
 
     return (
         <div className="flex flex-col items-center w-full animate-fadeIn">
-            {loading && <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-xl"><Loader /></div>}
+            {/* Loader removed as per request */}
 
             <h2 className="text-xl font-bold text-gray-900 mb-6">
                 {userType === 'tutor' ? 'Your Sessions' : 'Available Sessions'}
@@ -113,20 +115,21 @@ export default function SessionList({
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 min-[520px]:grid-cols-2 md:grid-cols-3 gap-6 w-full relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 w-full relative">
                 {sessions.map((session, index) => (
                     <Card
                         key={session.id}
                         id={session.id}
                         type="session"
-                        title={userType === 'tutor' ? `Session ${index + 1}` : session.topic}
-                        subtitle={userType === 'tutor' ? session.topic : session.time}
+                        title={`Session ${index + 1}`}
+                        subtitle={session.topic}
                         date={session.date}
                         time={session.time}
                         language={session.language}
                         status={session.booked ? 'Booked' : 'Available'}
+                        price={session.price}
                         onCancel={userType === 'tutor' ? onAction : undefined}
-                    // Add booking action support later for 'user' type if needed
+                        onBook={userType === 'user' ? onBook : undefined}
                     />
                 ))}
                 {sessions.length === 0 && (

@@ -8,6 +8,7 @@ interface DropdownProps {
   selected: string;
   onSelect: (value: string) => void;
   className?: string;
+  optionsClassName?: string;
 }
 
 export const Dropdown = ({
@@ -15,6 +16,7 @@ export const Dropdown = ({
   selected,
   onSelect,
   className = '',
+  optionsClassName = '',
 }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -41,14 +43,13 @@ export const Dropdown = ({
       >
         <span>{selected}</span>
         <FiChevronDown
-          className={`text-rose-400 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`text-rose-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+            }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-auto bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
+        <div className={`absolute right-0 mt-2 w-auto bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden ${optionsClassName}`}>
           {options.map((option) => (
             <button
               key={option}

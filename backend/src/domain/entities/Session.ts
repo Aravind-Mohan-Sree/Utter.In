@@ -1,5 +1,5 @@
 export class Session {
-    constructor(
+  constructor(
         public tutorId: string,
         public scheduledAt: Date,
         public duration: number,
@@ -11,5 +11,5 @@ export class Session {
         public id?: string,
         public createdAt?: Date,
         public updatedAt?: Date,
-    ) { }
+  ) { }
 }

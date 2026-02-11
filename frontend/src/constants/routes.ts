@@ -16,6 +16,9 @@ export const API_ROUTES = {
     UPDATE_PROFILE: '/user/update-profile',
     CHANGE_PASSWORD: '/user/change-password',
     SIGNOUT: '/user/signout',
+    GET_TUTORS: '/user/tutors',
+    CREATE_ORDER: '/user/book/order',
+    VERIFY_PAYMENT: '/user/book/verify',
   },
   TUTOR: {
     SIGNUP: '/tutor/signup',

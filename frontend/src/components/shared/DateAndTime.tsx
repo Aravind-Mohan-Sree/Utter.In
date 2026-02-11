@@ -38,7 +38,7 @@ export const DateAndTime = ({
         {showTime && (time || date) && (
           <>
             <span className="mx-1">•</span>
-            {time ? new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+            {time ? time : new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
           </>
         )}
       </span>

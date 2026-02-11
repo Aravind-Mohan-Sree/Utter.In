@@ -3,7 +3,7 @@ import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IFetchTutorsUseCase } from '~use-case-interfaces/admin/ITutorsUseCase';
 
 export class FetchTutorsUseCase implements IFetchTutorsUseCase {
-  constructor(private tutorRepo: ITutorRepository) {}
+  constructor(private tutorRepo: ITutorRepository) { }
 
   async execute(data: {
     page: number;
@@ -21,6 +21,9 @@ export class FetchTutorsUseCase implements IFetchTutorsUseCase {
         data.limit,
         data.query,
         data.filter,
+        undefined,
+        undefined,
+        true,
       );
 
     const fetchedTutors = tutors.map(TutorMapper.toResponse);
