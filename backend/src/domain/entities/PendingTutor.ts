@@ -5,10 +5,9 @@ export class PendingTutor {
     public knownLanguages?: string[],
     public yearsOfExperience?: string,
     public password?: string,
-    public otp?: string,
     public createdAt?: Date,
     public updatedAt?: Date,
     public id?: string,
     public googleId?: string,
-  ) {}
+  ) { }
 }

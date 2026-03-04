@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { FaCircleCheck } from 'react-icons/fa6';
-import Button from '~components/shared/Button';
 import { FiArrowLeft } from 'react-icons/fi';
+
+import Button from '~components/ui/Button';
 
 const VerificationPending: React.FC = () => {
   const router = useRouter();

@@ -67,6 +67,31 @@ export class MailService implements IMailService {
     });
   }
 
+  async sendBookingConfirmation(name: string, email: string, sessionTopic: string, language: string, sessionDate: string, isTutor: boolean): Promise<void> {
+    const roleText = isTutor ? 'You have a new booking' : 'Your session has been booked';
+    const body = `${roleText}.<br><br><b>Topic:</b> ${sessionTopic}<br><b>Language:</b> ${language}<br><b>Date:</b> ${sessionDate}`;
+
+    await this.send({
+      to: email,
+      subject: `Booking Confirmation: ${sessionTopic}`,
+      html: emailTemplate(name, body),
+    });
+  }
+
+  async sendBookingCancellation(name: string, email: string, sessionTopic: string, language: string, sessionDate: string, amount?: number): Promise<void> {
+    let body = `The session "<b>${sessionTopic}</b>" (${language}) scheduled for ${sessionDate} has been cancelled.`;
+
+    if (amount) {
+      body += `<br><br>The amount of <b>₹${amount}</b> has been credited back to your wallet.`;
+    }
+
+    await this.send({
+      to: email,
+      subject: `Session Cancelled: ${sessionTopic}`,
+      html: emailTemplate(name, body),
+    });
+  }
+
   generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }

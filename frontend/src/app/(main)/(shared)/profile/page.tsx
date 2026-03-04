@@ -1,22 +1,24 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { useSelector } from 'react-redux';
-import { ExperienceSelector } from '~components/auth/ExperienceSelector';
-import { InputField } from '~components/auth/InputField';
-import { LanguagesInput } from '~components/auth/LanguagesInput';
-import { PasswordInput } from '~components/auth/PasswordInput';
-import { TextAreaInput } from '~components/auth/TextAreaInput';
+import { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { ExperienceSelector } from '~components/form/ExperienceSelector';
+import { InputField } from '~components/form/InputField';
+import { LanguagesInput } from '~components/form/LanguagesInput';
+import { PasswordInput } from '~components/form/PasswordInput';
+import { TextAreaInput } from '~components/form/TextAreaInput';
 import Notification from '~components/layout/Notification';
-import AbuseReportsModal from '~components/profile/AbuseReportsModal';
-import Avatar from '~components/shared/Avatar';
-import ProfileDetail from '~components/profile/ProfileDetail';
-import TransactionHistoryModal from '~components/profile/TransactionHistoryModal';
-import AbstractShapesBackground from '~components/shared/AbstractShapesBackground';
-import Button from '~components/shared/Button';
-import Loader from '~components/shared/Loader';
+import AbuseReportsModal from '~components/modals/AbuseReportsModal';
+import ProfileDetail from '~components/blocks/ProfileDetail';
+import TransactionHistoryModal from '~components/modals/TransactionHistoryModal';
+import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
+import Avatar from '~components/ui/Avatar';
+import Button from '~components/ui/Button';
+import { DateAndTime } from '~components/ui/DateAndTime';
+import Loader from '~components/ui/Loader';
+import { API_ROUTES } from '~constants/routes';
 import {
   changePassword,
   getAccountDetails,
@@ -25,18 +27,16 @@ import {
   updateProfile,
   uploadAvatar,
 } from '~services/shared/managementService';
+import { getWalletTransactions } from '~services/shared/walletService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
-import { BiCamera, BiTime } from 'react-icons/bi';
 import {
   changePasswordSchema,
   tutorProfileUpdateSchema,
   userProfileUpdateSchema,
 } from '~validations/profileSchema';
-import { API_ROUTES } from '~constants/routes';
-import { DateAndTime } from '~components/shared/DateAndTime';
 
 interface ProfileData {
   name: string;
@@ -85,46 +85,78 @@ interface AbuseReport {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isAbuseReportsModalOpen, setIsAbuseReportsModalOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [error, setError] = useState(INITIAL_ERROR_STATE);
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
-  const { user } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [formData, setFormData] = useState<ProfileData | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     const timestamp = Date.now();
     return user?.role === 'user'
       ? `${API_ROUTES.USER.FETCH_AVATAR}/${user?.id}.jpeg?v=${timestamp}`
       : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user?.id}.jpeg?v=${timestamp}`;
   });
-  const router = useRouter();
+
   const validationSchema =
     user?.role === 'user' ? userProfileUpdateSchema : tutorProfileUpdateSchema;
 
-  const transactions: Transaction[] = [
-    {
-      id: 1,
-      type: 'payment',
-      description: 'Payment to Session',
-      date: 'January 15, 2025',
-      amount: -300,
-      balanceAfter: 2450,
-    },
-    {
-      id: 2,
-      type: 'refund',
-      description: 'Cancellation Refund',
-      date: 'January 12, 2025',
-      amount: 300,
-      balanceAfter: 2750,
-    },
-  ];
+  /**
+   * fetchWalletData wrapped in useCallback to prevent re-creation on every render.
+   * This stabilizes the dependency array for the useEffect hooks below.
+   */
+  const fetchWalletData = useCallback(async () => {
+    if (user?.role !== 'user') return;
+    try {
+      const wallet = await getWalletTransactions();
+      let currentBalance = wallet.balance;
+      const mappedTransactions = [...wallet.transactions]
+        .reverse()
+        .map((t, index) => {
+          const transactionRecord = {
+            id: index,
+            type: (t.type === 'credit' ? 'refund' : 'payment') as
+              | 'payment'
+              | 'refund',
+            description: t.description,
+            date: t.date,
+            amount: t.amount,
+            balanceAfter: currentBalance,
+          };
+          currentBalance -= t.type === 'credit' ? t.amount : -t.amount;
+          return transactionRecord;
+        });
+
+      setTransactions(mappedTransactions);
+      setWalletBalance(wallet.balance);
+    } catch (err: unknown) {
+      utterToast.error(errorHandler(err));
+    }
+  }, [user?.role]);
+
+  useEffect(() => {
+    if (user?.role === 'user') {
+      fetchWalletData();
+    }
+  }, [user, fetchWalletData]);
+
+  useEffect(() => {
+    if (isTransactionModalOpen) {
+      fetchWalletData();
+    }
+  }, [isTransactionModalOpen, fetchWalletData]);
 
   const abuseReports: AbuseReport[] = [
     {
@@ -164,18 +196,17 @@ export default function ProfilePage() {
 
   const handleAvatarUpload = async (croppedBlob: Blob) => {
     if (!user) return;
-
     try {
       const formData = new FormData();
       formData.append('avatar', croppedBlob);
 
       const res = await uploadAvatar(user!.role, formData);
-      const avatarUrl =
+      const newUrl =
         user.role === 'user'
           ? `${API_ROUTES.USER.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`
           : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`;
 
-      setAvatarUrl(avatarUrl);
+      setAvatarUrl(newUrl);
       utterToast.success(res.message);
     } catch (error) {
       utterToast.error(errorHandler(error));
@@ -185,7 +216,6 @@ export default function ProfilePage() {
   const handleAvatarDeletion = async () => {
     try {
       const res = await removeAvatar(user!.role);
-
       setAvatarUrl(null);
       utterToast.success(res.message);
     } catch (error) {
@@ -196,7 +226,6 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     try {
       const res = await signout(user!.role);
-
       dispatch({ type: 'signout' });
       utterToast.success(res.message);
       router.replace(`/signin?mode=${user?.role}`);
@@ -263,10 +292,7 @@ export default function ProfilePage() {
 
   const handleProfileUpdate = async () => {
     const fieldsToCompare = ['name', 'bio', 'knownLanguages'];
-
-    if (user?.role === 'tutor') {
-      fieldsToCompare.push('yearsOfExperience');
-    }
+    if (user?.role === 'tutor') fieldsToCompare.push('yearsOfExperience');
 
     const isUnchanged = fieldsToCompare.every((key) => {
       let newVal = formData![key as keyof ProfileData];
@@ -304,11 +330,7 @@ export default function ProfilePage() {
         {},
       );
 
-      setError({
-        ...INITIAL_ERROR_STATE,
-        ...newErrors,
-      });
-
+      setError({ ...INITIAL_ERROR_STATE, ...newErrors });
       return;
     }
 
@@ -344,10 +366,7 @@ export default function ProfilePage() {
         {},
       );
 
-      setError({
-        ...INITIAL_ERROR_STATE,
-        ...newErrors,
-      });
+      setError({ ...INITIAL_ERROR_STATE, ...newErrors });
       return;
     }
 
@@ -355,7 +374,6 @@ export default function ProfilePage() {
 
     try {
       const res = await changePassword(user!.role, formData as ProfileData);
-
       setFormData((prev) => ({
         ...prev!,
         currentPassword: '',
@@ -381,7 +399,6 @@ export default function ProfilePage() {
       {showNotifications && (
         <Notification onClose={() => setShowNotifications(false)} />
       )}
-
       <AbstractShapesBackground />
 
       <main className="pt-24 px-4 pb-6 max-w-7xl mx-auto">
@@ -389,6 +406,7 @@ export default function ProfilePage() {
           className={`relative grid grid-cols-1 gap-8 items-start ${isEditMode ? 'lg:grid-cols-2' : 'max-w-3xl mx-auto'
             }`}
         >
+          {/* Profile Overview Card */}
           <div className="bg-white/20 rounded-2xl shadow-lg p-6 h-fit backdrop-blur-xs">
             <div className="flex items-center gap-4 mb-6">
               <Avatar
@@ -426,7 +444,9 @@ export default function ProfilePage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-gray-600">Current Balance</p>
-                  <p className="text-2xl font-bold text-red-500">₹ 0</p>
+                  <p className="text-2xl font-bold text-green-500">
+                    ₹{walletBalance.toLocaleString()}
+                  </p>
                 </div>
                 <Button
                   text="Transaction History"
@@ -465,10 +485,13 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Edit Profile Form */}
           {isEditMode && (
             <div className="bg-white/20 rounded-2xl shadow-lg p-6 backdrop-blur-xs">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Edit Profile
+                </h2>
                 <p className="text-gray-600">
                   Update your personal information and preferences
                 </p>
@@ -518,6 +541,7 @@ export default function ProfilePage() {
                 </div>
               </form>
 
+              {/* Password Change Section */}
               <form className="mt-6 pt-6 border-t border-gray-200">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">
                   Change Password
@@ -575,7 +599,6 @@ export default function ProfilePage() {
               </form>
             </div>
           )}
-
         </div>
       </main>
 
@@ -583,7 +606,7 @@ export default function ProfilePage() {
         isOpen={isTransactionModalOpen}
         onClose={() => setIsTransactionModalOpen(false)}
         transactions={transactions}
-        totalBalance={formData.walletBalance}
+        totalBalance={walletBalance}
       />
 
       <AbuseReportsModal

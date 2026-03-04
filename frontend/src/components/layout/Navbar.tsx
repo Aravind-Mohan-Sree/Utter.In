@@ -1,29 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Notification from './Notification';
-import { FaBell } from 'react-icons/fa';
+import { Action, ThunkDispatch } from '@reduxjs/toolkit';
 import Image from 'next/image';
-import { GoX } from 'react-icons/go';
-import { BiMenu, BiSolidReport } from 'react-icons/bi';
-import { useSelector } from 'react-redux';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { RootState } from '~store/rootReducer';
-import { MdDashboard, MdPeople, MdSchool, MdLogout } from 'react-icons/md';
+import { useEffect,useState } from 'react';
+import { BiMenu, BiSolidReport } from 'react-icons/bi';
+import { FaBell } from 'react-icons/fa';
+import { GoX } from 'react-icons/go';
 import { HiChevronDoubleLeft } from 'react-icons/hi';
-import { IoLanguage } from 'react-icons/io5';
-import { utterToast } from '~utils/utterToast';
+import { MdDashboard, MdLogout,MdPeople, MdSchool } from 'react-icons/md';
+import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
+
+import { fetchSessionCount } from '~features/bookingSlice';
 import { signout } from '~services/shared/managementService';
+import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
+import { utterToast } from '~utils/utterToast';
+
 import { LanguageSwitcher } from './LanguageSwitcher';
+import Notification from './Notification';
 
 export function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { sessionCount } = useSelector((state: RootState) => state.booking);
   const userRole = user?.role;
-  const [sessionCount] = useState(8);
   const [chatCount] = useState(4);
   const [notificationCount] = useState(12);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,11 +34,16 @@ export function Navbar() {
   const pathname = usePathname();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const router = useRouter();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<ThunkDispatch<RootState, unknown, Action>>();
 
   const isAdminPath = pathname.startsWith('/admin');
 
-  // Update CSS variable for sidebar width
+  useEffect(() => {
+    if (user?.role && user.role !== 'admin') {
+      dispatch(fetchSessionCount(user.role));
+    }
+  }, [dispatch, user?.role]);
+
   useEffect(() => {
     if (userRole === 'admin' && isAdminPath) {
       const sidebarWidth = isSidebarCollapsed ? '80px' : '256px';
@@ -112,18 +120,16 @@ export function Navbar() {
     return (
       <>
         <div
-          className={`fixed inset-0 bg-rose-100/30 z-40 backdrop-blur-md lg:hidden transition-opacity duration-300 ${
-            isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
+          className={`fixed inset-0 bg-rose-100/30 z-40 backdrop-blur-md lg:hidden transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
           onClick={() => setIsMenuOpen(false)}
         />
 
         <aside
           className={`fixed lg:fixed inset-y-0 left-0 z-50 bg-white shadow-lg transition-all duration-300 ease-in-out flex flex-col h-screen
-            ${
-              isMenuOpen
-                ? 'translate-x-0'
-                : '-translate-x-full lg:translate-x-0'
+            ${isMenuOpen
+              ? 'translate-x-0'
+              : '-translate-x-full lg:translate-x-0'
             }
             ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64`}
         >
@@ -138,11 +144,10 @@ export function Navbar() {
                   className="shrink-0 animate-bounce"
                 />
                 <div
-                  className={`flex transition-all duration-300 ease-in-out ${
-                    isSidebarCollapsed
-                      ? 'lg:opacity-0 lg:w-0 lg:invisible'
-                      : 'opacity-100 w-auto visible'
-                  }`}
+                  className={`flex transition-all duration-300 ease-in-out ${isSidebarCollapsed
+                    ? 'lg:opacity-0 lg:w-0 lg:invisible'
+                    : 'opacity-100 w-auto visible'
+                    }`}
                 >
                   <span className="text-2xl font-bold text-rose-400 whitespace-nowrap">
                     Utter
@@ -166,19 +171,17 @@ export function Navbar() {
                     href={link.href}
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center gap-3 px-3.5 py-3 rounded-lg transition-all duration-300 relative group
-                      ${
-                        pathname === link.href
-                          ? 'bg-rose-50 text-rose-400'
-                          : 'text-gray-700 hover:bg-rose-50'
+                      ${pathname === link.href
+                        ? 'bg-rose-50 text-rose-400'
+                        : 'text-gray-700 hover:bg-rose-50'
                       }`}
                   >
                     <span className="text-xl shrink-0">{link.icon}</span>
                     <div
-                      className={`flex-1 flex items-center justify-between transition-all duration-300 ease-in-out overflow-hidden ${
-                        isSidebarCollapsed
-                          ? 'lg:opacity-0 lg:w-0 lg:invisible'
-                          : 'opacity-100 w-auto visible delay-00'
-                      }`}
+                      className={`flex-1 flex items-center justify-between transition-all duration-300 ease-in-out overflow-hidden ${isSidebarCollapsed
+                        ? 'lg:opacity-0 lg:w-0 lg:invisible'
+                        : 'opacity-100 w-auto visible delay-00'
+                        }`}
                     >
                       <span className="font-medium truncate mr-2 ml-1">
                         {link.label}
@@ -192,19 +195,17 @@ export function Navbar() {
 
           <div className="p-4 border-t border-gray-100 space-y-4">
             <div
-              className={`flex items-center gap-3 px-2 min-h-[40px] transition-all duration-300 ${
-                isSidebarCollapsed ? 'lg:justify-start' : 'justify-start'
-              }`}
+              className={`flex items-center gap-3 px-2 min-h-[40px] transition-all duration-300 ${isSidebarCollapsed ? 'lg:justify-start' : 'justify-start'
+                }`}
             >
               <span className="flex justify-center items-center rounded-full bg-rose-200 w-8 h-8 shrink-0 text-rose-400">
                 {user?.name?.[0]}
               </span>
               <div
-                className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                  isSidebarCollapsed
-                    ? 'lg:opacity-0 lg:max-w-0 lg:invisible'
-                    : 'opacity-100 max-w-[200px] visible'
-                }`}
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${isSidebarCollapsed
+                  ? 'lg:opacity-0 lg:max-w-0 lg:invisible'
+                  : 'opacity-100 max-w-[200px] visible'
+                  }`}
               >
                 <h3 className="font-medium text-gray-900 truncate leading-tight">
                   {user?.name}
@@ -221,17 +222,15 @@ export function Navbar() {
                 className="hidden lg:flex cursor-pointer items-center gap-3 px-3.5 py-3 text-gray-700 hover:bg-rose-50 rounded-lg hover:text-rose-400 transition-colors"
               >
                 <HiChevronDoubleLeft
-                  className={`shrink-0 transition-transform duration-300 ${
-                    isSidebarCollapsed ? 'rotate-180' : ''
-                  }`}
+                  className={`shrink-0 transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''
+                    }`}
                   size={20}
                 />
                 <div
-                  className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                    isSidebarCollapsed
-                      ? 'lg:opacity-0 lg:max-w-0 lg:invisible'
-                      : 'opacity-100 max-w-[150px] visible'
-                  }`}
+                  className={`transition-all duration-300 ease-in-out overflow-hidden ${isSidebarCollapsed
+                    ? 'lg:opacity-0 lg:max-w-0 lg:invisible'
+                    : 'opacity-100 max-w-[150px] visible'
+                    }`}
                 >
                   <span className="font-medium whitespace-nowrap">
                     Collapse
@@ -255,11 +254,10 @@ export function Navbar() {
               >
                 <MdLogout className="text-xl shrink-0" />
                 <div
-                  className={`flex transition-all duration-300 ease-in-out overflow-hidden ${
-                    isSidebarCollapsed
-                      ? 'lg:opacity-0 lg:w-0 lg:invisible'
-                      : 'opacity-100 lg:w-32 visible'
-                  }`}
+                  className={`flex transition-all duration-300 ease-in-out overflow-hidden ${isSidebarCollapsed
+                    ? 'lg:opacity-0 lg:w-0 lg:invisible'
+                    : 'opacity-100 lg:w-32 visible'
+                    }`}
                 >
                   <span className="font-medium whitespace-nowrap">
                     Sign Out
@@ -298,9 +296,8 @@ export function Navbar() {
   return (
     <>
       <div
-        className={`fixed inset-0 bg-rose-100/30 backdrop-blur-md z-40 lg:hidden transition-opacity duration-300 ${
-          isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-rose-100/30 backdrop-blur-md z-40 lg:hidden transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
         onClick={() => setIsMenuOpen(false)}
       />
 
@@ -326,16 +323,15 @@ export function Navbar() {
                       <Link
                         href={link.href}
                         className={`flex items-center h-full px-1 text-sm font-medium transition-colors 
-                          ${
-                            pathname === link.href
-                              ? 'shadow-[inset_0_-2px_0_0_#fb7185] text-rose-400'
-                              : 'border-transparent text-gray-600 hover:text-rose-400'
+                          ${pathname === link.href
+                            ? 'shadow-[inset_0_-2px_0_0_#fb7185] text-rose-400'
+                            : 'border-transparent text-gray-600 hover:text-rose-400'
                           }`}
                       >
                         {link.label}
-                        {link.badge && (
+                        {(link.badge ?? 0) > 0 && (
                           <span className="ml-2 bg-rose-100 text-rose-500 text-[0.65rem] font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                            {link.badge > 99 ? '99+' : link.badge}
+                            {(link.badge ?? 0) > 99 ? '99+' : link.badge}
                           </span>
                         )}
                       </Link>
@@ -382,10 +378,9 @@ export function Navbar() {
 
         <div
           className={`lg:hidden absolute top-16 left-0 right-0 bg-white border-b shadow-xl transition-all duration-300 origin-top
-            ${
-              isMenuOpen
-                ? 'scale-y-100 opacity-100'
-                : 'scale-y-0 opacity-0 pointer-events-none'
+            ${isMenuOpen
+              ? 'scale-y-100 opacity-100'
+              : 'scale-y-0 opacity-0 pointer-events-none'
             }`}
         >
           <div className="p-4 space-y-4">
@@ -393,15 +388,14 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center justify-between p-3 rounded-lg ${
-                  pathname === link.href
-                    ? 'bg-rose-50 text-rose-500'
-                    : 'text-gray-600'
-                }`}
+                className={`flex items-center justify-between p-3 rounded-lg ${pathname === link.href
+                  ? 'bg-rose-50 text-rose-500'
+                  : 'text-gray-600'
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 <span className="font-medium">{link.label}</span>
-                {link.badge && (
+                {(link.badge ?? 0) > 0 && (
                   <span className="bg-rose-100 text-rose-500 text-xs px-2 py-0.5 rounded-full">
                     {link.badge}
                   </span>

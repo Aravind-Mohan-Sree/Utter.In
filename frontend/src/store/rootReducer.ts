@@ -1,8 +1,11 @@
 import { combineReducers, UnknownAction } from '@reduxjs/toolkit';
+
 import { authReducer } from '~features/authSlice';
+import { bookingReducer } from '~features/bookingSlice';
 
 const appReducer = combineReducers({
   auth: authReducer,
+  booking: bookingReducer,
 });
 
 export type RootState = ReturnType<typeof appReducer>;

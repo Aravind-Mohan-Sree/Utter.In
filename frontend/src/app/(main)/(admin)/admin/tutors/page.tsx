@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { SearchAndFilter } from '~components/admin/SearchAndFilter';
-import { Card } from '~components/admin/Card';
-import { Pagination } from '~components/shared/Pagination';
+import { useEffect, useState } from 'react';
 import { MdPeople } from 'react-icons/md';
+import { useSelector } from 'react-redux';
+
+import { Card } from '~components/ui/Card';
+import { DetailsModal } from '~components/modals';
+import { SearchAndFilter } from '~components/form/SearchAndFilter';
+import { Pagination } from '~components/ui/Pagination';
+import { ResultsSummary } from '~components/ui/ResultsSummary';
+import { API_ROUTES } from '~constants/routes';
 import {
   approve,
   fetchTutors,
   reject,
   toggleStatus,
 } from '~services/admin/tutorsService';
-import { utterToast } from '~utils/utterToast';
-import { errorHandler } from '~utils/errorHandler';
-import { Dropdown } from '~components/shared/Dropdown';
-import { DetailsModal } from '~components/admin/modals';
-import { ResultsSummary } from '~components/shared/ResultsSummary';
-import { API_ROUTES } from '~constants/routes';
-import { utterRadioAlert } from '~utils/utterRadioAlert';
 import { RootState } from '~store/rootReducer';
-import { useSelector } from 'react-redux';
+import { errorHandler } from '~utils/errorHandler';
+import { utterRadioAlert } from '~utils/utterRadioAlert';
+import { utterToast } from '~utils/utterToast';
 
 interface Tutor {
   id: string;

@@ -1,5 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
-import { store } from '~store/store';
+
+import { getStore } from '~store/storeReference';
 
 axios.interceptors.request.use(
   (config: InternalAxiosRequestConfig<unknown>) => {
@@ -16,7 +17,8 @@ axios.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       const responseMessage = error.response?.data?.message;
 
-      store.dispatch({ type: 'signout' });
+      const store = getStore();
+      store?.dispatch({ type: 'signout' });
 
       if (typeof window !== 'undefined') {
         const isAdminRoute = window.location.pathname.startsWith('/admin');

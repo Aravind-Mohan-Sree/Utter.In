@@ -16,6 +16,10 @@ export class CancelSessionUseCase implements ICancelSessionUseCase {
       throw new ForbiddenError('You are not authorized to cancel this session');
     }
 
+    if (session.status === 'Booked') {
+      throw new ForbiddenError('Cannot cancel a session that has already been booked');
+    }
+
     await this.sessionRepository.deleteOneById(sessionId);
 
     return true;

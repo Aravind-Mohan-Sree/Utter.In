@@ -23,15 +23,13 @@ export class UserRepository
   }> {
     const pipeline: PipelineStage[] = [];
     const totalUsersCount = await this.model.countDocuments({});
-
-    // Handle Status Filter
+    
     if (filter !== 'All') {
       pipeline.push({
         $match: { isBlocked: filter === 'Blocked' },
       });
     }
-
-    // Handle Search Query
+    
     if (query) {
       pipeline.push({
         $match: {
@@ -45,8 +43,7 @@ export class UserRepository
         },
       });
     }
-
-    // Fetch data and filtered count simultaneously
+    
     pipeline.push({
       $facet: {
         metadata: [{ $count: 'total' }],

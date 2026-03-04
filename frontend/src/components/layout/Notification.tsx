@@ -12,7 +12,6 @@ interface NotificationProps {
 }
 
 export default function Notification({ onClose }: NotificationProps) {
-  // Mock notifications
   const notifications: Notification[] = [
     {
       id: 1,

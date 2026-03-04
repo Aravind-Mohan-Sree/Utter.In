@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { SearchAndFilter } from '~components/admin/SearchAndFilter';
-import { Card } from '~components/admin/Card';
-import { Pagination } from '~components/shared/Pagination';
+import { useEffect,useState } from 'react';
 import { MdPeople } from 'react-icons/md';
-import { fetchUsers, toggleStatus } from '~services/admin/usersService';
-import { utterToast } from '~utils/utterToast';
-import { errorHandler } from '~utils/errorHandler';
-import { Dropdown } from '~components/shared/Dropdown';
-import { API_ROUTES } from '~constants/routes';
-import { RootState } from '~store/rootReducer';
 import { useSelector } from 'react-redux';
+
+import { Card } from '~components/ui/Card';
+import { SearchAndFilter } from '~components/form/SearchAndFilter';
+import { Dropdown } from '~components/ui/Dropdown';
+import { Pagination } from '~components/ui/Pagination';
+import { API_ROUTES } from '~constants/routes';
+import { fetchUsers, toggleStatus } from '~services/admin/usersService';
+import { RootState } from '~store/rootReducer';
+import { errorHandler } from '~utils/errorHandler';
+import { utterToast } from '~utils/utterToast';
 
 interface User {
   id: string;

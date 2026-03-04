@@ -1,21 +1,3 @@
-export {};
-
-interface TranslationLanguage {
-  title: string;
-  name: string;
-}
-
-interface GoogleTranslationConfig {
-  languages: TranslationLanguage[];
-  defaultLanguage: string;
-}
-
-declare global {
-  interface Window {
-    __GOOGLE_TRANSLATION_CONFIG__: GoogleTranslationConfig;
-  }
-}
-
 if (typeof window !== 'undefined') {
   window.__GOOGLE_TRANSLATION_CONFIG__ = {
     languages: [

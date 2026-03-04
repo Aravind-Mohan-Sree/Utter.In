@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
 import { parseCookies, setCookie } from 'nookies';
+import { useEffect, useRef,useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { IoLanguage } from 'react-icons/io5';
 
@@ -262,4 +262,4 @@ const LanguageSwitcher = () => {
   );
 };
 
-export { LanguageSwitcher, COOKIE_NAME };
+export { COOKIE_NAME,LanguageSwitcher };

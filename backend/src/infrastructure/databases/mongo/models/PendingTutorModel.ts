@@ -6,7 +6,6 @@ export interface IPendingTutor extends Document {
   knownLanguages: string[];
   yearsOfExperience: string;
   password: string;
-  otp?: string;
   googleId?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +18,6 @@ const pendingTutorSchema = new Schema<IPendingTutor>(
     knownLanguages: { type: [String], default: null },
     yearsOfExperience: { type: String, default: null },
     password: { type: String, default: null },
-    otp: { type: String, default: null },
     googleId: { type: String, default: null },
     updatedAt: { type: Date, default: Date.now, expires: 120 },
   },

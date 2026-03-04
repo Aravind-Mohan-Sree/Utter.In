@@ -1,5 +1,6 @@
-import Swal from 'sweetalert2';
 import '../styles/utterAlert.css';
+
+import Swal from 'sweetalert2';
 
 type IconType =
   | 'success'
@@ -20,7 +21,7 @@ export const utterAlert = ({
   input = undefined as 'radio' | undefined,
   inputOptions = {} as Record<string, string>,
   inputPlaceholder = 'Select an option',
-  onConfirm = (value?: string) => {},
+  onConfirm = (_value?: string) => {},
 }) => {
   return Swal.fire({
     title,
@@ -53,9 +54,13 @@ export const utterAlert = ({
       }
       return value;
     },
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      onConfirm(result.value);
+      try {
+        await onConfirm(result.value);
+      } catch (error) {
+        console.error('utterAlert onConfirm failed:', error);
+      }
     }
   });
 };

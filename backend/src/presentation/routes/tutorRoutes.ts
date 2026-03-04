@@ -12,6 +12,7 @@ import { SignoutController } from '~controllers/shared/SignoutController';
 import { Tutor } from '~entities/Tutor';
 import { PendingTutorRepository } from '~concrete-repositories/PendingTutorRepository';
 import { TutorRepository } from '~concrete-repositories/TutorRepository';
+import { UserRepository } from '~concrete-repositories/UserRepository';
 import { Authenticate } from '~middlewares/Authenticate';
 import { AuthMiddlewareBundler } from '~middlewares/AuthMiddlewareBundler';
 import { Authorize } from '~middlewares/Authorize';
@@ -49,11 +50,25 @@ import { CreateSessionUseCase } from '~use-cases/tutor/session/CreateSessionUseC
 import { GetSessionsUseCase } from '~use-cases/tutor/session/GetSessionsUseCase';
 import { CancelSessionUseCase } from '~use-cases/tutor/session/CancelSessionUseCase';
 import { SessionController } from '~controllers/tutor/SessionController';
+import { BookingController } from '~controllers/user/BookingController';
+import { CreateBookingOrderUseCase } from '~use-cases/user/booking/CreateBookingOrderUseCase';
+import { VerifyPaymentAndBookUseCase } from '~use-cases/user/booking/VerifyPaymentAndBookUseCase';
+import { GetBookingsUseCase } from '~use-cases/shared/GetBookingsUseCase';
+import { CancelBookingUseCase } from '~use-cases/shared/CancelBookingUseCase';
+import { BookingRepository } from '~concrete-repositories/BookingRepository';
+import { WalletRepository } from '~concrete-repositories/WalletRepository';
+import { RazorpayService } from '~concrete-services/RazorpayService';
+import { GetWalletTransactionsUseCase } from '~use-cases/shared/GetWalletTransactionsUseCase';
+import { WalletController } from '~controllers/shared/WalletController';
+import { RedisOtpService } from '~concrete-services/RedisOtpService';
 
 // repositories
+const userRepository = new UserRepository();
 const tutorRepository = new TutorRepository();
 const pendingTutorRepository = new PendingTutorRepository();
 const sessionRepository = new SessionRepository();
+const bookingRepository = new BookingRepository();
+const walletRepository = new WalletRepository();
 
 // services
 const mailService = new MailService();
@@ -68,6 +83,8 @@ const s3Service = new S3Service({
   secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
 });
 const axiosImageGatewayService = new AxiosImageGatewayService();
+const razorpayService = new RazorpayService();
+const redisOtpService = new RedisOtpService();
 
 // use-cases
 const registerTutorUseCase = new RegisterTutorUseCase(
@@ -80,10 +97,10 @@ const finishRegisterTutorUseCase = new FinishRegisterTutorUseCase(
   tutorRepository,
 );
 const resubmitAccountUseCase = new ResubmitAccountUseCase(tutorRepository);
-const sendOtpUseCase = new SendOtpUseCase(mailService, pendingTutorRepository);
+const sendOtpUseCase = new SendOtpUseCase(mailService, pendingTutorRepository, redisOtpService);
 const verifyOtpUseCase = new VerifyOtpUseCase(
   mailService,
-  pendingTutorRepository,
+  redisOtpService,
 );
 const registerTutorFromPendingUseCase = new RegisterTutorFromPendingUseCase(
   pendingTutorRepository,
@@ -92,11 +109,13 @@ const registerTutorFromPendingUseCase = new RegisterTutorFromPendingUseCase(
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   tutorRepository,
   pendingTutorRepository,
+  redisOtpService,
 );
 const forgotPasswordOtpVerifyUseCase = new ForgotPasswordOtpVerifyUseCase(
   pendingTutorRepository,
   mailService,
   jwtService,
+  redisOtpService,
 );
 const resetPasswordUseCase = new ResetPasswordUseCase(
   jwtService,
@@ -186,6 +205,36 @@ const sessionController = new SessionController(
   cancelSessionUseCase,
 );
 
+const getWalletTransactionsUseCase = new GetWalletTransactionsUseCase(walletRepository);
+const walletController = new WalletController(getWalletTransactionsUseCase);
+
+const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService, sessionRepository);
+const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
+  bookingRepository,
+  sessionRepository,
+  userRepository,
+  tutorRepository,
+  razorpayService,
+  mailService,
+  walletRepository,
+);
+const getBookingsUseCase = new GetBookingsUseCase(bookingRepository);
+const cancelBookingUseCase = new CancelBookingUseCase(
+  bookingRepository,
+  sessionRepository,
+  userRepository,
+  tutorRepository,
+  walletRepository,
+  mailService,
+);
+
+const bookingController = new BookingController(
+  createBookingOrderUseCase,
+  verifyPaymentAndBookUseCase,
+  getBookingsUseCase,
+  cancelBookingUseCase,
+);
+
 // wire auth middlewares
 const authenticate = new Authenticate<Tutor>(jwtService, getTutorDataUseCase);
 const authorize = new Authorize();
@@ -249,9 +298,16 @@ router.patch(
   profileController.changePassword,
 );
 
-// Session Management
+// create session
 router.post('/create-session', auth.verify(), sessionController.createSession);
 router.get('/get-sessions', auth.verify(), sessionController.getSessions);
 router.delete('/cancel-session/:sessionId', auth.verify(), sessionController.cancelSession);
+
+// booking
+router.get('/bookings', auth.verify(), bookingController.getBookings);
+router.patch('/bookings/:id/cancel', auth.verify(), bookingController.cancelBooking);
+
+// wallet
+router.get('/wallet', auth.verify(), walletController.getTransactions);
 
 export const tutorRouter = router;

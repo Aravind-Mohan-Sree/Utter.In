@@ -6,8 +6,7 @@ import { Document } from 'mongoose';
 
 export class PendingUserRepository
   extends BaseRepository<PendingUser, IPendingUser>
-  implements IPendingUserRepository
-{
+  implements IPendingUserRepository {
   constructor() {
     super(PendingUserModel);
   }
@@ -20,7 +19,6 @@ export class PendingUserRepository
       email: entity.email,
       knownLanguages: entity.knownLanguages!,
       password: entity.password!,
-      otp: entity.otp!,
       googleId: entity.googleId,
       createdAt: entity.createdAt!,
       updatedAt: entity.updatedAt!,
@@ -37,7 +35,6 @@ export class PendingUserRepository
       data.name,
       data.knownLanguages,
       data.password,
-      data.otp,
       data.createdAt,
       data.updatedAt,
       String(data._id),

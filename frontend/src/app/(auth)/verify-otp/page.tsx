@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { parseCookies } from 'nookies';
+import React, { useEffect, useRef,useState } from 'react';
+import { FiArrowLeft } from 'react-icons/fi';
+
+import Button from '~components/ui/Button';
 import {
-  resendOtp,
   forgotPasswordOtpVerify,
+  resendOtp,
   verifyOtp,
 } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
-import { parseCookies } from 'nookies';
-import Button from '~components/shared/Button';
-import { FiArrowLeft } from 'react-icons/fi';
 
 const VerifyOtp: React.FC = () => {
   const router = useRouter();

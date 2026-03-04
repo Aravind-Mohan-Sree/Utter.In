@@ -9,7 +9,6 @@ export class SessionRepository extends BaseRepository<Session, ISession> impleme
     super(SessionModel);
   }
 
-
   protected toSchema(entity: Session | Partial<Session>): ISession | Partial<ISession> {
     return {
       tutorId: entity.tutorId ? new mongoose.Types.ObjectId(entity.tutorId) : undefined,

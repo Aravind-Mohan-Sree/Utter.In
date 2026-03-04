@@ -54,14 +54,20 @@ import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
 import { FinishRegisterUserUseCase } from '~use-cases/user/auth/FinishRegisterUserUseCase';
 import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
 import { MailService } from '~concrete-services/MailService';
+import { GetBookingsUseCase } from '~use-cases/shared/GetBookingsUseCase';
+import { CancelBookingUseCase } from '~use-cases/shared/CancelBookingUseCase';
+import { GetWalletTransactionsUseCase } from '~use-cases/shared/GetWalletTransactionsUseCase';
+import { WalletController } from '~controllers/shared/WalletController';
+import { WalletRepository } from '~concrete-repositories/WalletRepository';
+import { RedisOtpService } from '~concrete-services/RedisOtpService';
 
-// repositories
 // repositories
 const userRepository = new UserRepository();
 const pendingUserRepository = new PendingUserRepository();
 const tutorRepository = new TutorRepository();
 const sessionRepository = new SessionRepository();
 const bookingRepository = new BookingRepository();
+const walletRepository = new WalletRepository();
 
 // services
 const mailService = new MailService();
@@ -76,6 +82,7 @@ const s3Service = new S3Service({
 });
 const axiosImageGatewayService = new AxiosImageGatewayService();
 const razorpayService = new RazorpayService();
+const redisOtpService = new RedisOtpService();
 
 // use-cases
 const registerUserUseCase = new RegisterUserUseCase(
@@ -89,10 +96,10 @@ const finishRegisterUserUseCase = new FinishRegisterUserUseCase(
   jwtService,
   mailService,
 );
-const sendOtpUseCase = new SendOtpUseCase(mailService, pendingUserRepository);
+const sendOtpUseCase = new SendOtpUseCase(mailService, pendingUserRepository, redisOtpService);
 const verifyOtpUseCase = new VerifyOtpUseCase(
   mailService,
-  pendingUserRepository,
+  redisOtpService,
 );
 const registerUserFromPendingUseCase = new RegisterUserFromPendingUseCase(
   pendingUserRepository,
@@ -102,11 +109,13 @@ const registerUserFromPendingUseCase = new RegisterUserFromPendingUseCase(
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   userRepository,
   pendingUserRepository,
+  redisOtpService,
 );
 const forgotPasswordOtpVerifyUseCase = new ForgotPasswordOtpVerifyUseCase(
   pendingUserRepository,
   mailService,
   jwtService,
+  redisOtpService,
 );
 const resetPasswordUseCase = new ResetPasswordUseCase(
   jwtService,
@@ -150,11 +159,24 @@ const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
 );
 const getTutorSessionsUseCase = new GetTutorSessionsUseCase(sessionRepository);
 
-const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService);
+const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService, sessionRepository);
 const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
   bookingRepository,
   sessionRepository,
+  userRepository,
+  tutorRepository,
   razorpayService,
+  mailService,
+  walletRepository,
+);
+const getBookingsUseCase = new GetBookingsUseCase(bookingRepository);
+const cancelBookingUseCase = new CancelBookingUseCase(
+  bookingRepository,
+  sessionRepository,
+  userRepository,
+  tutorRepository,
+  walletRepository,
+  mailService,
 );
 
 // controllers
@@ -193,6 +215,8 @@ const tutorsController = new TutorsController(
 const bookingController = new BookingController(
   createBookingOrderUseCase,
   verifyPaymentAndBookUseCase,
+  getBookingsUseCase,
+  cancelBookingUseCase,
 );
 const getDataController = new GetDataController(getDataUseCase);
 const avatarController = new AvatarController(
@@ -205,6 +229,9 @@ const profileController = new ProfileController(
   changePasswordUseCase,
   dataValidatorService,
 );
+
+const getWalletTransactionsUseCase = new GetWalletTransactionsUseCase(walletRepository);
+const walletController = new WalletController(getWalletTransactionsUseCase);
 
 // wire auth middlewares
 const authenticate = new Authenticate<User>(jwtService, getUserDataUseCase);
@@ -272,5 +299,10 @@ router.get('/tutors/:id/sessions', auth.verify(), tutorsController.getTutorSessi
 // booking
 router.post('/book/order', auth.verify(), bookingController.createOrder);
 router.post('/book/verify', auth.verify(), bookingController.verifyPayment);
+router.get('/bookings', auth.verify(), bookingController.getBookings);
+router.patch('/bookings/:id/cancel', auth.verify(), bookingController.cancelBooking);
+
+// wallet
+router.get('/wallet', auth.verify(), walletController.getTransactions);
 
 export const userRouter = router;

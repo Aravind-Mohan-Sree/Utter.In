@@ -7,7 +7,6 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  prettier,
   {
     plugins: {
       'simple-import-sort': simpleImportSort,
@@ -21,6 +20,7 @@ const eslintConfig = defineConfig([
       ],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'react/display-name': 'off',
+      'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
     },
   },
   globalIgnores([
@@ -32,6 +32,7 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     '*.config.js',
   ]),
+  prettier,
 ]);
 
 export default eslintConfig;

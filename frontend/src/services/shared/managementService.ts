@@ -1,5 +1,5 @@
-import axios from '~utils/axiosConfig';
 import { API_ROUTES } from '~constants/routes';
+import axios from '~utils/axiosConfig';
 
 export const getAccountDetails = async (userType: string, email: string) => {
   try {

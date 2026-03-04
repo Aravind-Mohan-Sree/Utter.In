@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { InputField } from '~components/auth/InputField';
-import { ForgotPasswordSchema } from '~validations/AuthSchema';
+import React, { useState } from 'react';
+import { FiArrowLeft } from 'react-icons/fi';
+
+import { InputField } from '~components/form/InputField';
+import Button from '~components/ui/Button';
 import { verifyEmail } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
-import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
-import Button from '~components/shared/Button';
-import { FiArrowLeft } from 'react-icons/fi';
+import { utterToast } from '~utils/utterToast';
+import { ForgotPasswordSchema } from '~validations/AuthSchema';
 
 interface ForgotPasswordData {
   email: string;

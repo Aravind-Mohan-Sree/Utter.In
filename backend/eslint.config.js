@@ -54,6 +54,8 @@ export default [
       ],
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
     },
   },
 ];

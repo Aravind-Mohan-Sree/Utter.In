@@ -1,22 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { AuthFooter } from '~components/auth/AuthFooter';
-import { Divider } from '~components/auth/Divider';
-import { InputField } from '~components/auth/InputField';
-import { FormOptions } from '~components/auth/FormOptions';
-import { PasswordInput } from '~components/auth/PasswordInput';
-import { UserTypeToggle } from '~components/auth/UserTypeToggle';
-import { UserType } from '~types/auth/UserType';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SigninSchema } from '~validations/AuthSchema';
+import React, { useEffect, useState } from 'react';
+import { FaGoogle } from 'react-icons/fa6';
+import { useDispatch } from 'react-redux';
+
+import { AuthFooter } from '~components/blocks/AuthFooter';
+import { Divider } from '~components/ui/Divider';
+import { FormOptions } from '~components/form/FormOptions';
+import { InputField } from '~components/form/InputField';
+import { PasswordInput } from '~components/form/PasswordInput';
+import { UserTypeToggle } from '~components/form/UserTypeToggle';
+import Button from '~components/ui/Button';
+import { signIn } from '~features/authSlice';
+import { signin } from '~services/shared/authService';
+import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
-import { signin } from '~services/shared/authService';
-import { useDispatch } from 'react-redux';
-import { signIn } from '~features/authSlice';
-import Button from '~components/shared/Button';
-import { FaGoogle } from 'react-icons/fa6';
+import { SigninSchema } from '~validations/AuthSchema';
 
 interface SigninData {
   email: string;

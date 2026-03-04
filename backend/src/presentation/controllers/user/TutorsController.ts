@@ -9,7 +9,6 @@ import { IGetEntityDataUseCase } from '~use-case-interfaces/shared/IGetEntityDat
 import { Tutor } from '~entities/Tutor';
 import { TutorMapper } from '~mappers/TutorMapper';
 
-
 export class TutorsController {
   constructor(
         private fetchTutorsUC: IFetchTutorsUseCase,

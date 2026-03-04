@@ -2,4 +2,44 @@ import { Booking } from '~entities/Booking';
 import { IBaseRepository } from './IBaseRepository';
 import { IBooking } from '~models/BookingModel';
 
-export interface IBookingRepository extends IBaseRepository<Booking, IBooking> { }
+export interface IBookingDetail {
+    id: string;
+    sessionId: string;
+    topic: string;
+    language: string;
+    status: string;
+    date: Date;
+    price: number;
+    otherPartyName: string;
+    otherPartyAvatar: string | null;
+    otherPartyId: string;
+    otherPartyRole: 'user' | 'tutor';
+    transactionId: string;
+    createdAt: Date;
+}
+
+export interface IFetchBookingsParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    date?: string;
+    language?: string;
+    sort?: 'Newest' | 'Oldest';
+    userId?: string;
+    tutorId?: string;
+}
+
+export interface IFetchBookingsResponse {
+    upcoming: IBookingDetail[];
+    history: {
+        data: IBookingDetail[];
+        totalPage: number;
+        currentPage: number;
+        totalCount: number;
+    };
+}
+
+export interface IBookingRepository extends IBaseRepository<Booking, IBooking> {
+    fetchBookings(params: IFetchBookingsParams): Promise<IFetchBookingsResponse>;
+}

@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PasswordInput } from '~components/auth/PasswordInput';
-import { ResetPasswordSchema } from '~validations/AuthSchema';
+import React, { useState } from 'react';
+import { FiArrowLeft } from 'react-icons/fi';
+
+import { PasswordInput } from '~components/form/PasswordInput';
+import Button from '~components/ui/Button';
 import { resetPassword } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';
-import { utterToast } from '~utils/utterToast';
 import { errorHandler } from '~utils/errorHandler';
-import Button from '~components/shared/Button';
-import { FiArrowLeft } from 'react-icons/fi';
+import { utterToast } from '~utils/utterToast';
+import { ResetPasswordSchema } from '~validations/AuthSchema';
 
 interface ResetPasswordData {
   password: string;

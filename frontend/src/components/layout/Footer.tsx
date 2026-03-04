@@ -7,7 +7,6 @@ const Footer = () => {
   const pathname = usePathname();
   const isAdminPath = pathname?.startsWith('/admin');
 
-  // Hide footer on admin pages
   if (isAdminPath) {
     return null;
   }

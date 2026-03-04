@@ -1,8 +1,9 @@
 'use client';
 
-import { useLayoutEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
+
 import { RootState } from '~store/rootReducer';
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {

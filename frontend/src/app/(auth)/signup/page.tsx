@@ -2,16 +2,25 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { FaGoogle } from 'react-icons/fa';
 import { FaFileVideo, FaRegFilePdf } from 'react-icons/fa6';
-import { AuthFooter } from '~components/auth/AuthFooter';
-import { FileUpload } from '~components/auth/FileUpload';
-import { InputField } from '~components/auth/InputField';
-import { LanguagesInput } from '~components/auth/LanguagesInput';
-import { PasswordInput } from '~components/auth/PasswordInput';
-import { UserTypeToggle } from '~components/auth/UserTypeToggle';
+import { FiArrowLeft } from 'react-icons/fi';
+
+import { AuthFooter } from '~components/blocks/AuthFooter';
+import { Divider } from '~components/ui/Divider';
+import { ExperienceSelector } from '~components/form/ExperienceSelector';
+import { FileUpload } from '~components/form/FileUpload';
+import { InputField } from '~components/form/InputField';
+import { LanguagesInput } from '~components/form/LanguagesInput';
+import { PasswordInput } from '~components/form/PasswordInput';
+import { UserTypeToggle } from '~components/form/UserTypeToggle';
+import Button from '~components/ui/Button';
+import { useSubmitForm } from '~hooks/useSubmitForm';
 import { finishSignup, register } from '~services/shared/authService';
+import { resubmitAccount } from '~services/tutor/managementService';
 import { UserType } from '~types/auth/UserType';
 import { errorHandler } from '~utils/errorHandler';
+import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
 import {
   resubmitCertSchema,
@@ -22,14 +31,6 @@ import {
   UserSignupSchema,
 } from '~validations/AuthSchema';
 import { validateVideoDuration } from '~validations/validateVideoDuration';
-import { ExperienceSelector } from '~components/auth/ExperienceSelector';
-import Button from '~components/shared/Button';
-import { Divider } from '~components/auth/Divider';
-import { FaGoogle } from 'react-icons/fa';
-import { useSubmitForm } from '~hooks/useSubmitForm';
-import { FiArrowLeft } from 'react-icons/fi';
-import { utterAlert } from '~utils/utterAlert';
-import { resubmitAccount } from '~services/tutor/managementService';
 
 type ExperienceLevel = '0-1' | '1-2' | '2-3' | '3-5' | '5-10' | '10+' | '';
 
@@ -125,7 +126,7 @@ const SignUp: React.FC = () => {
         });
       }
     })();
-  }, [searchParams, userType, router]);
+  }, [searchParams, userType, router, rejectionReason, responseMessage]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,

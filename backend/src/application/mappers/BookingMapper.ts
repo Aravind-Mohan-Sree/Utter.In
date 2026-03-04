@@ -1,18 +1,21 @@
-import { Booking } from '~entities/Booking';
+import { IBookingDetail } from '~repository-interfaces/IBookingRepository';
 
 export class BookingMapper {
-  static toResponse(booking: Booking) {
+  static toResponse(data: IBookingDetail) {
     return {
-      id: booking.id,
-      sessionId: booking.sessionId,
-      userId: booking.userId,
-      tutorId: booking.tutorId,
-      payment: booking.payment,
-      status: booking.status,
-      refundStatus: booking.refundStatus,
-      cancelledAt: booking.cancelledAt,
-      createdAt: booking.createdAt,
-      updatedAt: booking.updatedAt,
+      id: data.id,
+      sessionId: data.sessionId,
+      topic: data.topic,
+      language: data.language,
+      status: data.status,
+      date: data.date,
+      price: data.price,
+      otherPartyName: data.otherPartyName,
+      otherPartyAvatar: data.otherPartyAvatar,
+      otherPartyId: data.otherPartyId,
+      otherPartyRole: data.otherPartyRole,
+      transactionId: data.transactionId,
+      createdAt: data.createdAt,
     };
   }
 }

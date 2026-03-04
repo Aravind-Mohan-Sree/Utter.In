@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import Button from '~components/shared/Button';
+
+import Button from '~components/ui/Button';
 import { RootState } from '~store/rootReducer';
 
 export default function Home() {

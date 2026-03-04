@@ -2,6 +2,7 @@ import { IForgotPasswordUseCase } from '~use-case-interfaces/shared/IForgotPassw
 import { errorMessage } from '~constants/errorMessage';
 import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
+import { IOtpService } from '~service-interfaces/IOtpService';
 import { PendingTutor } from '~entities/PendingTutor';
 import {
   BadRequestError,
@@ -13,7 +14,8 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
   constructor(
     private tutorRepo: ITutorRepository,
     private pendingTutorRepo: IPendingTutorRepository,
-  ) {}
+    private otpService: IOtpService,
+  ) { }
 
   async execute(email: string): Promise<void> {
     const tutor = await this.tutorRepo.findOneByField({ email });
@@ -21,17 +23,15 @@ export class ForgotPasswordUseCase implements IForgotPasswordUseCase {
     if (!tutor) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
     if (tutor.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
 
+    const remainingTtl = await this.otpService.getOtpTtl(email);
+    const coolDownLimit = 120 - 60; // 120 max TTL, 60 cooldown
+    if (remainingTtl > coolDownLimit) {
+      throw new BadRequestError('Please wait 60 sec before resend');
+    }
+
     let pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
 
     if (pendingTutor) {
-      const now = new Date().getTime();
-      const coolDownMs = 60 * 1000;
-      const timeDifferenceMs =
-        now - new Date(pendingTutor.updatedAt!).getTime();
-
-      if (timeDifferenceMs < coolDownMs)
-        throw new BadRequestError('Please wait 60 sec before resend');
-
       await this.pendingTutorRepo.deleteOneByField({ email });
     }
 

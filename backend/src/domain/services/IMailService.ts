@@ -10,6 +10,8 @@ export interface IMailService {
   sendOtp(name: string, email: string, otp: string): Promise<void>;
   sendVerificationUpdate(name: string, email: string): Promise<void>;
   sendWelcome(name: string, email: string): Promise<void>;
+  sendBookingConfirmation(name: string, email: string, sessionTopic: string, language: string, sessionDate: string, isTutor: boolean): Promise<void>;
+  sendBookingCancellation(name: string, email: string, sessionTopic: string, language: string, sessionDate: string, amount?: number): Promise<void>;
   generateOtp(): string;
   verifyOtp(entered: string, stored: string): boolean;
 }
