@@ -6,12 +6,12 @@ import { FaGoogle } from 'react-icons/fa6';
 import { useDispatch } from 'react-redux';
 
 import { AuthFooter } from '~components/blocks/AuthFooter';
-import { Divider } from '~components/ui/Divider';
 import { FormOptions } from '~components/form/FormOptions';
 import { InputField } from '~components/form/InputField';
 import { PasswordInput } from '~components/form/PasswordInput';
 import { UserTypeToggle } from '~components/form/UserTypeToggle';
 import Button from '~components/ui/Button';
+import { Divider } from '~components/ui/Divider';
 import { signIn } from '~features/authSlice';
 import { signin } from '~services/shared/authService';
 import { UserType } from '~types/auth/UserType';

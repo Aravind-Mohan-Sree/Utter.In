@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateBookingOrderUseCase } from '~use-cases/user/booking/CreateBookingOrderUseCase';
-import { VerifyPaymentAndBookUseCase } from '~use-cases/user/booking/VerifyPaymentAndBookUseCase';
-import { GetBookingsUseCase } from '~use-cases/shared/GetBookingsUseCase';
-import { CancelBookingUseCase } from '~use-cases/shared/CancelBookingUseCase';
+import { IPingBookingUseCase } from '~use-case-interfaces/shared/IPingBookingUseCase';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { logger } from '~logger/logger';
 import { GetBookingsDTO } from '~dtos/GetBookingsDTO';
+import { ICancelBookingUseCase } from '~use-case-interfaces/shared/ICancelBookingUseCase';
+import { IGetBookingsUseCase } from '~use-case-interfaces/shared/IGetBookingsUseCase';
+import { ICreateBookingOrderUseCase, IVerifyPaymentAndBookUseCase } from '~use-case-interfaces/user/IBookingUseCase';
 
 interface IAuthenticatedRequest extends Request {
   user: {
@@ -17,10 +17,11 @@ interface IAuthenticatedRequest extends Request {
 
 export class BookingController {
   constructor(
-    private createBookingOrderUC: CreateBookingOrderUseCase,
-    private verifyPaymentAndBookUC: VerifyPaymentAndBookUseCase,
-    private getBookingsUC: GetBookingsUseCase,
-    private cancelBookingUC: CancelBookingUseCase,
+    private createBookingOrderUC: ICreateBookingOrderUseCase,
+    private verifyPaymentAndBookUC: IVerifyPaymentAndBookUseCase,
+    private getBookingsUC: IGetBookingsUseCase,
+    private cancelBookingUC: ICancelBookingUseCase,
+    private pingBookingUC: IPingBookingUseCase,
   ) { }
 
   createOrder = async (req: Request, res: Response, next: NextFunction) => {
@@ -117,6 +118,23 @@ export class BookingController {
       res.status(httpStatusCode.OK).json({
         success: true,
         message: 'Booking cancelled successfully',
+      });
+    } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  };
+
+  pingSession = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const user = (req as unknown as IAuthenticatedRequest).user;
+
+      const response = await this.pingBookingUC.execute(id, user.role);
+
+      res.status(httpStatusCode.OK).json({
+        success: true,
+        completed: response.completed,
       });
     } catch (error) {
       logger.error(error);

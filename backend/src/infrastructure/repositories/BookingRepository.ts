@@ -4,6 +4,7 @@ import { IBookingRepository, IFetchBookingsParams, IFetchBookingsResponse, IBook
 import { IBooking, BookingModel } from '~models/BookingModel';
 import { PipelineStage } from 'mongoose';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
+import { env } from '~config/env';
 
 export class BookingRepository extends BaseRepository<Booking, IBooking> implements IBookingRepository {
   constructor() {
@@ -19,6 +20,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
       status: entity.status,
       refundStatus: entity.refundStatus,
       cancelledAt: entity.cancelledAt,
+      activeSeconds: entity.activeSeconds,
     };
   }
 
@@ -32,6 +34,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
       doc.status,
       doc.refundStatus,
       doc.cancelledAt,
+      doc.activeSeconds,
       String(doc._id),
       doc.createdAt,
       doc.updatedAt,
@@ -141,13 +144,13 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
 
     const upcomingPipeline = [
       ...basePipeline,
-      { $match: { date: { $gt: historyThreshold }, status: { $ne: 'Cancelled' } } },
+      { $match: { date: { $gt: historyThreshold }, status: { $nin: ['Cancelled', 'Completed'] } } },
       { $sort: { date: 1 as 1 | -1 } },
     ];
 
     const historyPipeline = [
       ...basePipeline,
-      { $match: { $or: [{ date: { $lte: historyThreshold } }, { status: 'Cancelled' }] } },
+      { $match: { $or: [{ date: { $lte: historyThreshold } }, { status: { $in: ['Cancelled', 'Completed'] } }] } },
 
       ...(status && status !== 'All' ? [{ $match: { status } }] : []),
       ...(language && language !== 'All' ? [{ $match: { 'session.language': language } }] : []),
@@ -179,6 +182,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
         currentPage: page,
         totalCount: totalCount,
       },
+      callJoinThresholdMinutes: parseInt(env.CALL_JOIN_THRESHOLD_MINUTES),
     };
   }
 }

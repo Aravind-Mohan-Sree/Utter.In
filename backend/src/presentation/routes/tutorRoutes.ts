@@ -61,6 +61,8 @@ import { RazorpayService } from '~concrete-services/RazorpayService';
 import { GetWalletTransactionsUseCase } from '~use-cases/shared/GetWalletTransactionsUseCase';
 import { WalletController } from '~controllers/shared/WalletController';
 import { RedisOtpService } from '~concrete-services/RedisOtpService';
+import { PingBookingUseCase } from '~use-cases/shared/PingBookingUseCase';
+import { RedisService } from '~concrete-services/RedisService';
 
 // repositories
 const userRepository = new UserRepository();
@@ -85,6 +87,7 @@ const s3Service = new S3Service({
 const axiosImageGatewayService = new AxiosImageGatewayService();
 const razorpayService = new RazorpayService();
 const redisOtpService = new RedisOtpService();
+const redisService = new RedisService();
 
 // use-cases
 const registerTutorUseCase = new RegisterTutorUseCase(
@@ -227,12 +230,14 @@ const cancelBookingUseCase = new CancelBookingUseCase(
   walletRepository,
   mailService,
 );
+const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService);
 
 const bookingController = new BookingController(
   createBookingOrderUseCase,
   verifyPaymentAndBookUseCase,
   getBookingsUseCase,
   cancelBookingUseCase,
+  pingBookingUseCase,
 );
 
 // wire auth middlewares
@@ -306,6 +311,7 @@ router.delete('/cancel-session/:sessionId', auth.verify(), sessionController.can
 // booking
 router.get('/bookings', auth.verify(), bookingController.getBookings);
 router.patch('/bookings/:id/cancel', auth.verify(), bookingController.cancelBooking);
+router.post('/bookings/:id/ping', auth.verify(), bookingController.pingSession);
 
 // wallet
 router.get('/wallet', auth.verify(), walletController.getTransactions);

@@ -38,6 +38,7 @@ export interface IFetchBookingsResponse {
         currentPage: number;
         totalCount: number;
     };
+    callJoinThresholdMinutes: number;
 }
 
 export interface IBookingRepository extends IBaseRepository<Booking, IBooking> {

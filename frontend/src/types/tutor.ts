@@ -85,9 +85,9 @@ export interface RazorpayOptions {
     order_id: string;
     handler: (response: RazorpayResponse) => void;
     prefill: {
-        name: string;
-        email: string;
-        contact: string;
+        name?: string;
+        email?: string;
+        contact?: string;
     };
     theme: {
         color: string;

@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { MdPeople } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 
-import { Card } from '~components/ui/Card';
-import { DetailsModal } from '~components/modals';
 import { SearchAndFilter } from '~components/form/SearchAndFilter';
+import { DetailsModal } from '~components/modals';
+import { Card } from '~components/ui/Card';
 import { Pagination } from '~components/ui/Pagination';
 import { ResultsSummary } from '~components/ui/ResultsSummary';
 import { API_ROUTES } from '~constants/routes';

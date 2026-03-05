@@ -2,6 +2,7 @@
 
 import '~utils/lang-config';
 
+import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 import { useEffect } from 'react';
 import { ReduxProvider } from 'ReduxProvider';
@@ -22,6 +23,9 @@ export default function ClientWrapper({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isVideoCall = pathname?.includes('/video-call/');
+
   useEffect(() => {
     window.TranslateInit = TranslateInit;
   }, []);
@@ -35,9 +39,9 @@ export default function ClientWrapper({
       />
 
       <ReduxProvider>
-        <Navbar />
+        {!isVideoCall && <Navbar />}
         {children}
-        <Footer />
+        {!isVideoCall && <Footer />}
       </ReduxProvider>
 
       <Toaster

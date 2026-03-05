@@ -1,5 +1,6 @@
 'use client';
 
+import { FaVideo } from 'react-icons/fa';
 import { FiCheckCircle, FiSlash } from 'react-icons/fi';
 import { HiArrowRight } from 'react-icons/hi';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
@@ -55,6 +56,7 @@ export interface TutorCardProps extends BaseCardProps {
   dateLabel?: string;
   showTime?: boolean;
   onCancel?: (id: string) => void;
+  onJoin?: (id: string) => void;
 }
 
 interface ReportCardProps extends BaseCardProps {
@@ -183,6 +185,7 @@ const TutorCard = ({
   onViewDetails,
   onBook,
   onToggleStatus,
+  onJoin,
   customActions,
   hideStatus,
   viewDetailsIcon,
@@ -192,7 +195,20 @@ const TutorCard = ({
   className,
   disabled,
 }: TutorCardProps) => (
-  <div className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all ${disabled ? 'opacity-60 grayscale-[0.2] pointer-events-none' : ''} ${className || ''}`}>
+  <div className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all relative group ${disabled ? 'opacity-60 grayscale-[0.2] pointer-events-none' : ''} ${className || ''}`}>
+    {onJoin && (
+      <div className="absolute top-3 right-3 z-10">
+        <Button
+          variant="primary"
+          size={1.5}          className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-lg shadow-rose-200"
+          onClick={onJoin}
+          args={[id]}
+          icon={<FaVideo className="text-white" />}
+        >
+          Join Call
+        </Button>
+      </div>
+    )}
     <div className="mb-4">
       <div className="flex gap-3 min-w-0 items-start justify-between">
         <div className="flex gap-3 min-w-0 flex-1">

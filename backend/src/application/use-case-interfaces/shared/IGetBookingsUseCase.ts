@@ -8,6 +8,8 @@ export interface IGetBookingsUseCase {
             data: BookingResponseDTO[];
             totalPage: number;
             currentPage: number;
-        }
+            totalCount: number;
+        };
+        callJoinThresholdMinutes: number;
     }>;
 }

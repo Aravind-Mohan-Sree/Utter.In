@@ -23,6 +23,7 @@ export interface GetBookingsResponse {
         currentPage: number;
         totalCount: number;
     };
+    callJoinThresholdMinutes: number;
 }
 
 export interface GetBookingsParams {

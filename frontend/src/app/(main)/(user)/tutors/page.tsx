@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { BiExpand } from 'react-icons/bi';
 import { MdPeople } from 'react-icons/md';
 
-import { Card } from '~components/ui/Card';
 import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
+import { Card } from '~components/ui/Card';
 import Loader from '~components/ui/Loader';
 import { Pagination } from '~components/ui/Pagination';
 import { ResultsSummary } from '~components/ui/ResultsSummary';

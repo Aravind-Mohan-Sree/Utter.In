@@ -3,15 +3,15 @@
 import { Action, ThunkDispatch } from '@reduxjs/toolkit';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import ProfileDetail from '~components/blocks/ProfileDetail';
-import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
-import Avatar from '~components/ui/Avatar';
-import Loader from '~components/ui/Loader';
 import SessionList, {
   Session as FrontendSession,
 } from '~components/blocks/SessionList';
+import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
+import Avatar from '~components/ui/Avatar';
+import Loader from '~components/ui/Loader';
 import { API_ROUTES } from '~constants/routes';
 import { fetchSessionCount, incrementSessionCount } from '~features/bookingSlice';
 import {
@@ -48,6 +48,7 @@ export default function TutorDetailsPage() {
   const params = useParams();
   const id = params?.id as string;
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, Action>>();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const formatLocalDate = (date: Date) => {
     const year = date.getFullYear();
@@ -148,9 +149,9 @@ export default function TutorDetailsPage() {
               }
             },
             prefill: {
-              name: 'User',
-              email: 'user@example.com',
-              contact: '9999999999',
+              name: user?.name || '',
+              email: user?.email || '',
+              contact: '6207494646',
             },
             theme: {
               color: '#F43F5E',

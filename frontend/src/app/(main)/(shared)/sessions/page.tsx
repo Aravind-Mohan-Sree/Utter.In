@@ -1,16 +1,16 @@
 'use client';
 
 import { Action, ThunkDispatch } from '@reduxjs/toolkit';
-import { useSearchParams } from 'next/navigation';
+import { useRouter,useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FiSlash } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Card } from '~components/ui/Card';
-import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import { commonLanguages } from '~components/form/LanguagesInput';
+import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Button from '~components/ui/Button';
+import { Card } from '~components/ui/Card';
 import Loader from '~components/ui/Loader';
 import { Pagination } from '~components/ui/Pagination';
 import { ResultsSummary } from '~components/ui/ResultsSummary';
@@ -33,6 +33,7 @@ import { utterToast } from '~utils/utterToast';
 
 export default function SessionsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, Action>>();
   const [upcomingSessions, setUpcomingSessions] = useState<Booking[]>([]);
@@ -51,6 +52,19 @@ export default function SessionsPage() {
   );
   const [date] = useState(searchParams.get('date') || '');
   const [totalResults, setTotalResults] = useState(0);
+  const [joinThreshold, setJoinThreshold] = useState(5);
+
+  const canJoin = (date: string | Date) => {
+    if (joinThreshold === 0) return true;
+    const sessionTime = new Date(date).getTime();
+    const now = new Date().getTime();
+    const diffInMinutes = (sessionTime - now) / (1000 * 60);
+    return diffInMinutes <= joinThreshold;
+  };
+
+  const handleJoin = (bookingId: string) => {
+    router.push(`/video-call/${bookingId}`);
+  };
 
   /**
    * fetchBookings wrapped in useCallback to stabilize the reference.
@@ -81,6 +95,7 @@ export default function SessionsPage() {
       setCompletedSessions(response.history.data);
       setTotalPages(response.history.totalPage);
       setTotalResults(response.history.totalCount);
+      setJoinThreshold(response.callJoinThresholdMinutes);
 
       if (
         response.history.currentPage > response.history.totalPage &&
@@ -217,6 +232,7 @@ export default function SessionsPage() {
                       }
                       className="bg-white/50 backdrop-blur-sm"
                       onCancel={undefined}
+                      onJoin={canJoin(booking.date) ? () => handleJoin(booking.id) : undefined}
                     />
                   </div>
                 ))}

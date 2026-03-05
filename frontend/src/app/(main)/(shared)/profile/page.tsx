@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import ProfileDetail from '~components/blocks/ProfileDetail';
 import { ExperienceSelector } from '~components/form/ExperienceSelector';
 import { InputField } from '~components/form/InputField';
 import { LanguagesInput } from '~components/form/LanguagesInput';
@@ -11,7 +12,6 @@ import { PasswordInput } from '~components/form/PasswordInput';
 import { TextAreaInput } from '~components/form/TextAreaInput';
 import Notification from '~components/layout/Notification';
 import AbuseReportsModal from '~components/modals/AbuseReportsModal';
-import ProfileDetail from '~components/blocks/ProfileDetail';
 import TransactionHistoryModal from '~components/modals/TransactionHistoryModal';
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Avatar from '~components/ui/Avatar';

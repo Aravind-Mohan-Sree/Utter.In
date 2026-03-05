@@ -7,7 +7,6 @@ import { FaFileVideo, FaRegFilePdf } from 'react-icons/fa6';
 import { FiArrowLeft } from 'react-icons/fi';
 
 import { AuthFooter } from '~components/blocks/AuthFooter';
-import { Divider } from '~components/ui/Divider';
 import { ExperienceSelector } from '~components/form/ExperienceSelector';
 import { FileUpload } from '~components/form/FileUpload';
 import { InputField } from '~components/form/InputField';
@@ -15,6 +14,7 @@ import { LanguagesInput } from '~components/form/LanguagesInput';
 import { PasswordInput } from '~components/form/PasswordInput';
 import { UserTypeToggle } from '~components/form/UserTypeToggle';
 import Button from '~components/ui/Button';
+import { Divider } from '~components/ui/Divider';
 import { useSubmitForm } from '~hooks/useSubmitForm';
 import { finishSignup, register } from '~services/shared/authService';
 import { resubmitAccount } from '~services/tutor/managementService';

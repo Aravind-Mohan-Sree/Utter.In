@@ -16,7 +16,8 @@ export class GetBookingsUseCase implements IGetBookingsUseCase {
       totalPage: number;
       currentPage: number;
       totalCount: number;
-    }
+    };
+    callJoinThresholdMinutes: number;
   }> {
     const result = await this.bookingRepo.fetchBookings(req);
 
@@ -27,6 +28,7 @@ export class GetBookingsUseCase implements IGetBookingsUseCase {
         data: result.history.data.map(booking => BookingMapper.toResponse(booking)),
         totalCount: result.history.totalCount,
       },
+      callJoinThresholdMinutes: result.callJoinThresholdMinutes,
     };
   }
 }

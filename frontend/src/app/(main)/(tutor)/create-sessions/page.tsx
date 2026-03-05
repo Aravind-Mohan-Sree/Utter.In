@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LuX } from 'react-icons/lu';
 import { useSelector } from 'react-redux';
 
+import SessionList, { Session } from '~components/blocks/SessionList';
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Button from '~components/ui/Button';
 import Loader from '~components/ui/Loader';
-import SessionList, { Session } from '~components/blocks/SessionList';
 import { getAccountDetails } from '~services/shared/managementService';
 import {
   cancelSession,

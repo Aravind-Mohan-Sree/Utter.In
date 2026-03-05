@@ -1,20 +1,21 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBooking extends Document {
-    sessionId: string;
-    userId: string;
-    tutorId: string;
-    payment: {
-        provider: string;
-        transactionId: string;
-        status: string;
-        currency: string;
-    };
+  sessionId: string;
+  userId: string;
+  tutorId: string;
+  payment: {
+    provider: string;
+    transactionId: string;
     status: string;
-    refundStatus: string;
-    cancelledAt: Date | null;
-    createdAt: Date;
-    updatedAt: Date;
+    currency: string;
+  };
+  status: string;
+  refundStatus: string;
+  cancelledAt: Date | null;
+  activeSeconds: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const bookingSchema = new Schema<IBooking>(
@@ -31,6 +32,7 @@ const bookingSchema = new Schema<IBooking>(
     status: { type: String, required: true },
     refundStatus: { type: String, required: true },
     cancelledAt: { type: Date, default: null },
+    activeSeconds: { type: Number, default: 0 },
   },
   {
     timestamps: true,
