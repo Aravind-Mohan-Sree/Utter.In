@@ -7,7 +7,7 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { IUpdateProfileUseCase } from '~use-case-interfaces/user/IUserUseCase';
 
 export class UpdateProfileUseCase implements IUpdateProfileUseCase {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(private _userRepo: IUserRepository) {}
 
   async execute(
     id: string,
@@ -18,7 +18,7 @@ export class UpdateProfileUseCase implements IUpdateProfileUseCase {
       bio: data.bio,
       knownLanguages: data.knownLanguages,
     };
-    const updatedUser = await this.userRepo.updateOneById(id, partialUser);
+    const updatedUser = await this._userRepo.updateOneById(id, partialUser);
 
     if (!updatedUser) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
 

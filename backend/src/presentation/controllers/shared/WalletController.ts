@@ -11,14 +11,14 @@ interface IAuthenticatedRequest extends Request {
 }
 
 export class WalletController {
-  constructor(private getWalletTransactionsUseCase: IGetWalletTransactionsUseCase) { }
+  constructor(private _getWalletTransactionsUseCase: IGetWalletTransactionsUseCase) { }
 
   getTransactions = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as unknown as IAuthenticatedRequest).user;
       const userId = user.id;
 
-      const wallet = await this.getWalletTransactionsUseCase.execute(userId);
+      const wallet = await this._getWalletTransactionsUseCase.execute(userId);
 
       res.status(httpStatusCode.OK).json({
         success: true,

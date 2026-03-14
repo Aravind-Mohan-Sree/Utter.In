@@ -14,23 +14,24 @@ import { IValidateDataService } from '~service-interfaces/IValidateDataService';
 import { logger } from '~logger/logger';
 import { FinishRegisterUserDTO } from '~dtos/FinishRegisterUserDTO';
 import { IUpdateFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
 export class AuthController {
   constructor(
-    private registerUser: IRegisterUserUseCase,
-    private finishRegisterUser: IFinishRegisterUserUseCase,
-    private signinUser: ISigninUserUseCase,
-    private validator: IValidateDataService,
-    private sendOtp: ISendOtpUseCase,
-    private updateFile: IUpdateFileUseCase,
+    private _registerUser: IRegisterUserUseCase,
+    private _finishRegisterUser: IFinishRegisterUserUseCase,
+    private _signinUser: ISigninUserUseCase,
+    private _validator: IValidateDataService,
+    private _sendOtp: ISendOtpUseCase,
+    private _updateFile: IUpdateFileUseCase,
   ) {}
 
   register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = new RegisterUserDTO(req.body, this.validator);
-      const email = await this.registerUser.execute(data);
+      const data = new RegisterUserDTO(req.body, this._validator);
+      const email = await this._registerUser.execute(data);
 
-      await this.sendOtp.execute(email);
+      await this._sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
@@ -54,7 +55,7 @@ export class AuthController {
 
   finishRegister = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = new FinishRegisterUserDTO({ ...req.body }, this.validator);
+      const data = new FinishRegisterUserDTO({ ...req.body }, this._validator);
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
         httpOnly: true,
@@ -64,14 +65,14 @@ export class AuthController {
         path: '/',
       };
 
-      const userData = await this.finishRegisterUser.execute(data);
+      const userData = await this._finishRegisterUser.execute(data);
 
-      await this.updateFile.execute(
-        'temp/users/avatars/',
-        'users/avatars/',
+      await this._updateFile.execute(
+        filePrefixes.TEMP_USER_AVATAR,
+        filePrefixes.USER_AVATAR,
         userData.oldId,
         userData.user.id!,
-        'image/jpeg',
+        contentTypes.IMAGE_JPEG,
       );
 
       res.cookie('accessToken', userData.accessToken, {
@@ -93,8 +94,8 @@ export class AuthController {
 
   signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = new SigninDTO(req.body, this.validator);
-      const userData = await this.signinUser.execute(data);
+      const data = new SigninDTO(req.body, this._validator);
+      const userData = await this._signinUser.execute(data);
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
         httpOnly: true,

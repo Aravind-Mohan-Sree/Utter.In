@@ -7,7 +7,7 @@ import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IUpdateProfileUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
 
 export class UpdateProfileUseCase implements IUpdateProfileUseCase {
-  constructor(private tutorRepo: ITutorRepository) {}
+  constructor(private _tutorRepo: ITutorRepository) {}
 
   async execute(
     id: string,
@@ -19,7 +19,7 @@ export class UpdateProfileUseCase implements IUpdateProfileUseCase {
       knownLanguages: data.knownLanguages,
       yearsOfExperience: data.yearsOfExperience,
     };
-    const updatedTutor = await this.tutorRepo.updateOneById(id, partialTutor);
+    const updatedTutor = await this._tutorRepo.updateOneById(id, partialTutor);
 
     if (!updatedTutor) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
 

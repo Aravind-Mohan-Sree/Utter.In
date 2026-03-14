@@ -14,8 +14,8 @@ interface UserQuery {
 
 export class UsersController {
   constructor(
-    private fetchUsersUC: IFetchUsersUseCase,
-    private toggleStatusUC: IToggleStatusUseCase,
+    private _fetchUsersUC: IFetchUsersUseCase,
+    private _toggleStatusUC: IToggleStatusUseCase,
   ) {}
 
   fetchUsers = async (req: Request, res: Response, next: NextFunction) => {
@@ -23,7 +23,7 @@ export class UsersController {
       const { page, limit, query, filter } = new FetchAdminUsersDTO(
         req.query as unknown as UserQuery,
       );
-      const usersData = await this.fetchUsersUC.execute({
+      const usersData = await this._fetchUsersUC.execute({
         page,
         limit,
         query,
@@ -43,7 +43,7 @@ export class UsersController {
   toggleStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      await this.toggleStatusUC.execute(id);
+      await this._toggleStatusUC.execute(id);
 
       res.status(httpStatusCode.OK).json({
         message: successMessage.STATUS_UPDATED,

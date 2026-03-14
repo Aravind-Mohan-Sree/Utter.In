@@ -9,9 +9,9 @@ import { ISigninUseCase } from '~use-case-interfaces/admin/IAdminUseCase';
 
 export class SigninUseCase implements ISigninUseCase {
   constructor(
-    private adminRepo: IAdminRepository,
-    private tokenService: ITokenService,
-    private hashService: IHashService,
+    private _adminRepo: IAdminRepository,
+    private _tokenService: ITokenService,
+    private _hashService: IHashService,
   ) {}
 
   async execute(data: SigninDTO): Promise<{
@@ -20,19 +20,19 @@ export class SigninUseCase implements ISigninUseCase {
     refreshToken: string;
   }> {
     const { email, password } = data;
-    const admin = await this.adminRepo.findOneByField({ email });
+    const admin = await this._adminRepo.findOneByField({ email });
 
     if (!admin) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
 
-    const valid = await this.hashService.compare(password, admin.password!);
+    const valid = await this._hashService.compare(password, admin.password!);
 
     if (!valid) throw new BadRequestError(errorMessage.WRONG_PASSWORD);
 
-    const accessToken = this.tokenService.generateAuthToken({
+    const accessToken = this._tokenService.generateAuthToken({
       id: admin.id,
       role: 'admin',
     });
-    const refreshToken = this.tokenService.generateRefreshToken({
+    const refreshToken = this._tokenService.generateRefreshToken({
       id: admin.id,
       role: 'admin',
     });

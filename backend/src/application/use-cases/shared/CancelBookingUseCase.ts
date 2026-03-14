@@ -13,16 +13,16 @@ import { IMailService } from '~service-interfaces/IMailService';
 
 export class CancelBookingUseCase implements ICancelBookingUseCase {
   constructor(
-        private bookingRepository: IBookingRepository,
-        private sessionRepository: ISessionRepository,
-        private userRepository: IUserRepository,
-        private tutorRepository: ITutorRepository,
-        private walletRepository: IWalletRepository,
-        private mailService: IMailService,
+        private _bookingRepository: IBookingRepository,
+        private _sessionRepository: ISessionRepository,
+        private _userRepository: IUserRepository,
+        private _tutorRepository: ITutorRepository,
+        private _walletRepository: IWalletRepository,
+        private _mailService: IMailService,
   ) { }
 
   async execute(bookingId: string, userId: string, role: string): Promise<boolean> {
-    const booking = await this.bookingRepository.findOneById(bookingId);
+    const booking = await this._bookingRepository.findOneById(bookingId);
 
     if (!booking) {
       throw new NotFoundError('Booking not found');
@@ -39,7 +39,7 @@ export class CancelBookingUseCase implements ICancelBookingUseCase {
       throw new BadRequestError('This booking has already been cancelled');
     }
 
-    const session = await this.sessionRepository.findOneById(booking.sessionId);
+    const session = await this._sessionRepository.findOneById(booking.sessionId);
     if (!session) {
       throw new NotFoundError('Session not found');
     }
@@ -52,11 +52,11 @@ export class CancelBookingUseCase implements ICancelBookingUseCase {
       throw new ForbiddenError('Cancellation is only allowed up to 1 hour before the session.');
     }
 
-    let wallet = await this.walletRepository.findOneByField({ userId: booking.userId } as unknown as FilterQuery<IWallet>);
+    let wallet = await this._walletRepository.findOneByField({ userId: booking.userId } as unknown as FilterQuery<IWallet>);
 
     if (!wallet) {
       wallet = new Wallet(booking.userId, 0, 'INR', []);
-      wallet = await this.walletRepository.create(wallet);
+      wallet = await this._walletRepository.create(wallet);
     }
 
     const refundAmount = session.price;
@@ -69,15 +69,15 @@ export class CancelBookingUseCase implements ICancelBookingUseCase {
       date: new Date(),
     });
 
-    await this.walletRepository.updateOneById(wallet.id!, wallet);
+    await this._walletRepository.updateOneById(wallet.id!, wallet);
 
-    await this.bookingRepository.updateOneById(bookingId, { status: 'Cancelled' });
+    await this._bookingRepository.updateOneById(bookingId, { status: 'Cancelled' });
 
-    await this.sessionRepository.updateOneById(session.id as string, { status: 'Available' });
+    await this._sessionRepository.updateOneById(session.id as string, { status: 'Available' });
 
     const [user, tutor] = await Promise.all([
-      this.userRepository.findOneById(booking.userId),
-      this.tutorRepository.findOneById(booking.tutorId),
+      this._userRepository.findOneById(booking.userId),
+      this._tutorRepository.findOneById(booking.tutorId),
     ]);
 
     if (user && tutor) {
@@ -91,11 +91,11 @@ export class CancelBookingUseCase implements ICancelBookingUseCase {
       });
 
       if (role === 'tutor') {                
-        await this.mailService.sendBookingCancellation(user.name, user.email, session.topic, session.language, formattedDate, refundAmount);
+        await this._mailService.sendBookingCancellation(user.name, user.email, session.topic, session.language, formattedDate, refundAmount);
       } else {                
-        await this.mailService.sendBookingCancellation(tutor.name, tutor.email, session.topic, session.language, formattedDate);
+        await this._mailService.sendBookingCancellation(tutor.name, tutor.email, session.topic, session.language, formattedDate);
 
-        await this.mailService.sendBookingCancellation(user.name, user.email, session.topic, session.language, formattedDate, refundAmount);
+        await this._mailService.sendBookingCancellation(user.name, user.email, session.topic, session.language, formattedDate, refundAmount);
       }
     }
 

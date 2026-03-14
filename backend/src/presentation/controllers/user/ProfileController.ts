@@ -12,9 +12,9 @@ import {
 
 export class ProfileController {
   constructor(
-    private updateProfileUC: IUpdateProfileUseCase,
-    private changePasswordUC: IChangePasswordUseCase,
-    private validator: IValidateDataService,
+    private _updateProfileUC: IUpdateProfileUseCase,
+    private _changePasswordUC: IChangePasswordUseCase,
+    private _validator: IValidateDataService,
   ) {}
 
   updateProfile = async (req: Request, res: Response, next: NextFunction) => {
@@ -24,9 +24,9 @@ export class ProfileController {
         (({ knownLanguages: languages, ...body }) => ({ ...body, languages }))(
           req.body,
         ),
-        this.validator,
+        this._validator,
       );
-      const updatedUser = await this.updateProfileUC.execute(id, data);
+      const updatedUser = await this._updateProfileUC.execute(id, data);
 
       res
         .status(httpStatusCode.OK)
@@ -40,9 +40,9 @@ export class ProfileController {
   changePassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.user as { id: string };
-      const data = new ChangePasswordDTO(req.body, this.validator);
+      const data = new ChangePasswordDTO(req.body, this._validator);
 
-      await this.changePasswordUC.execute(id, data);
+      await this._changePasswordUC.execute(id, data);
 
       res
         .status(httpStatusCode.OK)

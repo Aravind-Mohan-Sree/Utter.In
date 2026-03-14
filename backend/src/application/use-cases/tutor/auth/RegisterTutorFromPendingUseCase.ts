@@ -8,8 +8,8 @@ import { errorMessage } from '~constants/errorMessage';
 
 export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendingUseCase {
   constructor(
-    private pendingTutorRepo: IPendingTutorRepository,
-    private tutorRepo: ITutorRepository,
+    private _pendingTutorRepo: IPendingTutorRepository,
+    private _tutorRepo: ITutorRepository,
   ) {}
 
   async execute(email: string): Promise<{
@@ -17,7 +17,7 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
     newTutorId: string;
     tutor: TutorResponseDTO;
   }> {
-    const pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
+    const pendingTutor = await this._pendingTutorRepo.findOneByField({ email });
 
     if (!pendingTutor) throw new NotFoundError('Tutor not found');
 
@@ -36,7 +36,7 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
       null,
     );
 
-    const newTutor = await this.tutorRepo.create(tutor);
+    const newTutor = await this._tutorRepo.create(tutor);
 
     if (!newTutor) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 

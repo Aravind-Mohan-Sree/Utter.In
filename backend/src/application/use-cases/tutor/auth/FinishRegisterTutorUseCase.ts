@@ -8,15 +8,15 @@ import { IFinishRegisterTutorUseCase } from '~use-case-interfaces/tutor/ITutorUs
 
 export class FinishRegisterTutorUseCase implements IFinishRegisterTutorUseCase {
   constructor(
-    private pendingTutorRepo: IPendingTutorRepository,
-    private tutorRepo: ITutorRepository,
+    private _pendingTutorRepo: IPendingTutorRepository,
+    private _tutorRepo: ITutorRepository,
   ) {}
 
   async execute(
     data: FinishRegisterTutorDTO,
   ): Promise<{ oldId: string; newId: string }> {
     const { email, knownLanguages, yearsOfExperience } = data;
-    const pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
+    const pendingTutor = await this._pendingTutorRepo.findOneByField({ email });
 
     if (!pendingTutor) throw new BadRequestError(errorMessage.SESSION_EXPIRED);
 
@@ -35,7 +35,7 @@ export class FinishRegisterTutorUseCase implements IFinishRegisterTutorUseCase {
       null,
     );
 
-    tutor = await this.tutorRepo.create(tutor);
+    tutor = await this._tutorRepo.create(tutor);
 
     return { oldId: pendingTutor.id!, newId: tutor.id! };
   }

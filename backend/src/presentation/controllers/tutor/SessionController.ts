@@ -10,9 +10,9 @@ import { logger } from '~logger/logger';
 
 export class SessionController {
   constructor(
-        private createSessionUseCase: ICreateSessionUseCase,
-        private getSessionsUseCase: IGetSessionsUseCase,
-        private cancelSessionUseCase: ICancelSessionUseCase,
+        private _createSessionUseCase: ICreateSessionUseCase,
+        private _getSessionsUseCase: IGetSessionsUseCase,
+        private _cancelSessionUseCase: ICancelSessionUseCase,
   ) { }
 
   createSession = async (req: Request, res: Response, next: NextFunction) => {
@@ -20,7 +20,7 @@ export class SessionController {
       const { id } = req.user as { id: string };
       const data = new CreateSessionDTO({ ...req.body, tutorId: id });
 
-      const session = await this.createSessionUseCase.execute(data);
+      const session = await this._createSessionUseCase.execute(data);
 
       res.status(httpStatusCode.CREATED).json(session);
     } catch (error) {
@@ -39,7 +39,7 @@ export class SessionController {
         return;
       }
 
-      const sessions = await this.getSessionsUseCase.execute(id, date);
+      const sessions = await this._getSessionsUseCase.execute(id, date);
       res.status(httpStatusCode.OK).json({ sessions });
     } catch (error) {
       logger.error(error);
@@ -52,7 +52,7 @@ export class SessionController {
       const { id } = req.user as { id: string };
       const sessionId = req.params.sessionId;
 
-      await this.cancelSessionUseCase.execute(sessionId, id);
+      await this._cancelSessionUseCase.execute(sessionId, id);
 
       res.status(httpStatusCode.OK).json({ message: 'Session cancelled successfully' });
     } catch (error) {

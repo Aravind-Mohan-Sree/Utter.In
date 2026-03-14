@@ -24,18 +24,19 @@ import {
   IUploadFileUseCase,
 } from '~use-case-interfaces/shared/IFileUseCase';
 import { resubmitAccountDTO } from '~dtos/resubmitAccountDTO';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
 export class AuthController {
   constructor(
-    private registerTutor: IRegisterTutorUseCase,
-    private finishRegisterTutor: IFinishRegisterTutorUseCase,
-    private resubmitAccountUseCase: IResubmitAccountUseCase,
-    private signinTutor: ISigninTutorUseCase,
-    private validator: IValidateDataService,
-    private sendOtp: ISendOtpUseCase,
-    private videoMetadataService: IVideoMetadataService,
-    private uploadFile: IUploadFileUseCase,
-    private updateFile: IUpdateFileUseCase,
+    private _registerTutor: IRegisterTutorUseCase,
+    private _finishRegisterTutor: IFinishRegisterTutorUseCase,
+    private _resubmitAccountUseCase: IResubmitAccountUseCase,
+    private _signinTutor: ISigninTutorUseCase,
+    private _validator: IValidateDataService,
+    private _sendOtp: ISendOtpUseCase,
+    private _videoMetadataService: IVideoMetadataService,
+    private _uploadFile: IUploadFileUseCase,
+    private _updateFile: IUpdateFileUseCase,
   ) {}
 
   register = async (req: Request, res: Response, next: NextFunction) => {
@@ -47,9 +48,9 @@ export class AuthController {
       const { introVideo: _, certificate: __, ...body } = req.body;
       const data = new RegisterTutorDTO(
         { introVideo: introVideoFile, certificate: certificateFile, ...body },
-        this.validator,
+        this._validator,
       );
-      const duration = await this.videoMetadataService.getDuration(
+      const duration = await this._videoMetadataService.getDuration(
         introVideoFile!.path,
       );
 
@@ -57,21 +58,21 @@ export class AuthController {
         throw new BadRequestError(errorMessage.VIDEO);
       }
 
-      const { id, email } = await this.registerTutor.execute(data);
+      const { id, email } = await this._registerTutor.execute(data);
 
-      await this.uploadFile.execute(
-        'temp/tutors/videos/',
+      await this._uploadFile.execute(
+        filePrefixes.TEMP_TUTOR_VIDEO,
         id,
         introVideoFile!.path,
-        'video/mp4',
+        contentTypes.VIDEO_MP4,
       );
-      await this.uploadFile.execute(
-        'temp/tutors/certificates/',
+      await this._uploadFile.execute(
+        filePrefixes.TEMP_TUTOR_CERTIFICATE,
         id,
         certificateFile!.path,
-        'application/pdf',
+        contentTypes.APPLICATION_PDF,
       );
-      await this.sendOtp.execute(email);
+      await this._sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
@@ -110,9 +111,9 @@ export class AuthController {
       const { introVideo: _, certificate: __, ...body } = req.body;
       const data = new FinishRegisterTutorDTO(
         { introVideo: introVideoFile, certificate: certificateFile, ...body },
-        this.validator,
+        this._validator,
       );
-      const duration = await this.videoMetadataService.getDuration(
+      const duration = await this._videoMetadataService.getDuration(
         introVideoFile!.path,
       );
 
@@ -120,26 +121,26 @@ export class AuthController {
         throw new BadRequestError(errorMessage.VIDEO);
       }
 
-      const { oldId, newId } = await this.finishRegisterTutor.execute(data);
+      const { oldId, newId } = await this._finishRegisterTutor.execute(data);
 
-      await this.updateFile.execute(
-        'temp/tutors/avatars/',
-        'tutors/avatars/',
+      await this._updateFile.execute(
+        filePrefixes.TEMP_TUTOR_AVATAR,
+        filePrefixes.TUTOR_AVATAR,
         oldId,
         newId,
-        'image/jpeg',
+        contentTypes.IMAGE_JPEG,
       );
-      await this.uploadFile.execute(
-        'tutors/videos/',
+      await this._uploadFile.execute(
+        filePrefixes.TUTOR_VIDEO,
         newId,
         introVideoFile!.path,
-        'video/mp4',
+        contentTypes.VIDEO_MP4,
       );
-      await this.uploadFile.execute(
-        'tutors/certificates/',
+      await this._uploadFile.execute(
+        filePrefixes.TUTOR_CERTIFICATE,
         newId,
         certificateFile!.path,
-        'application/pdf',
+        contentTypes.APPLICATION_PDF,
       );
 
       res
@@ -168,11 +169,11 @@ export class AuthController {
       const { introVideo: _, certificate: __, ...body } = req.body;
       const data = new resubmitAccountDTO(
         { introVideo: introVideoFile, certificate: certificateFile, ...body },
-        this.validator,
+        this._validator,
       );
 
       if (introVideoFile) {
-        const duration = await this.videoMetadataService.getDuration(
+        const duration = await this._videoMetadataService.getDuration(
           introVideoFile!.path,
         );
 
@@ -182,32 +183,32 @@ export class AuthController {
       }
 
       const { oldId, newId, googleId } =
-        await this.resubmitAccountUseCase.execute(data);
+        await this._resubmitAccountUseCase.execute(data);
 
       if (googleId) {
-        await this.updateFile.execute(
-          'temp/rejected-tutors/avatars/',
-          'tutors/avatars/',
+        await this._updateFile.execute(
+          filePrefixes.TEMP_REJECTED_TUTOR_AVATAR,
+          filePrefixes.TUTOR_AVATAR,
           oldId,
           newId,
-          'image/jpeg',
+          contentTypes.IMAGE_JPEG,
         );
       }
 
-      await this.updateFile.execute(
+      await this._updateFile.execute(
         introVideoFile
-          ? 'temp/rejected-tutors/certificates/'
-          : 'temp/rejected-tutors/videos/',
-        introVideoFile ? 'tutors/certificates/' : 'tutors/videos/',
+          ? filePrefixes.TEMP_REJECTED_TUTOR_CERTIFICATE
+          : filePrefixes.TEMP_REJECTED_TUTOR_VIDEO,
+        introVideoFile ? filePrefixes.TUTOR_CERTIFICATE : filePrefixes.TUTOR_VIDEO,
         oldId,
         newId,
-        introVideoFile ? 'application/pdf' : 'video/mp4',
+        introVideoFile ? contentTypes.APPLICATION_PDF : contentTypes.VIDEO_MP4,
       );
-      await this.uploadFile.execute(
-        introVideoFile ? 'tutors/videos/' : 'tutors/certificates/',
+      await this._uploadFile.execute(
+        introVideoFile ? filePrefixes.TUTOR_VIDEO : filePrefixes.TUTOR_CERTIFICATE,
         oldId,
         introVideoFile ? introVideoFile.path : certificateFile!.path,
-        introVideoFile ? 'video/mp4' : 'application/pdf',
+        introVideoFile ? contentTypes.VIDEO_MP4 : contentTypes.APPLICATION_PDF,
       );
 
       res
@@ -229,8 +230,8 @@ export class AuthController {
 
   signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = new SigninDTO(req.body, this.validator);
-      const tutorData = await this.signinTutor.execute(data);
+      const data = new SigninDTO(req.body, this._validator);
+      const tutorData = await this._signinTutor.execute(data);
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
         httpOnly: true,

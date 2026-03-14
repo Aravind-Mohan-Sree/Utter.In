@@ -12,8 +12,8 @@ import {
 
 export class TutorGoogleSigninUseCase implements ITutorGoogleSigninUseCase {
   constructor(
-    private tutorRepo: ITutorRepository,
-    private tokenService: ITokenService,
+    private _tutorRepo: ITutorRepository,
+    private _tokenService: ITokenService,
   ) {}
 
   async execute(
@@ -24,17 +24,17 @@ export class TutorGoogleSigninUseCase implements ITutorGoogleSigninUseCase {
     accessToken: string;
     refreshToken: string;
   }> {
-    let tutor = await this.tutorRepo.findOneByField({ googleId });
+    let tutor = await this._tutorRepo.findOneByField({ googleId });
 
     if (!tutor) {
-      tutor = await this.tutorRepo.findOneByField({ email });
+      tutor = await this._tutorRepo.findOneByField({ email });
 
       if (tutor) {
         const partialTutor: Partial<Tutor> = {
           googleId,
         };
 
-        tutor = await this.tutorRepo.updateOneById(tutor.id!, partialTutor);
+        tutor = await this._tutorRepo.updateOneById(tutor.id!, partialTutor);
       } else {
         throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
       }
@@ -51,12 +51,12 @@ export class TutorGoogleSigninUseCase implements ITutorGoogleSigninUseCase {
       throw new ForbiddenError(errorMessage.BLOCKED);
     }
 
-    const accessToken = this.tokenService.generateAuthToken({
+    const accessToken = this._tokenService.generateAuthToken({
       id: tutor?.id,
       role: 'tutor',
     });
 
-    const refreshToken = this.tokenService.generateRefreshToken({
+    const refreshToken = this._tokenService.generateRefreshToken({
       id: tutor?.id,
       role: 'tutor',
     });

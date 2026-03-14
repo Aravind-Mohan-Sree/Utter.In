@@ -15,11 +15,11 @@ import { ResetPasswordDTO } from '~dtos/ResetPasswordDTO';
 
 export class ForgotPasswordController {
   constructor(
-    private forgotPassword: IForgotPasswordUseCase,
-    private sendOtp: ISendOtpUseCase,
-    private forgotPassOtpVerify: IForgotPasswordOtpVerifyUseCase,
-    private validator: IValidateDataService,
-    private resetPasswordUC: IResetPasswordUseCase,
+    private _forgotPassword: IForgotPasswordUseCase,
+    private _sendOtp: ISendOtpUseCase,
+    private _forgotPassOtpVerify: IForgotPasswordOtpVerifyUseCase,
+    private _validator: IValidateDataService,
+    private _resetPasswordUC: IResetPasswordUseCase,
   ) {}
 
   registerForgotPassword = async (
@@ -29,13 +29,13 @@ export class ForgotPasswordController {
   ) => {
     try {
       const { email } = req.body;
-      const validatedEmail = this.validator.validateEmail(email);
+      const validatedEmail = this._validator.validateEmail(email);
 
       if (!validatedEmail.success)
         throw new BadRequestError(validatedEmail.message);
 
-      await this.forgotPassword.execute(email);
-      await this.sendOtp.execute(email);
+      await this._forgotPassword.execute(email);
+      await this._sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
@@ -64,15 +64,15 @@ export class ForgotPasswordController {
   ) => {
     try {
       const { email, otp } = req.body;
-      const validatedEmail = this.validator.validateEmail(email);
-      const validatedOtp = this.validator.validateOtp(otp);
+      const validatedEmail = this._validator.validateEmail(email);
+      const validatedOtp = this._validator.validateOtp(otp);
 
       if (!validatedEmail.success)
         throw new BadRequestError(validatedEmail.message);
       if (!validatedOtp.success)
         throw new BadRequestError(validatedOtp.message);
 
-      const resetToken = await this.forgotPassOtpVerify.execute(email, otp);
+      const resetToken = await this._forgotPassOtpVerify.execute(email, otp);
       const isProduction = env.NODE_ENV === 'production';
 
       res.cookie('resetToken', resetToken, {
@@ -99,10 +99,10 @@ export class ForgotPasswordController {
       const { resetToken } = req.cookies;
       const data = new ResetPasswordDTO(
         { password, confirmPassword },
-        this.validator,
+        this._validator,
       );
 
-      await this.resetPasswordUC.execute(resetToken, data.password);
+      await this._resetPasswordUC.execute(resetToken, data.password);
 
       const isProduction = env.NODE_ENV === 'production';
 

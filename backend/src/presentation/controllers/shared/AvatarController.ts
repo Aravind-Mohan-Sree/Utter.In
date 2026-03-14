@@ -13,6 +13,7 @@ import {
   IDeleteFileUseCase,
   IUploadFileUseCase,
 } from '~use-case-interfaces/shared/IFileUseCase';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
 interface User {
   id: string;
@@ -21,9 +22,9 @@ interface User {
 
 export class AvatarController {
   constructor(
-    private uploadFile: IUploadFileUseCase,
-    private deleteFile: IDeleteFileUseCase,
-    private validator: IValidateDataService,
+    private _uploadFile: IUploadFileUseCase,
+    private _deleteFile: IDeleteFileUseCase,
+    private _validator: IValidateDataService,
   ) {}
 
   uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
@@ -34,11 +35,17 @@ export class AvatarController {
       const { id, role } = req.user as User;
       const data = new AvatarDTO(
         { avatar: avatar as FileInput },
-        this.validator,
+        this._validator,
       );
-      const prefix = role === 'user' ? 'users/avatars/' : 'tutors/avatars/';
+      const prefix =
+        role === 'user' ? filePrefixes.USER_AVATAR : filePrefixes.TUTOR_AVATAR;
 
-      await this.uploadFile.execute(prefix, id, data.avatar.path, 'image/jpeg');
+      await this._uploadFile.execute(
+        prefix,
+        id,
+        data.avatar.path,
+        contentTypes.IMAGE_JPEG,
+      );
 
       res
         .status(httpStatusCode.OK)
@@ -56,9 +63,10 @@ export class AvatarController {
   deleteAvatar = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id, role } = req.user as User;
-      const prefix = role === 'user' ? 'users/avatars/' : 'tutors/avatars/';
+      const prefix =
+        role === 'user' ? filePrefixes.USER_AVATAR : filePrefixes.TUTOR_AVATAR;
 
-      await this.deleteFile.execute(prefix, id, 'image/jpeg');
+      await this._deleteFile.execute(prefix, id, contentTypes.IMAGE_JPEG);
 
       res
         .status(httpStatusCode.OK)

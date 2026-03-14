@@ -5,7 +5,7 @@ import { ISessionRepository } from '~repository-interfaces/ISessionRepository';
 import mongoose from 'mongoose';
 
 export class GetSessionsUseCase implements IGetSessionsUseCase {
-  constructor(private sessionRepository: ISessionRepository) { }
+  constructor(private _sessionRepository: ISessionRepository) { }
 
   async execute(tutorId: string, date: string): Promise<SessionResponseDTO[]> {
     const start = new Date(date);
@@ -19,7 +19,7 @@ export class GetSessionsUseCase implements IGetSessionsUseCase {
       scheduledAt: { $gte: start, $lte: end },
     };
 
-    const sessions = await this.sessionRepository.findAllByField(filter) || [];
+    const sessions = await this._sessionRepository.findAllByField(filter) || [];
 
     return sessions.map(s => SessionMapper.toResponse(s));
   }

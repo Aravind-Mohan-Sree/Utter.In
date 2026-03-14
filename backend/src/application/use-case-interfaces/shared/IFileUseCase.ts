@@ -1,17 +1,8 @@
-export type Prefix =
-  | 'temp/users/avatars/'
-  | 'temp/tutors/avatars/'
-  | 'temp/tutors/videos/'
-  | 'temp/tutors/certificates/'
-  | 'temp/rejected-tutors/avatars/'
-  | 'temp/rejected-tutors/videos/'
-  | 'temp/rejected-tutors/certificates/'
-  | 'users/avatars/'
-  | 'tutors/avatars/'
-  | 'tutors/videos/'
-  | 'tutors/certificates/';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
-export type ContentType = 'image/jpeg' | 'video/mp4' | 'application/pdf';
+export type Prefix = (typeof filePrefixes)[keyof typeof filePrefixes];
+
+export type ContentType = (typeof contentTypes)[keyof typeof contentTypes];
 
 export interface IUploadAvatarUseCase {
   execute(prefix: Prefix, filename: string, imageUrl: string): Promise<void>;

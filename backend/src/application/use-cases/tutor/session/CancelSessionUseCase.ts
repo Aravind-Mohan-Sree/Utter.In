@@ -3,10 +3,10 @@ import { ISessionRepository } from '~repository-interfaces/ISessionRepository';
 import { NotFoundError, ForbiddenError } from '~errors/HttpError';
 
 export class CancelSessionUseCase implements ICancelSessionUseCase {
-  constructor(private sessionRepository: ISessionRepository) { }
+  constructor(private _sessionRepository: ISessionRepository) { }
 
   async execute(sessionId: string, tutorId: string): Promise<boolean> {
-    const session = await this.sessionRepository.findOneById(sessionId);
+    const session = await this._sessionRepository.findOneById(sessionId);
 
     if (!session) {
       throw new NotFoundError('Session not found');
@@ -20,7 +20,7 @@ export class CancelSessionUseCase implements ICancelSessionUseCase {
       throw new ForbiddenError('Cannot cancel a session that has already been booked');
     }
 
-    await this.sessionRepository.deleteOneById(sessionId);
+    await this._sessionRepository.deleteOneById(sessionId);
 
     return true;
   }

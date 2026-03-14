@@ -3,13 +3,13 @@ import { IAuthorize } from './Authorize';
 
 export class AuthMiddlewareBundler {
   constructor(
-    private authenticate: IAuthenticate,
-    private authorize: IAuthorize,
-    private role: string,
+    private _authenticate: IAuthenticate,
+    private _authorize: IAuthorize,
+    private _role: string,
   ) {}
 
   verify = () => [
-    this.authenticate.verify,
-    this.authorize.checkRole(this.role),
+    this._authenticate.verify,
+    this._authorize.checkRole(this._role),
   ];
 }

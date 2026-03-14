@@ -18,8 +18,8 @@ import { useSelector } from 'react-redux';
 
 import Loader from '~components/ui/Loader';
 import { RootState } from '~store/rootReducer';
-import { utterToast } from '~utils/utterToast';
 import axiosInstance from '~utils/axiosConfig';
+import { utterToast } from '~utils/utterToast';
 
 interface Message {
     senderId: string;
@@ -35,7 +35,7 @@ export default function VideoCallPage() {
     const bookingId = params?.id as string;
     const { user } = useSelector((state: RootState) => state.auth);
 
-    const userId = user?.id || (user as any)?._id;
+    const userId = user?.id;
     const userName = user?.name;
     const userRole = user?.role;
 

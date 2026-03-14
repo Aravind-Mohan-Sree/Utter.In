@@ -13,15 +13,15 @@ import {
 
 export class RegisterTutorUseCase implements IRegisterTutorUseCase {
   constructor(
-    private tutorRepo: ITutorRepository,
-    private pendingTutorRepo: IPendingTutorRepository,
-    private hashService: IHashService,
+    private _tutorRepo: ITutorRepository,
+    private _pendingTutorRepo: IPendingTutorRepository,
+    private _hashService: IHashService,
   ) {}
 
   async execute(
     data: RegisterTutorDTO,
   ): Promise<{ id: string; email: string }> {
-    const tutor = await this.tutorRepo.findOneByField({ email: data.email });
+    const tutor = await this._tutorRepo.findOneByField({ email: data.email });
 
     if (tutor) {
       if (tutor.rejectionReason) {
@@ -33,17 +33,17 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
       throw new ConflictError(errorMessage.ACCOUNT_EXISTS);
     }
 
-    let pendingTutor = await this.pendingTutorRepo.findOneByField({
+    let pendingTutor = await this._pendingTutorRepo.findOneByField({
       email: data.email,
     });
 
     if (pendingTutor) {
-      await this.pendingTutorRepo.deleteOneByField({
+      await this._pendingTutorRepo.deleteOneByField({
         email: pendingTutor.email,
       });
     }
 
-    const hashedPassword = await this.hashService.hash(data.password);
+    const hashedPassword = await this._hashService.hash(data.password);
 
     pendingTutor = new PendingTutor(
       data.email,
@@ -53,7 +53,7 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
       hashedPassword,
     );
 
-    pendingTutor = await this.pendingTutorRepo.create(pendingTutor);
+    pendingTutor = await this._pendingTutorRepo.create(pendingTutor);
 
     if (!pendingTutor)
       throw new InternalServerError(errorMessage.SOMETHING_WRONG);

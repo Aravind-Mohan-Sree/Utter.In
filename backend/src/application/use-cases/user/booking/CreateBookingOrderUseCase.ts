@@ -5,12 +5,12 @@ import { BadRequestError } from '~errors/HttpError';
 
 export class CreateBookingOrderUseCase implements ICreateBookingOrderUseCase {
   constructor(
-    private paymentService: IPaymentService,
-    private sessionRepository: ISessionRepository,
+    private _paymentService: IPaymentService,
+    private _sessionRepository: ISessionRepository,
   ) { }
 
   async execute(amount: number, currency: string, sessionId: string) {
-    const session = await this.sessionRepository.findOneById(sessionId);
+    const session = await this._sessionRepository.findOneById(sessionId);
 
     if (!session) {
       throw new BadRequestError('Session not found');
@@ -20,6 +20,6 @@ export class CreateBookingOrderUseCase implements ICreateBookingOrderUseCase {
       throw new BadRequestError('This session is no longer available for booking');
     }
 
-    return this.paymentService.createOrder(amount, currency, `receipt_session_${sessionId}`);
+    return this._paymentService.createOrder(amount, currency, `receipt_session_${sessionId}`);
   }
 }

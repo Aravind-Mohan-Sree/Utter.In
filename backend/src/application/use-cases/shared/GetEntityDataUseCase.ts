@@ -5,10 +5,10 @@ export class GetEntityDataUseCase<
   Entity,
   ModelSchema,
 > implements IGetEntityDataUseCase<Entity> {
-  constructor(private baseRepo: IBaseRepository<Entity, ModelSchema>) {}
+  constructor(private _baseRepo: IBaseRepository<Entity, ModelSchema>) {}
 
   async getOneById(id: string): Promise<Entity | null> {
-    const entity = await this.baseRepo.findOneById(id);
+    const entity = await this._baseRepo.findOneById(id);
 
     if (!entity) return null;
 

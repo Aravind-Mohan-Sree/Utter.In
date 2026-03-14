@@ -9,36 +9,37 @@ import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 import { logger } from '~logger/logger';
 import { IUpdateFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
 export class OtpController {
   constructor(
-    private verifyOtp: IVerifyOtpUseCase,
-    private sendOtp: ISendOtpUseCase,
-    private registerTutorFromPending: IRegisterTutorFromPendingUseCase,
-    private updateFile: IUpdateFileUseCase,
+    private _verifyOtp: IVerifyOtpUseCase,
+    private _sendOtp: ISendOtpUseCase,
+    private _registerTutorFromPending: IRegisterTutorFromPendingUseCase,
+    private _updateFile: IUpdateFileUseCase,
   ) {}
 
   verify = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { otp, email } = req.body;
 
-      await this.verifyOtp.execute(email, otp);
+      await this._verifyOtp.execute(email, otp);
 
-      const data = await this.registerTutorFromPending.execute(email);
+      const data = await this._registerTutorFromPending.execute(email);
 
-      await this.updateFile.execute(
-        'temp/tutors/videos/',
-        'tutors/videos/',
+      await this._updateFile.execute(
+        filePrefixes.TEMP_TUTOR_VIDEO,
+        filePrefixes.TUTOR_VIDEO,
         data.pendingTutorId,
         data.newTutorId,
-        'video/mp4',
+        contentTypes.VIDEO_MP4,
       );
-      await this.updateFile.execute(
-        'temp/tutors/certificates/',
-        'tutors/certificates/',
+      await this._updateFile.execute(
+        filePrefixes.TEMP_TUTOR_CERTIFICATE,
+        filePrefixes.TUTOR_CERTIFICATE,
         data.pendingTutorId,
         data.newTutorId,
-        'application/pdf',
+        contentTypes.APPLICATION_PDF,
       );
 
       res
@@ -54,7 +55,7 @@ export class OtpController {
     try {
       const { email } = req.body;
 
-      await this.sendOtp.execute(email);
+      await this._sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {

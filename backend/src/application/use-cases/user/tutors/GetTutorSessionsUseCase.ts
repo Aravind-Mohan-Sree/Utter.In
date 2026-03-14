@@ -5,7 +5,7 @@ import { SessionMapper, SessionResponseDTO } from '~mappers/SessionMapper';
 import mongoose from 'mongoose';
 
 export class GetTutorSessionsUseCase implements IGetTutorSessionsUseCase {
-  constructor(private sessionRepository: ISessionRepository) { }
+  constructor(private _sessionRepository: ISessionRepository) { }
 
   async execute(tutorId: string, startDate?: Date, endDate?: Date): Promise<SessionResponseDTO[]> {
     const start = startDate || new Date();
@@ -23,7 +23,7 @@ export class GetTutorSessionsUseCase implements IGetTutorSessionsUseCase {
       scheduledAt: { $gte: start, $lte: end },
     };
 
-    const sessions = await this.sessionRepository.findAllByField(filter) || [];
+    const sessions = await this._sessionRepository.findAllByField(filter) || [];
 
     const availableSessions = sessions
       .filter(session => session.status === 'Available')

@@ -11,7 +11,7 @@ export interface IMailOptions {
 }
 
 export class MailService implements IMailService {
-  private transporter = nodemailer.createTransport({
+  private _transporter = nodemailer.createTransport({
     host: env.NODEMAILER_HOST,
     port: parseInt(env.NODEMAILER_PORT),
     secure: env.NODEMAILER_PORT === '465',
@@ -22,7 +22,7 @@ export class MailService implements IMailService {
   });
 
   async send(options: IMailOptions): Promise<void> {
-    await this.transporter.sendMail({
+    await this._transporter.sendMail({
       from: env.NODEMAILER_USER,
       ...options,
     });

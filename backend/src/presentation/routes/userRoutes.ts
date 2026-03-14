@@ -59,7 +59,6 @@ import { CancelBookingUseCase } from '~use-cases/shared/CancelBookingUseCase';
 import { GetWalletTransactionsUseCase } from '~use-cases/shared/GetWalletTransactionsUseCase';
 import { WalletController } from '~controllers/shared/WalletController';
 import { WalletRepository } from '~concrete-repositories/WalletRepository';
-import { RedisOtpService } from '~concrete-services/RedisOtpService';
 import { PingBookingUseCase } from '~use-cases/shared/PingBookingUseCase';
 import { RedisService } from '~concrete-services/RedisService';
 
@@ -84,7 +83,6 @@ const s3Service = new S3Service({
 });
 const axiosImageGatewayService = new AxiosImageGatewayService();
 const razorpayService = new RazorpayService();
-const redisOtpService = new RedisOtpService();
 const redisService = new RedisService();
 
 // use-cases
@@ -99,10 +97,10 @@ const finishRegisterUserUseCase = new FinishRegisterUserUseCase(
   jwtService,
   mailService,
 );
-const sendOtpUseCase = new SendOtpUseCase(mailService, pendingUserRepository, redisOtpService);
+const sendOtpUseCase = new SendOtpUseCase(mailService, pendingUserRepository, redisService);
 const verifyOtpUseCase = new VerifyOtpUseCase(
   mailService,
-  redisOtpService,
+  redisService,
 );
 const registerUserFromPendingUseCase = new RegisterUserFromPendingUseCase(
   pendingUserRepository,
@@ -112,13 +110,13 @@ const registerUserFromPendingUseCase = new RegisterUserFromPendingUseCase(
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   userRepository,
   pendingUserRepository,
-  redisOtpService,
+  redisService,
 );
 const forgotPasswordOtpVerifyUseCase = new ForgotPasswordOtpVerifyUseCase(
   pendingUserRepository,
   mailService,
   jwtService,
-  redisOtpService,
+  redisService,
 );
 const resetPasswordUseCase = new ResetPasswordUseCase(
   jwtService,

@@ -15,13 +15,13 @@ import {
 import fs from 'fs';
 
 export class S3Service implements ICloudService {
-  private s3: S3Client;
-  private bucket: string;
+  private _s3: S3Client;
+  private _bucket: string;
 
   constructor(config: S3Config) {
-    this.bucket = config.bucket;
+    this._bucket = config.bucket;
 
-    this.s3 = new S3Client({
+    this._s3 = new S3Client({
       region: config.region,
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -41,9 +41,9 @@ export class S3Service implements ICloudService {
         options.key ||
         `${options.folder || 'uploads'}/${Date.now()}-${filePath.split('/').pop()}`;
 
-      await this.s3.send(
+      await this._s3.send(
         new PutObjectCommand({
-          Bucket: this.bucket,
+          Bucket: this._bucket,
           Key: key,
           Body: fileStream,
           ContentType: options.contentType,
@@ -54,7 +54,7 @@ export class S3Service implements ICloudService {
         success: true,
         data: {
           key,
-          url: `https://${this.bucket}.s3.amazonaws.com/${key}`,
+          url: `https://${this._bucket}.s3.amazonaws.com/${key}`,
         },
       };
     } catch (error: unknown) {
@@ -71,13 +71,13 @@ export class S3Service implements ICloudService {
   ): Promise<UploadResult> {
     try {
       const command = new PutObjectCommand({
-        Bucket: this.bucket,
+        Bucket: this._bucket,
         Key: options.key,
         Body: buffer,
         ContentType: options.contentType,
       });
 
-      await this.s3.send(command);
+      await this._s3.send(command);
 
       return {
         success: true,
@@ -92,17 +92,17 @@ export class S3Service implements ICloudService {
 
   async update(fromKey: string, toKey: string): Promise<UpdateResult> {
     try {
-      await this.s3.send(
+      await this._s3.send(
         new CopyObjectCommand({
-          Bucket: this.bucket,
-          CopySource: `${this.bucket}/${fromKey}`,
+          Bucket: this._bucket,
+          CopySource: `${this._bucket}/${fromKey}`,
           Key: toKey,
         }),
       );
 
-      await this.s3.send(
+      await this._s3.send(
         new DeleteObjectCommand({
-          Bucket: this.bucket,
+          Bucket: this._bucket,
           Key: fromKey,
         }),
       );
@@ -125,9 +125,9 @@ export class S3Service implements ICloudService {
 
   async delete(key: string): Promise<DeleteResult> {
     try {
-      await this.s3.send(
+      await this._s3.send(
         new DeleteObjectCommand({
-          Bucket: this.bucket,
+          Bucket: this._bucket,
           Key: key,
         }),
       );

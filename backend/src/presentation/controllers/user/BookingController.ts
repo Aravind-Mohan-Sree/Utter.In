@@ -17,17 +17,17 @@ interface IAuthenticatedRequest extends Request {
 
 export class BookingController {
   constructor(
-    private createBookingOrderUC: ICreateBookingOrderUseCase,
-    private verifyPaymentAndBookUC: IVerifyPaymentAndBookUseCase,
-    private getBookingsUC: IGetBookingsUseCase,
-    private cancelBookingUC: ICancelBookingUseCase,
-    private pingBookingUC: IPingBookingUseCase,
+    private _createBookingOrderUC: ICreateBookingOrderUseCase,
+    private _verifyPaymentAndBookUC: IVerifyPaymentAndBookUseCase,
+    private _getBookingsUC: IGetBookingsUseCase,
+    private _cancelBookingUC: ICancelBookingUseCase,
+    private _pingBookingUC: IPingBookingUseCase,
   ) { }
 
   createOrder = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { amount, currency, sessionId } = req.body;
-      const order = await this.createBookingOrderUC.execute(amount, currency, sessionId);
+      const order = await this._createBookingOrderUC.execute(amount, currency, sessionId);
       res.status(httpStatusCode.OK).json({
         success: true,
         message: successMessage.ORDER_CREATED,
@@ -60,7 +60,7 @@ export class BookingController {
       const user = (req as AuthenticatedRequest).user;
       const userId = user?.id || user?._id;
 
-      const booking = await this.verifyPaymentAndBookUC.execute({
+      const booking = await this._verifyPaymentAndBookUC.execute({
         orderId,
         paymentId,
         signature,
@@ -96,7 +96,7 @@ export class BookingController {
         tutorId,
       });
 
-      const response = await this.getBookingsUC.execute(requestDTO);
+      const response = await this._getBookingsUC.execute(requestDTO);
 
       res.status(httpStatusCode.OK).json({
         success: true,
@@ -113,7 +113,7 @@ export class BookingController {
       const { id } = req.params;
       const user = (req as unknown as IAuthenticatedRequest).user;
 
-      await this.cancelBookingUC.execute(id, user.id, user.role);
+      await this._cancelBookingUC.execute(id, user.id, user.role);
 
       res.status(httpStatusCode.OK).json({
         success: true,
@@ -130,7 +130,7 @@ export class BookingController {
       const { id } = req.params;
       const user = (req as unknown as IAuthenticatedRequest).user;
 
-      const response = await this.pingBookingUC.execute(id, user.role);
+      const response = await this._pingBookingUC.execute(id, user.role);
 
       res.status(httpStatusCode.OK).json({
         success: true,

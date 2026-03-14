@@ -17,11 +17,11 @@ export interface IAuthenticate {
 
 export class Authenticate<Entity> implements IAuthenticate {
   constructor(
-    private tokenService: ITokenService,
-    private getEntity: IGetEntityDataUseCase<Entity>,
+    private _tokenService: ITokenService,
+    private _getEntity: IGetEntityDataUseCase<Entity>,
   ) {}
 
-  private getCookieOptions() {
+  private _getCookieOptions() {
     const isProduction = env.NODE_ENV === 'production';
     return {
       httpOnly: true,
@@ -36,7 +36,7 @@ export class Authenticate<Entity> implements IAuthenticate {
     try {
       let accessToken = req.cookies.accessToken;
       const refreshToken = req.cookies.refreshToken;
-      const cookieOptions = this.getCookieOptions();
+      const cookieOptions = this._getCookieOptions();
 
       if (!accessToken && !refreshToken) {
         throw new UnauthorizedError(errorMessage.SESSION_EXPIRED);
@@ -46,7 +46,7 @@ export class Authenticate<Entity> implements IAuthenticate {
 
       if (accessToken) {
         try {
-          payload = this.tokenService.verifyAuthToken(accessToken);
+          payload = this._tokenService.verifyAuthToken(accessToken);
         } catch {
           if (!refreshToken) {
             res.clearCookie('accessToken', cookieOptions);
@@ -58,13 +58,13 @@ export class Authenticate<Entity> implements IAuthenticate {
 
       if (!accessToken && refreshToken) {
         try {
-          payload = this.tokenService.verifyRefreshToken(refreshToken);
+          payload = this._tokenService.verifyRefreshToken(refreshToken);
         } catch {
           res.clearCookie('accessToken', cookieOptions);
           res.clearCookie('refreshToken', cookieOptions);
           throw new UnauthorizedError(errorMessage.SESSION_EXPIRED);
         }
-        const newAccessToken = this.tokenService.generateAuthToken({
+        const newAccessToken = this._tokenService.generateAuthToken({
           id: payload.id,
           role: payload.role,
         });
@@ -75,7 +75,7 @@ export class Authenticate<Entity> implements IAuthenticate {
         });
       }
 
-      const user = (await this.getEntity.getOneById(
+      const user = (await this._getEntity.getOneById(
         payload.id!,
       )) as IEntityData;
 

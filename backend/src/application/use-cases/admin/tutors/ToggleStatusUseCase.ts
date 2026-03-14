@@ -3,10 +3,10 @@ import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IToggleStatusUseCase } from '~use-case-interfaces/admin/ITutorsUseCase';
 
 export class ToggleTutorStatusUseCase implements IToggleStatusUseCase {
-  constructor(private tutorRepo: ITutorRepository) {}
+  constructor(private _tutorRepo: ITutorRepository) {}
 
   async execute(id: string): Promise<void> {
-    const tutor = await this.tutorRepo.findOneById(id);
+    const tutor = await this._tutorRepo.findOneById(id);
 
     if (!tutor) return;
 
@@ -14,6 +14,6 @@ export class ToggleTutorStatusUseCase implements IToggleStatusUseCase {
       isBlocked: !tutor.isBlocked,
     };
 
-    await this.tutorRepo.updateOneById(id, partialTutor);
+    await this._tutorRepo.updateOneById(id, partialTutor);
   }
 }

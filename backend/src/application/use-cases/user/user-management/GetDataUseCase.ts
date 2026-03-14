@@ -3,10 +3,10 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { IGetDataUseCase } from '~use-case-interfaces/user/IUserUseCase';
 
 export class GetDataUseCase implements IGetDataUseCase {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(private _userRepo: IUserRepository) {}
 
   async execute(email: string): Promise<UserResponseDTO | null> {
-    const user = await this.userRepo.findOneByField({ email });
+    const user = await this._userRepo.findOneByField({ email });
 
     if (!user) return null;
 

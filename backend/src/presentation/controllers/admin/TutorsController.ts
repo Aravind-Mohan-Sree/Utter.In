@@ -15,6 +15,7 @@ import {
   IDeleteFileUseCase,
   IUpdateFileUseCase,
 } from '~use-case-interfaces/shared/IFileUseCase';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
 interface TutorQuery {
   page: string;
@@ -25,12 +26,12 @@ interface TutorQuery {
 
 export class TutorsController {
   constructor(
-    private fetchTutorsUC: IFetchTutorsUseCase,
-    private toggleStatusUC: IToggleStatusUseCase,
-    private approveUC: IApproveUseCase,
-    private rejectUC: IRejectUseCase,
-    private updateFileUC: IUpdateFileUseCase,
-    private deleteFileUC: IDeleteFileUseCase,
+    private _fetchTutorsUC: IFetchTutorsUseCase,
+    private _toggleStatusUC: IToggleStatusUseCase,
+    private _approveUC: IApproveUseCase,
+    private _rejectUC: IRejectUseCase,
+    private _updateFileUC: IUpdateFileUseCase,
+    private _deleteFileUC: IDeleteFileUseCase,
   ) {}
 
   fetchTutors = async (req: Request, res: Response, next: NextFunction) => {
@@ -38,7 +39,7 @@ export class TutorsController {
       const { page, limit, query, filter } = new FetchAdminUsersDTO(
         req.query as unknown as TutorQuery,
       );
-      const tutorsData = await this.fetchTutorsUC.execute({
+      const tutorsData = await this._fetchTutorsUC.execute({
         page,
         limit,
         query,
@@ -58,7 +59,7 @@ export class TutorsController {
   toggleStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      await this.toggleStatusUC.execute(id);
+      await this._toggleStatusUC.execute(id);
 
       res.status(httpStatusCode.OK).json({
         message: successMessage.STATUS_UPDATED,
@@ -76,7 +77,7 @@ export class TutorsController {
         certificationType: req.query.certificationType as string,
       });
 
-      await this.approveUC.execute(id, certificationType);
+      await this._approveUC.execute(id, certificationType);
 
       res.status(httpStatusCode.OK).json({
         message: successMessage.VERIFIED,
@@ -95,31 +96,31 @@ export class TutorsController {
       });
       const dueToVideo = rejectionReason.split('/')[0] === 'video';
 
-      const googleId = await this.rejectUC.execute(id, rejectionReason);
+      const googleId = await this._rejectUC.execute(id, rejectionReason);
 
       if (googleId) {
-        await this.updateFileUC.execute(
-          'tutors/avatars/',
-          'temp/rejected-tutors/avatars/',
+        await this._updateFileUC.execute(
+          filePrefixes.TUTOR_AVATAR,
+          filePrefixes.TEMP_REJECTED_TUTOR_AVATAR,
           id,
           id,
-          'image/jpeg',
+          contentTypes.IMAGE_JPEG,
         );
       }
 
-      await this.updateFileUC.execute(
-        dueToVideo ? 'tutors/certificates/' : 'tutors/videos/',
+      await this._updateFileUC.execute(
+        dueToVideo ? filePrefixes.TUTOR_CERTIFICATE : filePrefixes.TUTOR_VIDEO,
         dueToVideo
-          ? 'temp/rejected-tutors/certificates/'
-          : 'temp/rejected-tutors/videos/',
+          ? filePrefixes.TEMP_REJECTED_TUTOR_CERTIFICATE
+          : filePrefixes.TEMP_REJECTED_TUTOR_VIDEO,
         id,
         id,
-        dueToVideo ? 'application/pdf' : 'video/mp4',
+        dueToVideo ? contentTypes.APPLICATION_PDF : contentTypes.VIDEO_MP4,
       );
-      await this.deleteFileUC.execute(
-        dueToVideo ? 'tutors/videos/' : 'tutors/certificates/',
+      await this._deleteFileUC.execute(
+        dueToVideo ? filePrefixes.TUTOR_VIDEO : filePrefixes.TUTOR_CERTIFICATE,
         id,
-        dueToVideo ? 'video/mp4' : 'application/pdf',
+        dueToVideo ? contentTypes.VIDEO_MP4 : contentTypes.APPLICATION_PDF,
       );
 
       res.status(httpStatusCode.OK).json({

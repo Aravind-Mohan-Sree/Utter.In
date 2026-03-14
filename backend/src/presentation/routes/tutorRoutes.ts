@@ -60,7 +60,6 @@ import { WalletRepository } from '~concrete-repositories/WalletRepository';
 import { RazorpayService } from '~concrete-services/RazorpayService';
 import { GetWalletTransactionsUseCase } from '~use-cases/shared/GetWalletTransactionsUseCase';
 import { WalletController } from '~controllers/shared/WalletController';
-import { RedisOtpService } from '~concrete-services/RedisOtpService';
 import { PingBookingUseCase } from '~use-cases/shared/PingBookingUseCase';
 import { RedisService } from '~concrete-services/RedisService';
 
@@ -86,7 +85,6 @@ const s3Service = new S3Service({
 });
 const axiosImageGatewayService = new AxiosImageGatewayService();
 const razorpayService = new RazorpayService();
-const redisOtpService = new RedisOtpService();
 const redisService = new RedisService();
 
 // use-cases
@@ -100,10 +98,10 @@ const finishRegisterTutorUseCase = new FinishRegisterTutorUseCase(
   tutorRepository,
 );
 const resubmitAccountUseCase = new ResubmitAccountUseCase(tutorRepository);
-const sendOtpUseCase = new SendOtpUseCase(mailService, pendingTutorRepository, redisOtpService);
+const sendOtpUseCase = new SendOtpUseCase(mailService, pendingTutorRepository, redisService);
 const verifyOtpUseCase = new VerifyOtpUseCase(
   mailService,
-  redisOtpService,
+  redisService,
 );
 const registerTutorFromPendingUseCase = new RegisterTutorFromPendingUseCase(
   pendingTutorRepository,
@@ -112,13 +110,13 @@ const registerTutorFromPendingUseCase = new RegisterTutorFromPendingUseCase(
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   tutorRepository,
   pendingTutorRepository,
-  redisOtpService,
+  redisService,
 );
 const forgotPasswordOtpVerifyUseCase = new ForgotPasswordOtpVerifyUseCase(
   pendingTutorRepository,
   mailService,
   jwtService,
-  redisOtpService,
+  redisService,
 );
 const resetPasswordUseCase = new ResetPasswordUseCase(
   jwtService,

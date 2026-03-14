@@ -6,19 +6,19 @@ import { Tutor } from '~entities/Tutor';
 
 export class ResetPasswordUseCase implements IResetPasswordUseCase {
   constructor(
-    private tokenService: ITokenService,
-    private tutorRepo: ITutorRepository,
-    private hashService: IHashService,
+    private _tokenService: ITokenService,
+    private _tutorRepo: ITutorRepository,
+    private _hashService: IHashService,
   ) {}
 
   async execute(resetToken: string, password: string): Promise<void> {
-    const payload = this.tokenService.verifyResetToken(resetToken);
+    const payload = this._tokenService.verifyResetToken(resetToken);
     const email = payload.email;
-    const hashedPassword = await this.hashService.hash(password);
+    const hashedPassword = await this._hashService.hash(password);
     const tutor: Partial<Tutor> = {
       password: hashedPassword,
     };
 
-    await this.tutorRepo.updateOneByField({ email }, tutor);
+    await this._tutorRepo.updateOneByField({ email }, tutor);
   }
 }

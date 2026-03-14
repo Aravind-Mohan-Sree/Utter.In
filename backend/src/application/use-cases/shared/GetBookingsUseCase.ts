@@ -6,7 +6,7 @@ import { GetBookingsDTO } from "~dtos/GetBookingsDTO";
 
 export class GetBookingsUseCase implements IGetBookingsUseCase {
   constructor(
-    private bookingRepo: IBookingRepository,
+    private _bookingRepo: IBookingRepository,
   ) { }
 
   async execute(req: GetBookingsDTO): Promise<{
@@ -19,7 +19,7 @@ export class GetBookingsUseCase implements IGetBookingsUseCase {
     };
     callJoinThresholdMinutes: number;
   }> {
-    const result = await this.bookingRepo.fetchBookings(req);
+    const result = await this._bookingRepo.fetchBookings(req);
 
     return {
       upcoming: result.upcoming.map(booking => BookingMapper.toResponse(booking)),

@@ -11,18 +11,18 @@ import { logger } from '~logger/logger';
 
 export class OtpController {
   constructor(
-    private verifyOtp: IVerifyOtpUseCase,
-    private sendOtp: ISendOtpUseCase,
-    private registerUserFromPending: IRegisterUserFromPendingUseCase,
+    private _verifyOtp: IVerifyOtpUseCase,
+    private _sendOtp: ISendOtpUseCase,
+    private _registerUserFromPending: IRegisterUserFromPendingUseCase,
   ) {}
 
   verify = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { otp, email } = req.body;
 
-      await this.verifyOtp.execute(email, otp);
+      await this._verifyOtp.execute(email, otp);
 
-      const user = await this.registerUserFromPending.execute(email);
+      const user = await this._registerUserFromPending.execute(email);
 
       res
         .status(httpStatusCode.OK)
@@ -37,7 +37,7 @@ export class OtpController {
     try {
       const { email } = req.body;
 
-      await this.sendOtp.execute(email);
+      await this._sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {

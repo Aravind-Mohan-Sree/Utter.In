@@ -8,16 +8,16 @@ import { IChangePasswordUseCase } from '~use-case-interfaces/tutor/ITutorUseCase
 
 export class ChangePasswordUseCase implements IChangePasswordUseCase {
   constructor(
-    private tutorRepo: ITutorRepository,
-    private hashService: IHashService,
+    private _tutorRepo: ITutorRepository,
+    private _hashService: IHashService,
   ) {}
 
   async execute(id: string, data: ChangePasswordDTO): Promise<void> {
-    const tutor = await this.tutorRepo.findOneById(id);
+    const tutor = await this._tutorRepo.findOneById(id);
 
     if (!tutor) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
 
-    const validPassword = await this.hashService.compare(
+    const validPassword = await this._hashService.compare(
       data.currentPassword,
       tutor.password,
     );
@@ -25,9 +25,9 @@ export class ChangePasswordUseCase implements IChangePasswordUseCase {
     if (!validPassword) throw new BadRequestError(errorMessage.WRONG_PASSWORD);
 
     const partialTutor: Partial<Tutor> = {
-      password: await this.hashService.hash(data.password),
+      password: await this._hashService.hash(data.password),
     };
 
-    await this.tutorRepo.updateOneById(id, partialTutor);
+    await this._tutorRepo.updateOneById(id, partialTutor);
   }
 }

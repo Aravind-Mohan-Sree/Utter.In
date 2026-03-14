@@ -6,19 +6,19 @@ import { User } from '~entities/User';
 
 export class ResetPasswordUseCase implements IResetPasswordUseCase {
   constructor(
-    private tokenService: ITokenService,
-    private userRepo: IUserRepository,
-    private hashService: IHashService,
+    private _tokenService: ITokenService,
+    private _userRepo: IUserRepository,
+    private _hashService: IHashService,
   ) {}
 
   async execute(resetToken: string, password: string): Promise<void> {
-    const payload = this.tokenService.verifyResetToken(resetToken);
+    const payload = this._tokenService.verifyResetToken(resetToken);
     const email = payload.email;
-    const hashedPassword = await this.hashService.hash(password);
+    const hashedPassword = await this._hashService.hash(password);
     const user: Partial<User> = {
       password: hashedPassword,
     };
 
-    await this.userRepo.updateOneByField({ email }, user);
+    await this._userRepo.updateOneByField({ email }, user);
   }
 }

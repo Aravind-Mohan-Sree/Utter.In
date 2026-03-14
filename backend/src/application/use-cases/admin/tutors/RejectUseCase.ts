@@ -5,12 +5,12 @@ import { IRejectUseCase } from '~use-case-interfaces/admin/ITutorsUseCase';
 
 export class RejectUseCase implements IRejectUseCase {
   constructor(
-    private tutorRepo: ITutorRepository,
-    private mailService: IMailService,
+    private _tutorRepo: ITutorRepository,
+    private _mailService: IMailService,
   ) {}
 
   async execute(id: string, rejectionReason: string): Promise<string | null> {
-    const tutor = await this.tutorRepo.findOneById(id);
+    const tutor = await this._tutorRepo.findOneById(id);
 
     if (!tutor) return null;
 
@@ -19,8 +19,8 @@ export class RejectUseCase implements IRejectUseCase {
       expiresAt: new Date(),
     };
 
-    await this.mailService.sendVerificationUpdate(tutor.name, tutor.email);
-    await this.tutorRepo.updateOneById(id, partialTutor);
+    await this._mailService.sendVerificationUpdate(tutor.name, tutor.email);
+    await this._tutorRepo.updateOneById(id, partialTutor);
 
     return tutor.googleId;
   }

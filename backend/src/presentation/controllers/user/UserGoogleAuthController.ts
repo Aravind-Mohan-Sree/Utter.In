@@ -9,6 +9,7 @@ import { logger } from '~logger/logger';
 import { HttpError } from '~errors/HttpError';
 import { successMessage } from '~constants/successMessage';
 import { IUploadAvatarUseCase } from '~use-case-interfaces/shared/IFileUseCase';
+import { filePrefixes } from '~constants/fileConstants';
 
 interface IAuthUser {
   name: string;
@@ -19,27 +20,31 @@ interface IAuthUser {
 
 export class UserGoogleAuthController {
   constructor(
-    private getDataUC: IGetDataUseCase,
-    private googleRegisterUC: IUserGoogleRegisterUseCase,
-    private googleSigninUC: IUserGoogleSigninUseCase,
-    private uploadAvatar: IUploadAvatarUseCase,
+    private _getDataUC: IGetDataUseCase,
+    private _googleRegisterUC: IUserGoogleRegisterUseCase,
+    private _googleSigninUC: IUserGoogleSigninUseCase,
+    private _uploadAvatar: IUploadAvatarUseCase,
   ) {}
 
   handleSuccess = async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const { name, email, avatarUrl, googleId } = req.user as IAuthUser;
-      const user = await this.getDataUC.execute(email);
+      const user = await this._getDataUC.execute(email);
 
       if (!user) {
-        const id = await this.googleRegisterUC.execute(name, email, googleId);
+        const id = await this._googleRegisterUC.execute(name, email, googleId);
 
-        await this.uploadAvatar.execute('temp/users/avatars/', id, avatarUrl);
+        await this._uploadAvatar.execute(
+          filePrefixes.TEMP_USER_AVATAR,
+          id,
+          avatarUrl,
+        );
 
         res.redirect(
           `${env.FRONTEND_URL}/signup?mode=user&responseMessage=finishSignup&email=${email}`,
         );
       } else {
-        const user = await this.googleSigninUC.execute(email, googleId);
+        const user = await this._googleSigninUC.execute(email, googleId);
 
         const isProduction = env.NODE_ENV === 'production';
         const cookieOptions = {

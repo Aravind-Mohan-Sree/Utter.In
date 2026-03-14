@@ -7,7 +7,7 @@ import {
 } from '~use-case-interfaces/shared/IFileUseCase';
 
 export class UpdateFileUseCase implements IUpdateFileUseCase {
-  constructor(private cloudService: ICloudService) {}
+  constructor(private _cloudService: ICloudService) {}
 
   async execute(
     oldPrefix: Prefix,
@@ -19,7 +19,7 @@ export class UpdateFileUseCase implements IUpdateFileUseCase {
     const fromKey = `${oldPrefix}${oldFilename}.${contentType.split('/')[1]}`;
     const toKey = `${newPrefix}${newFilename}.${contentType.split('/')[1]}`;
 
-    const updateResult = await this.cloudService.update(fromKey, toKey);
+    const updateResult = await this._cloudService.update(fromKey, toKey);
 
     if (!updateResult.success)
       throw new InternalServerError(updateResult.error);

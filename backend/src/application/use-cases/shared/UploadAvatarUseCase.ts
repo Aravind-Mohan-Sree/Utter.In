@@ -8,8 +8,8 @@ import {
 
 export class UploadAvatarUseCase implements IUploadAvatarUseCase {
   constructor(
-    private cloudService: ICloudService,
-    private imageGateway: IImageGatewayService,
+    private _cloudService: ICloudService,
+    private _imageGateway: IImageGatewayService,
   ) {}
 
   async execute(
@@ -18,9 +18,9 @@ export class UploadAvatarUseCase implements IUploadAvatarUseCase {
     imageUrl: string,
   ): Promise<void> {
     const { buffer, contentType } =
-      await this.imageGateway.fetchImageBuffer(imageUrl);
+      await this._imageGateway.fetchImageBuffer(imageUrl);
 
-    const uploadResult = await this.cloudService.uploadBuffer(buffer, {
+    const uploadResult = await this._cloudService.uploadBuffer(buffer, {
       key: `${prefix}${filename}.jpeg`,
       contentType,
     });

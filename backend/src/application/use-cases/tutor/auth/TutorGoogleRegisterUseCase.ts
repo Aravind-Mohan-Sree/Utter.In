@@ -3,17 +3,17 @@ import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRep
 import { ITutorGoogleRegisterUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
 
 export class TutorGoogleRegisterUseCase implements ITutorGoogleRegisterUseCase {
-  constructor(private pendingTutorRepo: IPendingTutorRepository) {}
+  constructor(private _pendingTutorRepo: IPendingTutorRepository) {}
 
   async execute(
     name: string,
     email: string,
     googleId: string,
   ): Promise<string> {
-    let pendingTutor = await this.pendingTutorRepo.findOneByField({ email });
+    let pendingTutor = await this._pendingTutorRepo.findOneByField({ email });
 
     if (pendingTutor) {
-      await this.pendingTutorRepo.deleteOneByField({
+      await this._pendingTutorRepo.deleteOneByField({
         email: pendingTutor.email,
       });
     }
@@ -24,7 +24,7 @@ export class TutorGoogleRegisterUseCase implements ITutorGoogleRegisterUseCase {
       googleId,
     };
 
-    pendingTutor = await this.pendingTutorRepo.create(tutor);
+    pendingTutor = await this._pendingTutorRepo.create(tutor);
 
     return pendingTutor.id!;
   }

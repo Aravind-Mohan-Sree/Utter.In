@@ -13,9 +13,9 @@ import {
 
 export class SigninTutorUseCase implements ISigninTutorUseCase {
   constructor(
-    private tutorRepo: ITutorRepository,
-    private hashService: IHashService,
-    private tokenService: ITokenService,
+    private _tutorRepo: ITutorRepository,
+    private _hashService: IHashService,
+    private _tokenService: ITokenService,
   ) {}
 
   async execute(data: SigninDTO): Promise<{
@@ -24,7 +24,7 @@ export class SigninTutorUseCase implements ISigninTutorUseCase {
     refreshToken: string;
   }> {
     const { email, password } = data;
-    const tutor = await this.tutorRepo.findOneByField({ email });
+    const tutor = await this._tutorRepo.findOneByField({ email });
 
     if (!tutor) throw new NotFoundError(errorMessage.ACCOUNT_NOT_EXISTS);
 
@@ -36,15 +36,15 @@ export class SigninTutorUseCase implements ISigninTutorUseCase {
       );
     if (tutor.isBlocked) throw new ForbiddenError(errorMessage.BLOCKED);
 
-    const valid = await this.hashService.compare(password, tutor.password!);
+    const valid = await this._hashService.compare(password, tutor.password!);
 
     if (!valid) throw new BadRequestError(errorMessage.WRONG_PASSWORD);
 
-    const accessToken = this.tokenService.generateAuthToken({
+    const accessToken = this._tokenService.generateAuthToken({
       id: tutor.id,
       role: 'tutor',
     });
-    const refreshToken = this.tokenService.generateRefreshToken({
+    const refreshToken = this._tokenService.generateRefreshToken({
       id: tutor.id,
       role: 'tutor',
     });

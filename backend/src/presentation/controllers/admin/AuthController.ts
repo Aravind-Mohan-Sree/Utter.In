@@ -9,14 +9,14 @@ import { ISigninUseCase } from '~use-case-interfaces/admin/IAdminUseCase';
 
 export class AuthController {
   constructor(
-    private signinUC: ISigninUseCase,
-    private validator: IValidateDataService,
+    private _signinUC: ISigninUseCase,
+    private _validator: IValidateDataService,
   ) {}
 
   signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const data = new SigninDTO(req.body, this.validator);
-      const adminData = await this.signinUC.execute(data);
+      const data = new SigninDTO(req.body, this._validator);
+      const adminData = await this._signinUC.execute(data);
       const isProduction = env.NODE_ENV === 'production';
       const cookieOptions = {
         httpOnly: true,

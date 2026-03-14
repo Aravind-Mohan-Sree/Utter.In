@@ -11,9 +11,9 @@ import { TutorMapper } from '~mappers/TutorMapper';
 
 export class TutorsController {
   constructor(
-        private fetchTutorsUC: IFetchTutorsUseCase,
-        private getTutorDataUC: IGetEntityDataUseCase<Tutor>,
-        private getTutorSessionsUC: IGetTutorSessionsUseCase,
+        private _fetchTutorsUC: IFetchTutorsUseCase,
+        private _getTutorDataUC: IGetEntityDataUseCase<Tutor>,
+        private _getTutorSessionsUC: IGetTutorSessionsUseCase,
   ) { }
 
   fetchTutors = async (req: Request, res: Response, next: NextFunction) => {
@@ -27,7 +27,7 @@ export class TutorsController {
         filter: '',
       });
 
-      const tutorsData = await this.fetchTutorsUC.execute({
+      const tutorsData = await this._fetchTutorsUC.execute({
         page: queryData.page,
         limit: queryData.limit,
         query: queryData.query,
@@ -48,7 +48,7 @@ export class TutorsController {
   getTutorDetails = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tutorId = req.params.id;
-      const tutor = await this.getTutorDataUC.getOneById(tutorId);
+      const tutor = await this._getTutorDataUC.getOneById(tutorId);
 
       if (!tutor) {
         throw new Error('Tutor not found');
@@ -76,7 +76,7 @@ export class TutorsController {
         startDate = new Date(date as string);
       }
 
-      const sessions = await this.getTutorSessionsUC.execute(tutorId, startDate);
+      const sessions = await this._getTutorSessionsUC.execute(tutorId, startDate);
 
       res.status(httpStatusCode.OK).json({
         message: successMessage.DATA_FETCHED,

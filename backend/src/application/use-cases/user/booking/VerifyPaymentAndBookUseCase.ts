@@ -15,13 +15,13 @@ import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 
 export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase {
   constructor(
-    private bookingRepository: IBookingRepository,
-    private sessionRepository: ISessionRepository,
-    private userRepository: IUserRepository,
-    private tutorRepository: ITutorRepository,
-    private paymentService: IPaymentService,
-    private mailService: IMailService,
-    private walletRepository: IWalletRepository,
+    private _bookingRepository: IBookingRepository,
+    private _sessionRepository: ISessionRepository,
+    private _userRepository: IUserRepository,
+    private _tutorRepository: ITutorRepository,
+    private _paymentService: IPaymentService,
+    private _mailService: IMailService,
+    private _walletRepository: IWalletRepository,
   ) { }
 
   async execute(data: {
@@ -34,13 +34,13 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
     amount: number;
     currency: string;
   }): Promise<null> {
-    const isValid = this.paymentService.verifySignature(data.orderId, data.paymentId, data.signature);
+    const isValid = this._paymentService.verifySignature(data.orderId, data.paymentId, data.signature);
 
     if (!isValid) {
       throw new BadRequestError('Invalid payment signature');
     }
 
-    const session = await this.sessionRepository.findOneById(data.sessionId);
+    const session = await this._sessionRepository.findOneById(data.sessionId);
     if (!session) {
       throw new BadRequestError('Session not found');
     }
@@ -48,17 +48,17 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
     const expiresAt = new Date(session.scheduledAt);
     expiresAt.setHours(expiresAt.getHours() + 1);
 
-    const updatedSession = await this.sessionRepository.updateOneByField(
+    const updatedSession = await this._sessionRepository.updateOneByField(
       { _id: data.sessionId, status: 'Available' } as Parameters<ISessionRepository['updateOneByField']>[0],
       { status: 'Booked', expiresAt },
     );
 
     if (!updatedSession) {
-      let wallet = await this.walletRepository.findOneByField({ userId: data.userId } as unknown as FilterQuery<IWallet>);
+      let wallet = await this._walletRepository.findOneByField({ userId: data.userId } as unknown as FilterQuery<IWallet>);
 
       if (!wallet) {
         wallet = new Wallet(data.userId, 0, 'INR', []);
-        wallet = await this.walletRepository.create(wallet);
+        wallet = await this._walletRepository.create(wallet);
       }
 
       const refundAmount = session.price;
@@ -71,7 +71,7 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
         date: new Date(),
       });
 
-      await this.walletRepository.updateOneById(wallet.id!, wallet);
+      await this._walletRepository.updateOneById(wallet.id!, wallet);
 
       throw new BadRequestError('This session was just booked by someone else. The amount has been refunded to your wallet.');
     }
@@ -91,11 +91,11 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
       null,
     );
 
-    await this.bookingRepository.create(booking);
+    await this._bookingRepository.create(booking);
 
     const [user, tutor] = await Promise.all([
-      this.userRepository.findOneById(data.userId),
-      this.tutorRepository.findOneById(data.tutorId),
+      this._userRepository.findOneById(data.userId),
+      this._tutorRepository.findOneById(data.tutorId),
     ]);
 
     if (user && tutor) {
@@ -109,8 +109,8 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
       });
 
       await Promise.all([
-        this.mailService.sendBookingConfirmation(tutor.name, tutor.email, session.topic, session.language, formattedDate, true),
-        this.mailService.sendBookingConfirmation(user.name, user.email, session.topic, session.language, formattedDate, false),
+        this._mailService.sendBookingConfirmation(tutor.name, tutor.email, session.topic, session.language, formattedDate, true),
+        this._mailService.sendBookingConfirmation(user.name, user.email, session.topic, session.language, formattedDate, false),
       ]);
     }
 

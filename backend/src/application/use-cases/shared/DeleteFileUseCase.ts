@@ -7,14 +7,14 @@ import {
 } from '~use-case-interfaces/shared/IFileUseCase';
 
 export class DeleteFileUseCase implements IDeleteFileUseCase {
-  constructor(private cloudService: ICloudService) {}
+  constructor(private _cloudService: ICloudService) {}
 
   async execute(
     prefix: Prefix,
     filename: string,
     contentType: ContentType,
   ): Promise<void> {
-    const deleteResult = await this.cloudService.delete(
+    const deleteResult = await this._cloudService.delete(
       `${prefix}${filename}.${contentType.split('/')[1]}`,
     );
 

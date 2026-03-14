@@ -9,6 +9,7 @@ import { logger } from '~logger/logger';
 import { HttpError } from '~errors/HttpError';
 import { successMessage } from '~constants/successMessage';
 import { IUploadAvatarUseCase } from '~use-case-interfaces/shared/IFileUseCase';
+import { filePrefixes } from '~constants/fileConstants';
 
 interface IAuthTutor {
   name: string;
@@ -19,27 +20,31 @@ interface IAuthTutor {
 
 export class TutorGoogleAuthController {
   constructor(
-    private getDataUC: IGetDataUseCase,
-    private googleRegisterUC: ITutorGoogleRegisterUseCase,
-    private googleSigninUC: ITutorGoogleSigninUseCase,
-    private uploadAvatar: IUploadAvatarUseCase,
+    private _getDataUC: IGetDataUseCase,
+    private _googleRegisterUC: ITutorGoogleRegisterUseCase,
+    private _googleSigninUC: ITutorGoogleSigninUseCase,
+    private _uploadAvatar: IUploadAvatarUseCase,
   ) {}
 
   handleSuccess = async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const { name, email, avatarUrl, googleId } = req.user as IAuthTutor;
-      const tutor = await this.getDataUC.execute(email);
+      const tutor = await this._getDataUC.execute(email);
 
       if (!tutor) {
-        const id = await this.googleRegisterUC.execute(name, email, googleId);
+        const id = await this._googleRegisterUC.execute(name, email, googleId);
 
-        await this.uploadAvatar.execute('temp/tutors/avatars/', id, avatarUrl);
+        await this._uploadAvatar.execute(
+          filePrefixes.TEMP_TUTOR_AVATAR,
+          id,
+          avatarUrl,
+        );
 
         res.redirect(
           `${env.FRONTEND_URL}/signup?mode=tutor&responseMessage=finishSignup&email=${email}`,
         );
       } else {
-        const tutor = await this.googleSigninUC.execute(email, googleId);
+        const tutor = await this._googleSigninUC.execute(email, googleId);
 
         const isProduction = env.NODE_ENV === 'production';
         const cookieOptions = {

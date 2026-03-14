@@ -5,7 +5,7 @@ import { ISessionRepository } from '~repository-interfaces/ISessionRepository';
 import { Session } from '~entities/Session';
 
 export class CreateSessionUseCase implements ICreateSessionUseCase {
-  constructor(private sessionRepository: ISessionRepository) { }
+  constructor(private _sessionRepository: ISessionRepository) { }
 
   async execute(data: CreateSessionDTO): Promise<SessionResponseDTO> {
     const sessionEntity = new Session(
@@ -19,7 +19,7 @@ export class CreateSessionUseCase implements ICreateSessionUseCase {
       data.expiresAt,
     );
 
-    const createdSession = await this.sessionRepository.create(sessionEntity);
+    const createdSession = await this._sessionRepository.create(sessionEntity);
 
     return SessionMapper.toResponse(createdSession);
   }

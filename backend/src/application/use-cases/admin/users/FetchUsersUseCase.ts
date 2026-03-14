@@ -3,7 +3,7 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { IFetchUsersUseCase } from '~use-case-interfaces/admin/IUsersUseCase';
 
 export class FetchUsersUseCase implements IFetchUsersUseCase {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(private _userRepo: IUserRepository) {}
 
   async execute(data: {
     page: number;
@@ -16,7 +16,7 @@ export class FetchUsersUseCase implements IFetchUsersUseCase {
     users: UserResponseDTO[];
   }> {
     const { totalUsersCount, filteredUsersCount, users } =
-      await this.userRepo.fetchUsers(
+      await this._userRepo.fetchUsers(
         data.page,
         data.limit,
         data.query,

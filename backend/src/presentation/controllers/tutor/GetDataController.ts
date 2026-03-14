@@ -7,7 +7,7 @@ import { logger } from '~logger/logger';
 import { IGetDataUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
 
 export class GetDataController {
-  constructor(private getData: IGetDataUseCase) {}
+  constructor(private _getData: IGetDataUseCase) {}
 
   getAccountDetails = async (
     req: Request,
@@ -16,7 +16,7 @@ export class GetDataController {
   ) => {
     try {
       const { tutorEmail } = req.params;
-      const tutor = await this.getData.execute(tutorEmail);
+      const tutor = await this._getData.execute(tutorEmail);
 
       if (!tutor) throw new NotFoundError(errorMessage.SOMETHING_WRONG);
 

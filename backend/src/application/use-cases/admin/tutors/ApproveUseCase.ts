@@ -5,12 +5,12 @@ import { IApproveUseCase } from '~use-case-interfaces/admin/ITutorsUseCase';
 
 export class ApproveUseCase implements IApproveUseCase {
   constructor(
-    private tutorRepo: ITutorRepository,
-    private mailService: IMailService,
+    private _tutorRepo: ITutorRepository,
+    private _mailService: IMailService,
   ) {}
 
   async execute(id: string, certificationType: string): Promise<void> {
-    const tutor = await this.tutorRepo.findOneById(id);
+    const tutor = await this._tutorRepo.findOneById(id);
 
     if (!tutor) return;
 
@@ -19,7 +19,7 @@ export class ApproveUseCase implements IApproveUseCase {
       certificationType,
     };
 
-    await this.mailService.sendWelcome(tutor.name, tutor.email);
-    await this.tutorRepo.updateOneById(id, partialTutor);
+    await this._mailService.sendWelcome(tutor.name, tutor.email);
+    await this._tutorRepo.updateOneById(id, partialTutor);
   }
 }

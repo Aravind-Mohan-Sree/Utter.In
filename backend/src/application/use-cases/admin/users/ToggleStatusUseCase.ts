@@ -3,10 +3,10 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { IToggleStatusUseCase } from '~use-case-interfaces/admin/IUsersUseCase';
 
 export class ToggleUserStatusUseCase implements IToggleStatusUseCase {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(private _userRepo: IUserRepository) {}
 
   async execute(id: string): Promise<void> {
-    const user = await this.userRepo.findOneById(id);
+    const user = await this._userRepo.findOneById(id);
 
     if (!user) return;
 
@@ -14,6 +14,6 @@ export class ToggleUserStatusUseCase implements IToggleStatusUseCase {
       isBlocked: !user.isBlocked,
     };
 
-    await this.userRepo.updateOneById(id, partialUser);
+    await this._userRepo.updateOneById(id, partialUser);
   }
 }

@@ -4,32 +4,48 @@ import { logger } from '~logger/logger';
 import { env } from '~config/env';
 
 export class RedisService implements IRedisService {
-    private client;
+    private _client;
 
     constructor() {
-        this.client = createClient({
+        this._client = createClient({
             url: env.REDIS_URL,
         });
 
-        this.client.on('error', (err) => logger.error('Redis Client Error', err));
-        this.client.on('connect', () => logger.info('Redis Generic Client Connected'));
+        this._client.on('error', (err) => logger.error('Redis Client Error', err));
+        this._client.on('connect', () => logger.info('Redis Client Connected'));
 
-        this.client.connect().catch((err) => logger.error('Redis Connect Error', err));
+        this._client.connect().catch((err) => logger.error('Redis Connect Error', err));
     }
 
     async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
         if (ttlSeconds) {
-            await this.client.set(key, value, { EX: ttlSeconds });
+            await this._client.set(key, value, { EX: ttlSeconds });
         } else {
-            await this.client.set(key, value);
+            await this._client.set(key, value);
         }
     }
 
     async get(key: string): Promise<string | null> {
-        return await this.client.get(key);
+        return await this._client.get(key);
     }
 
     async delete(key: string): Promise<void> {
-        await this.client.del(key);
+        await this._client.del(key);
+    }
+
+    async storeOtp(email: string, otp: string, ttlSeconds: number): Promise<void> {
+        await this.set(email, otp, ttlSeconds);
+    }
+
+    async getOtp(email: string): Promise<string | null> {
+        return await this.get(email);
+    }
+
+    async deleteOtp(email: string): Promise<void> {
+        await this.delete(email);
+    }
+
+    async getOtpTtl(email: string): Promise<number> {
+        return await this._client.ttl(email);
     }
 }
