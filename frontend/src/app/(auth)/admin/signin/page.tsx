@@ -47,12 +47,17 @@ const SignIn: React.FC = () => {
   }, [dispatch, router, searchParams]);
 
   const handleSubmit = async () => {
-    const newErrors = SigninSchema.safeParse(formData).error?.issues.reduce<
-      Record<string, string>
-    >((acc, issue) => {
+    const issues = SigninSchema.safeParse(formData).error?.issues;
+    const newErrors = issues?.reduce<Record<string, string>>((acc, issue) => {
       const fieldName = issue.path[0];
 
       if (typeof fieldName === 'string' && fieldName && !acc[fieldName]) {
+        if (
+          fieldName === 'password' &&
+          issue.message !== 'Password is required'
+        ) {
+          return acc;
+        }
         acc[fieldName] = issue.message;
       }
 
@@ -67,10 +72,10 @@ const SignIn: React.FC = () => {
     setError((prev) => ({
       ...prev,
       ...clearedState,
-      ...newErrors,
+      ...(newErrors || {}),
     }));
 
-    if (!newErrors) {
+    if (!newErrors || Object.keys(newErrors).length === 0) {
       try {
         const res = await signin(formData);
         const data = res.admin;
@@ -88,7 +93,18 @@ const SignIn: React.FC = () => {
       } catch (error) {
         const message: string = errorHandler(error);
 
-        setError((prev) => ({ ...prev, ['password']: message }));
+        if (message.toLowerCase().includes('password')) {
+          setError((prev) => ({ ...prev, password: 'Wrong password' }));
+        } else {
+          setError((prev) => {
+            const newState = { ...prev, password: '' };
+            if (message.toLowerCase().includes('email')) {
+              newState.email = message;
+            }
+            return newState;
+          });
+          utterToast.error(message);
+        }
       }
     }
   };
@@ -100,12 +116,23 @@ const SignIn: React.FC = () => {
     const updatedFormData = { ...formData, [name]: value };
 
     setFormData(updatedFormData);
-    setError((prev) => ({
-      ...prev,
-      [name]: SigninSchema.safeParse(updatedFormData).error?.issues.find(
+    setError((prev) => {
+      const message = SigninSchema.safeParse(updatedFormData).error?.issues.find(
         (ele) => ele.path[0] === name,
-      )?.message,
-    }));
+      )?.message;
+
+      if (name === 'password') {
+        return {
+          ...prev,
+          [name]: message === 'Password is required' ? message : '',
+        };
+      }
+
+      return {
+        ...prev,
+        [name]: message || '',
+      };
+    });
   };
 
   return (
