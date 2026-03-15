@@ -5,6 +5,8 @@ import {
 } from '~service-interfaces/IValidateDataService';
 import * as z from 'zod';
 
+import { errorMessage } from '~constants/errorMessage';
+
 const toValidatedData = (data: z.ZodSafeParseResult<object>) => {
   return {
     success: data.success,
@@ -238,5 +240,28 @@ export class DataValidatorService implements IValidateDataService {
     });
 
     return toValidatedData(avatarSchema.safeParse({ avatar }));
+  }
+
+  validateRating(rating: number): ValidatedData {
+    const ratingSchema = z.object({
+      rating: z
+        .number()
+        .min(1, errorMessage.RATING_MIN)
+        .max(5, errorMessage.RATING_MAX),
+    });
+
+    return toValidatedData(ratingSchema.safeParse({ rating }));
+  }
+
+  validateReviewNote(note: string): ValidatedData {
+    const noteSchema = z.object({
+      note: z
+        .string()
+        .trim()
+        .min(5, errorMessage.NOTE_MIN)
+        .max(500, errorMessage.NOTE_MAX),
+    });
+
+    return toValidatedData(noteSchema.safeParse({ note }));
   }
 }

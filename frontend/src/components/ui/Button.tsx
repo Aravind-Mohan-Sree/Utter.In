@@ -65,7 +65,7 @@ export default function Button<T extends unknown[]>({
     primary: 'from-rose-400 to-rose-900 hover:to-rose-900 hover:from-rose-400',
     secondary:
       'from-blue-400 to-blue-900 hover:to-blue-900 hover:from-blue-400',
-    outline: 'bg-transparent shadow-none!',
+    outline: 'bg-gray-200 shadow-none! text-gray-700! border border-gray-300',
     success:
       'from-green-400 to-green-900 hover:to-green-900 hover:from-green-400',
     danger: 'from-red-500 to-red-900 hover:to-red-900 hover:from-red-500',

@@ -14,4 +14,7 @@ export const successMessage = {
   PROFILE_UPDATED: 'Profile successfully updated',
   ORDER_CREATED: 'Order created successfully',
   BOOKING_SUCCESS: 'Booking successful',
+  REVIEW_ADDED: 'Review added successfully',
+  REVIEW_UPDATED: 'Review updated successfully',
+  REVIEW_DELETED: 'Review deleted successfully',
 };

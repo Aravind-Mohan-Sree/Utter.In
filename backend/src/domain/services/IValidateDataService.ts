@@ -22,4 +22,6 @@ export interface IValidateDataService {
   validatePassword(password: string): ValidatedData;
   validateOtp(otp: string): ValidatedData;
   validateAvatar(avatar: FileInput): ValidatedData;
+  validateRating(rating: number): ValidatedData;
+  validateReviewNote(note: string): ValidatedData;
 }

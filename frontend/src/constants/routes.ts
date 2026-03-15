@@ -19,6 +19,9 @@ export const API_ROUTES = {
     GET_TUTORS: '/user/tutors',
     CREATE_ORDER: '/user/book/order',
     VERIFY_PAYMENT: '/user/book/verify',
+    REVIEWS: '/user/reviews',
+    TUTOR_REVIEWS: (tutorId: string) => `/user/tutors/${tutorId}/reviews`,
+    REVIEW_ELIGIBILITY: (tutorId: string) => `/user/tutors/${tutorId}/review-eligibility`,
   },
   TUTOR: {
     SIGNUP: '/tutor/signup',

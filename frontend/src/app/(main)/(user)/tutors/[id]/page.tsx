@@ -12,6 +12,7 @@ import SessionList, {
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Avatar from '~components/ui/Avatar';
 import Loader from '~components/ui/Loader';
+import ReviewSection from '~components/blocks/ReviewSection';
 import { API_ROUTES } from '~constants/routes';
 import { fetchSessionCount, incrementSessionCount } from '~features/bookingSlice';
 import {
@@ -272,6 +273,9 @@ export default function TutorDetailsPage() {
             />
           </div>
         </div>
+      </div>
+      <div className="max-w-7xl mx-auto mt-12 relative z-10">
+        <ReviewSection tutorId={id} />
       </div>
     </div>
   );

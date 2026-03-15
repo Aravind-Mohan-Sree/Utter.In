@@ -30,12 +30,22 @@ export abstract class BaseRepository<
     return this.toEntity(doc);
   }
 
-  async findAllByField(filter: FilterQuery<ModelSchema>): Promise<Entity[] | null> {
-    const docs = await this.model.find(filter as FilterQuery<ModelSchema & Document>);
+  async findAllByField(
+    filter: FilterQuery<ModelSchema>,
+    options?: { skip?: number; limit?: number },
+  ): Promise<Entity[] | null> {
+    let query = this.model.find(
+      filter as FilterQuery<ModelSchema & Document>,
+    );
+
+    if (options?.skip !== undefined) query = query.skip(options.skip);
+    if (options?.limit !== undefined) query = query.limit(options.limit);
+
+    const docs = await query;
 
     if (docs.length === 0) return null;
 
-    return docs.map(this.toEntity) as Entity[];
+    return docs.map((doc) => this.toEntity(doc as ModelSchema & Document)) as Entity[];
   }
 
   async updateOneById(

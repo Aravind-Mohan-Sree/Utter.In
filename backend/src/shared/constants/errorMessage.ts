@@ -14,4 +14,13 @@ export const errorMessage = {
   VIDEO: 'Video must be 30 seconds or less',
   STATUS_NOT_UPDATED: 'Status not updated',
   VERIFICATION_FAILED: 'Verification failed',
+  REVIEW_NOT_FOUND: 'Review not found',
+  REVIEW_SESSION_REQUIRED: 'You must complete at least one session with this tutor to leave a review',
+  REVIEW_ALREADY_EXISTS: 'You have already reviewed this tutor',
+  REVIEW_NOT_AUTHORIZED: 'You are not authorized to perform this action on this review',
+  TUTOR_ID_REQUIRED: 'Tutor ID is required',
+  RATING_MIN: 'Rating must be at least 1',
+  RATING_MAX: 'Rating cannot exceed 5',
+  NOTE_MIN: 'Review note must be at least 5 characters long',
+  NOTE_MAX: 'Review note cannot exceed 500 characters',
 };

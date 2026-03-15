@@ -61,6 +61,13 @@ import { WalletController } from '~controllers/shared/WalletController';
 import { WalletRepository } from '~concrete-repositories/WalletRepository';
 import { PingBookingUseCase } from '~use-cases/shared/PingBookingUseCase';
 import { RedisService } from '~concrete-services/RedisService';
+import { ReviewRepository } from '~concrete-repositories/ReviewRepository';
+import { AddReviewUseCase } from '~use-cases/user/reviews/AddReviewUseCase';
+import { GetReviewsUseCase } from '~use-cases/user/reviews/GetReviewsUseCase';
+import { UpdateReviewUseCase } from '~use-cases/user/reviews/UpdateReviewUseCase';
+import { DeleteReviewUseCase } from '~use-cases/user/reviews/DeleteReviewUseCase';
+import { GetReviewEligibilityUseCase } from '~use-cases/user/reviews/GetReviewEligibilityUseCase';
+import { ReviewController } from '~controllers/user/ReviewController';
 
 // repositories
 const userRepository = new UserRepository();
@@ -69,6 +76,7 @@ const tutorRepository = new TutorRepository();
 const sessionRepository = new SessionRepository();
 const bookingRepository = new BookingRepository();
 const walletRepository = new WalletRepository();
+const reviewRepository = new ReviewRepository();
 
 // services
 const mailService = new MailService();
@@ -181,6 +189,12 @@ const cancelBookingUseCase = new CancelBookingUseCase(
 );
 const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService);
 
+const addReviewUseCase = new AddReviewUseCase(reviewRepository);
+const getReviewsUseCase = new GetReviewsUseCase(reviewRepository);
+const updateReviewUseCase = new UpdateReviewUseCase(reviewRepository);
+const deleteReviewUseCase = new DeleteReviewUseCase(reviewRepository);
+const getReviewEligibilityUseCase = new GetReviewEligibilityUseCase(reviewRepository);
+
 // controllers
 const authController = new AuthController(
   registerUserUseCase,
@@ -235,6 +249,15 @@ const profileController = new ProfileController(
 
 const getWalletTransactionsUseCase = new GetWalletTransactionsUseCase(walletRepository);
 const walletController = new WalletController(getWalletTransactionsUseCase);
+
+const reviewController = new ReviewController(
+  addReviewUseCase,
+  getReviewsUseCase,
+  updateReviewUseCase,
+  deleteReviewUseCase,
+  getReviewEligibilityUseCase,
+  dataValidatorService,
+);
 
 // wire auth middlewares
 const authenticate = new Authenticate<User>(jwtService, getUserDataUseCase);
@@ -308,5 +331,12 @@ router.post('/bookings/:id/ping', auth.verify(), bookingController.pingSession);
 
 // wallet
 router.get('/wallet', auth.verify(), walletController.getTransactions);
+
+// reviews
+router.get('/tutors/:tutorId/reviews', auth.verify(), reviewController.getReviews);
+router.post('/reviews', auth.verify(), reviewController.addReview);
+router.patch('/reviews/:id', auth.verify(), reviewController.updateReview);
+router.delete('/reviews/:id', auth.verify(), reviewController.deleteReview);
+router.get('/tutors/:tutorId/review-eligibility', auth.verify(), reviewController.checkEligibility);
 
 export const userRouter = router;
