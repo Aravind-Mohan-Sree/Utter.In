@@ -103,20 +103,10 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState<ProfileData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletBalance, setWalletBalance] = useState(0);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
-    const timestamp = Date.now();
-    return user?.role === 'user'
-      ? `${API_ROUTES.USER.FETCH_AVATAR}/${user?.id}.jpeg?v=${timestamp}`
-      : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user?.id}.jpeg?v=${timestamp}`;
-  });
 
   const validationSchema =
     user?.role === 'user' ? userProfileUpdateSchema : tutorProfileUpdateSchema;
 
-  /**
-   * fetchWalletData wrapped in useCallback to prevent re-creation on every render.
-   * This stabilizes the dependency array for the useEffect hooks below.
-   */
   const fetchWalletData = useCallback(async () => {
     if (user?.role !== 'user') return;
     try {
@@ -201,12 +191,6 @@ export default function ProfilePage() {
       formData.append('avatar', croppedBlob);
 
       const res = await uploadAvatar(user!.role, formData);
-      const newUrl =
-        user.role === 'user'
-          ? `${API_ROUTES.USER.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`
-          : `${API_ROUTES.TUTOR.FETCH_AVATAR}/${user.id}.jpeg?v=${Date.now()}`;
-
-      setAvatarUrl(newUrl);
       utterToast.success(res.message);
     } catch (error) {
       utterToast.error(errorHandler(error));
@@ -216,7 +200,6 @@ export default function ProfilePage() {
   const handleAvatarDeletion = async () => {
     try {
       const res = await removeAvatar(user!.role);
-      setAvatarUrl(null);
       utterToast.success(res.message);
     } catch (error) {
       utterToast.error(errorHandler(error));
@@ -412,12 +395,13 @@ export default function ProfilePage() {
               <Avatar
                 size="xxl"
                 user={{
+                  id: user?.id,
                   name: user?.name as string,
-                  avatarUrl,
                   role: user?.role as 'user',
                 }}
                 handleAvatarUpload={handleAvatarUpload}
                 handleAvatarDeletion={handleAvatarDeletion}
+                editable={true}
               />
               <div>
                 <h3 className="text-2xl font-bold text-gray-800 wrap-anywhere">

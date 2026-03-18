@@ -11,44 +11,65 @@ import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
 
+import { API_ROUTES } from '~constants/routes';
+
 import AvatarUploadModal from '../modals/AvatarUploadModal';
 
 type AvatarProps = {
   user: {
+    id?: string;
     name: string;
-    avatarUrl: string | null;
     role: 'user' | 'tutor' | 'admin';
   };
   size: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   handleAvatarUpload?: (croppedBlob: Blob) => Promise<void>;
   handleAvatarDeletion?: () => Promise<void>;
   editable?: boolean;
+  interactive?: boolean;
 };
+
+const failedAvatars = new Set<string>();
 
 const Avatar = ({
   user,
   size,
   handleAvatarUpload,
   handleAvatarDeletion,
-  editable = true,
+  editable = false,
+  interactive = true,
 }: AvatarProps) => {
   const sizeClasses = {
-    sm: 'w-10 h-10 text-base',
-    md: 'w-12 h-12 text-lg',
-    lg: 'w-16 h-16 text-xl',
-    xl: 'w-22 h-22 text-2xl',
-    xxl: 'w-28 h-28 text-5xl',
+    sm: 'w-10 h-10',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-22 h-22',
+    xxl: 'w-28 h-28',
+  };
+  const fontClasses = {
+    sm: 'text-xl',
+    md: 'text-2xl',
+    lg: 'text-3xl',
+    xl: 'text-4xl',
+    xxl: 'text-6xl',
   };
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [version, setVersion] = useState(Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [imgSrc, setImgSrc] = useState(user.avatarUrl || null);
+
+  const getAvatarUrl = () => {
+    if (!user.id || user.role === 'admin' || failedAvatars.has(user.id)) return null;
+    const baseUrl = user.role === 'tutor' ? API_ROUTES.TUTOR.FETCH_AVATAR : API_ROUTES.USER.FETCH_AVATAR;
+    return `${baseUrl}/${user.id}.jpeg?v=${version}`;
+  };
+
+  const [imgSrc, setImgSrc] = useState<string | null>(getAvatarUrl());
 
   useEffect(() => {
-    setImgSrc(user.avatarUrl || null);
-  }, [user.avatarUrl]);
+    setImgSrc(getAvatarUrl());
+  }, [user.id, user.role, version]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,6 +84,12 @@ const Avatar = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleUploadSuccess = async (croppedBlob: Blob) => {
+    await handleAvatarUpload!(croppedBlob);
+    if (user.id) failedAvatars.delete(user.id);
+    setVersion(Date.now());
+  };
+
   const handleDelete = async () => {
     setIsMenuOpen(false);
     utterAlert({
@@ -76,6 +103,8 @@ const Avatar = ({
         try {
           setIsLoading(true);
           await handleAvatarDeletion!();
+          if (user.id) failedAvatars.add(user.id);
+          setVersion(Date.now());
         } catch (err) {
           utterToast.error(errorHandler(err));
         } finally {
@@ -88,8 +117,13 @@ const Avatar = ({
   return (
     <div className="relative" ref={containerRef}>
       <div
-        className={`relative ${sizeClasses[size]} mx-auto rounded-full group overflow-hidden flex items-center justify-center bg-rose-50 border-1 border-rose-200 ${(editable || imgSrc) ? 'cursor-pointer' : ''}`}
-        onClick={() => (editable || imgSrc) && setIsMenuOpen(!isMenuOpen)}
+        className={`relative ${sizeClasses[size]} mx-auto rounded-full group overflow-hidden flex items-center justify-center bg-rose-50 border-1 border-rose-200 ${editable || (interactive && imgSrc) ? 'cursor-pointer' : ''}`}
+        onClick={(e) => {
+          if (interactive && (editable || imgSrc)) {
+            e.stopPropagation();
+            setIsMenuOpen(!isMenuOpen);
+          }
+        }}
       >
         {imgSrc ? (
           <Image
@@ -98,74 +132,79 @@ const Avatar = ({
             width={400}
             height={400}
             className="w-full h-auto max-w-[124px] rounded-full object-cover aspect-square"
-            onError={() => setImgSrc(null)}
+            onError={() => {
+              if (user.id) failedAvatars.add(user.id);
+              setImgSrc(null);
+            }}
           />
         ) : (
           <span
-            className={`text-rose-400 text-4xl font-bold uppercase select-none ${sizeClasses[size]} flex justify-center items-center`}
+            className={`text-rose-400 font-bold uppercase select-none flex justify-center items-center ${fontClasses[size]}`}
           >
             {user.name && user.name[0]}
           </span>
         )}
 
-        <div
-          className={`absolute inset-0 ${user.role === 'user' || user.role === 'tutor' || imgSrc
-            ? 'bg-black/40 backdrop-blur-[2px]'
-            : ''
-            }  flex flex-col items-center justify-center gap-4 transition-all duration-200 rounded-full z-10 ${isMenuOpen
-              ? 'opacity-100 pointer-events-auto'
-              : 'opacity-0 pointer-events-none lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto'
-            } ${isLoading && 'opacity-100'}`}
-        >
-          {isLoading && <LuLoaderCircle className="animate-spin" size={30} />}
+        {interactive && (
+          <div
+            className={`absolute inset-0 ${user.role === 'user' || user.role === 'tutor' || imgSrc
+              ? 'bg-black/40 backdrop-blur-[2px]'
+              : ''
+              }  flex flex-col items-center justify-center gap-4 transition-all duration-200 rounded-full z-10 ${isMenuOpen
+                ? 'opacity-100 pointer-events-auto'
+                : `opacity-0 pointer-events-none lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto`
+              } ${isLoading && 'opacity-100'}`}
+          >
+            {isLoading && <LuLoaderCircle className="animate-spin" size={30} />}
 
-          {user.role !== 'admin' && !isLoading && editable && (
-            <span onClick={(e) => e.stopPropagation()} className="contents">
-              <Button
-                variant="outline"
-                icon={
-                  <LuImagePlus className="transition-transform hover:scale-135 hover:rotate-12" />
-                }
-                size={0}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  inputRef.current?.click();
-                }}
-              />
-            </span>
-          )}
-
-          {imgSrc && !isLoading && (
-            <>
+            {user.role !== 'admin' && !isLoading && editable && (
               <span onClick={(e) => e.stopPropagation()} className="contents">
                 <Button
-                  variant="outline"
+                  variant="transparent"
                   icon={
-                    <LuMaximize className="transition-transform hover:scale-135 hover:rotate-12" />
+                    <LuImagePlus className="transition-transform hover:scale-135 hover:rotate-12" />
                   }
                   size={0}
                   onClick={() => {
                     setIsMenuOpen(false);
-                    setIsPreviewOpen(true);
+                    inputRef.current?.click();
                   }}
                 />
               </span>
+            )}
 
-              {user.role !== 'admin' && editable && (
+            {imgSrc && !isLoading && (
+              <>
                 <span onClick={(e) => e.stopPropagation()} className="contents">
                   <Button
-                    variant="outline"
+                    variant='transparent'
                     icon={
-                      <RiDeleteBin6Line className="transition-transform hover:scale-135 hover:rotate-12" />
+                      <LuMaximize className="transition-transform hover:scale-135 hover:rotate-12" />
                     }
                     size={0}
-                    onClick={handleDelete}
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsPreviewOpen(true);
+                    }}
                   />
                 </span>
-              )}
-            </>
-          )}
-        </div>
+
+                {user.role !== 'admin' && editable && (
+                  <span onClick={(e) => e.stopPropagation()} className="contents">
+                    <Button
+                      variant="transparent"
+                      icon={
+                        <RiDeleteBin6Line className="transition-transform hover:scale-135 hover:rotate-12" />
+                      }
+                      size={0}
+                      onClick={handleDelete}
+                    />
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {isPreviewOpen &&
@@ -191,7 +230,7 @@ const Avatar = ({
         )}
 
       <AvatarUploadModal
-        handleAvatarUpload={handleAvatarUpload!}
+        handleAvatarUpload={handleUploadSuccess}
         inputRef={inputRef}
         setIsLoading={setIsLoading}
       />

@@ -10,6 +10,7 @@ import { Toaster } from 'sonner';
 
 import Footer from '~components/layout/Footer';
 import { Navbar } from '~components/layout/Navbar';
+import { SocketProvider } from '~contexts/SocketContext';
 import TranslateInit from '~utils/translate-init';
 
 declare global {
@@ -39,9 +40,11 @@ export default function ClientWrapper({
       />
 
       <ReduxProvider>
-        {!isVideoCall && <Navbar />}
-        {children}
-        {!isVideoCall && <Footer />}
+        <SocketProvider>
+          {!isVideoCall && <Navbar />}
+          {children}
+          {!isVideoCall && <Footer />}
+        </SocketProvider>
       </ReduxProvider>
 
       <Toaster

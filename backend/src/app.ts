@@ -17,6 +17,8 @@ import '~strategies/googleUserStrategy';
 import '~strategies/googleTutorStrategy';
 import { tutorRouter } from '~routes/tutorRoutes';
 import { adminRouter } from '~routes/adminRoutes';
+import { createServer } from 'http';
+import { SocketManager } from '~infrastructure-services/SocketManager';
 
 async function startServer() {
   const app = express();
@@ -71,8 +73,11 @@ async function startServer() {
   app.use(morgan('dev'));
 
   const port = env.PORT;
+  const server = createServer(app);
 
-  app.listen(port, () => {
+  SocketManager.getInstance().init(server, env.FRONTEND_URL);
+
+  server.listen(port, () => {
     logger.info(`App is running on port ${port}`);
   });
 }

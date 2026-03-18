@@ -8,7 +8,6 @@ import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import { Card } from '~components/ui/Card';
 import { Dropdown } from '~components/ui/Dropdown';
 import { Pagination } from '~components/ui/Pagination';
-import { API_ROUTES } from '~constants/routes';
 import { fetchUsers, toggleStatus } from '~services/admin/usersService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
@@ -18,7 +17,6 @@ interface User {
   id: string;
   name: string;
   email: string;
-  avatarUrl: string | null;
   knownLanguages: string[];
   bio: string;
   role: string;
@@ -61,11 +59,7 @@ export default function UsersPage() {
           activeFilter,
         );
 
-        const users = res.usersData.users.map((user: User) => ({
-          ...user,
-          avatarUrl: `${API_ROUTES.USER.FETCH_AVATAR}/${user.id
-            }.jpeg?v=${Date.now()}`,
-        }));
+        const users = res.usersData.users;
 
         setTotalUsersCount(res.usersData.totalUsersCount);
         setFilteredUsersCount(res.usersData.filteredUsersCount);
@@ -174,7 +168,6 @@ export default function UsersPage() {
               id={user.id}
               name={user.name}
               email={user.email}
-              avatarUrl={user.avatarUrl}
               joinedAt={user.createdAt}
               status={user.isBlocked ? 'Blocked' : 'Active'}
               knownLanguages={user.knownLanguages}

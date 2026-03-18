@@ -115,6 +115,10 @@ export abstract class BaseRepository<
     return result.acknowledged;
   }
 
+  async countRecords(filter: FilterQuery<ModelSchema>): Promise<number> {
+    return this.model.countDocuments(filter as NonNullable<FilterQuery<ModelSchema & Document>>);
+  }
+
   protected abstract toSchema(
     entity: Entity | Partial<Entity>,
   ): ModelSchema | Partial<ModelSchema>;

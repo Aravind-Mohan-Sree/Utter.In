@@ -2,10 +2,12 @@ import { combineReducers, UnknownAction } from '@reduxjs/toolkit';
 
 import { authReducer } from '~features/authSlice';
 import { bookingReducer } from '~features/bookingSlice';
+import { chatReducer } from '~features/chatSlice';
 
 const appReducer = combineReducers({
   auth: authReducer,
   booking: bookingReducer,
+  chat: chatReducer,
 });
 
 export type RootState = ReturnType<typeof appReducer>;

@@ -131,7 +131,6 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
         date: '$session.scheduledAt',
         price: '$session.price',
         otherPartyName: { $ifNull: [userId ? '$tutor.name' : '$user.name', userId ? 'Unknown Tutor' : 'Unknown User'] },
-        otherPartyAvatar: { $ifNull: [userId ? '$tutor.avatarUrl' : '$user.avatarUrl', null] },
         otherPartyId: { $toString: { $ifNull: [userId ? '$tutor._id' : '$user._id', null] } },
         otherPartyRole: userId ? 'tutor' : 'user',
         transactionId: '$payment.transactionId',

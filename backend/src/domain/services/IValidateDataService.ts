@@ -24,4 +24,5 @@ export interface IValidateDataService {
   validateAvatar(avatar: FileInput): ValidatedData;
   validateRating(rating: number): ValidatedData;
   validateReviewNote(note: string): ValidatedData;
+  validateMessageText(text: string): ValidatedData;
 }

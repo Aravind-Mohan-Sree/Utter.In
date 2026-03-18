@@ -165,7 +165,9 @@ export default function VideoCallPage() {
     useEffect(() => {
         let interval: NodeJS.Timeout;
 
-        if (isCallConnected && bookingId) {
+        const isChatCall = searchParams.get('type') === 'chat';
+
+        if (isCallConnected && bookingId && !isChatCall) {
             interval = setInterval(async () => {
                 try {
                     const rolePrefix = myRole === 'user' ? 'user' : 'tutor';
@@ -183,7 +185,7 @@ export default function VideoCallPage() {
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isCallConnected, bookingId, myRole, handleDisconnect]);
+    }, [isCallConnected, bookingId, myRole, handleDisconnect, searchParams]);
 
     const getDevices = async () => {
         try {
@@ -324,8 +326,16 @@ export default function VideoCallPage() {
 
                 if (!isActive) return;
 
-                const myPeerId = `${bookingId}_${myRole}`;
-                const targetPeerId = `${bookingId}_${myRole === 'user' ? 'tutor' : 'user'}`;
+                const isChatCall = searchParams.get('type') === 'chat';
+                const otherId = searchParams.get('otherId');
+
+                let myPeerId = `${bookingId}_${myRole}`;
+                let targetPeerId = `${bookingId}_${myRole === 'user' ? 'tutor' : 'user'}`;
+
+                if (isChatCall && userId && otherId) {
+                    myPeerId = `${bookingId}_${userId}`;
+                    targetPeerId = `${bookingId}_${otherId}`;
+                }
 
                 peerInstance = new PeerJS(myPeerId, {
                     debug: 0,

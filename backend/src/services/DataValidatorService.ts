@@ -264,4 +264,14 @@ export class DataValidatorService implements IValidateDataService {
 
     return toValidatedData(noteSchema.safeParse({ note }));
   }
+
+  validateMessageText(text: string): ValidatedData {
+    const chatSchema = z.object({
+      text: z
+        .string()
+        .min(1, errorMessage.MESSAGE_TEXT_REQUIRED)
+        .max(1000, errorMessage.MESSAGE_TEXT_MAX),
+    });
+    return toValidatedData(chatSchema.safeParse({ text }));
+  }
 }

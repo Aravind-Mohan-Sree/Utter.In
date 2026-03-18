@@ -25,7 +25,6 @@ interface Tutor {
   id: string;
   name: string;
   email: string;
-  avatarUrl: string;
   introVideoUrl: string;
   certificateUrl: string;
   certificationType: string | null;
@@ -80,8 +79,6 @@ export default function TutorsPage() {
 
         const tutors = res.tutorsData.tutors.map((tutor: Tutor) => ({
           ...tutor,
-          avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${tutor.id
-            }.jpeg?v=${Date.now()}`,
           introVideoUrl: `${API_ROUTES.TUTOR.FETCH_VIDEO}/${tutor.id
             }.mp4?v=${Date.now()}`,
           certificateUrl: `${API_ROUTES.TUTOR.FETCH_CERTIFICATE}/${tutor.id
@@ -191,8 +188,6 @@ export default function TutorsPage() {
               tutor.id === id
                 ? {
                   ...tutor,
-                  avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${tutor.id
-                    }.jpeg?v=${Date.now()}`,
                   rejectionReason: reason,
                 }
                 : tutor,
@@ -268,7 +263,6 @@ export default function TutorsPage() {
               id={tutor.id}
               name={tutor.name}
               email={tutor.email}
-              avatarUrl={tutor.avatarUrl}
               joinedAt={tutor.createdAt}
               knownLanguages={tutor.knownLanguages}
               yearsOfExperience={`${tutor.yearsOfExperience} years experience`}
@@ -304,7 +298,6 @@ export default function TutorsPage() {
             id: selectedTutor.id,
             name: selectedTutor.name,
             email: selectedTutor.email,
-            avatarUrl: selectedTutor.avatarUrl || '',
             experience: `${selectedTutor.yearsOfExperience} years experience`,
             verified: selectedTutor.isVerified,
             rejectionReason: selectedTutor.rejectionReason || null,

@@ -4,9 +4,9 @@ import { UserInfo } from './UserInfo';
 
 interface ReportSectionProps {
   user: {
+    id: string;
     name: string;
     email: string;
-    avatarUrl: string;
   };
   role: string;
   variant?: 'reporter' | 'reported';
@@ -23,9 +23,9 @@ export const ReportSection = ({
     <div className={`flex items-center gap-3 ${className}`}>
       <Avatar
         user={{
+          id: user.id,
           name: user.name,
-          avatarUrl: user.avatarUrl,
-          role: 'admin',
+          role: 'user',
         }}
         size="md"
       />

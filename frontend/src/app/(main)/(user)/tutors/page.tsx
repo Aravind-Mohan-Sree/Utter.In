@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { BiExpand } from 'react-icons/bi';
 import { MdPeople } from 'react-icons/md';
 
 import { SearchAndFilter } from '~components/form/SearchAndFilter';
@@ -11,7 +10,6 @@ import { Card } from '~components/ui/Card';
 import Loader from '~components/ui/Loader';
 import { Pagination } from '~components/ui/Pagination';
 import { ResultsSummary } from '~components/ui/ResultsSummary';
-import { API_ROUTES } from '~constants/routes';
 import { fetchTutors } from '~services/user/tutorService';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
@@ -19,7 +17,6 @@ import { utterToast } from '~utils/utterToast';
 interface Tutor {
   id: string;
   name: string;
-  avatarUrl: string;
   knownLanguages: string[];
   yearsOfExperience: string;
   bio: string;
@@ -86,12 +83,7 @@ export default function TutorsPage() {
           selectedLanguage,
         );
 
-        const mappedTutors = res.tutorsData.tutors.map((tutor) => ({
-          ...tutor,
-          avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${
-            tutor.id
-          }.jpeg?v=${Date.now()}`,
-        }));
+        const mappedTutors = res.tutorsData.tutors;
 
         setTotalTutorsCount(res.tutorsData.totalTutorsCount);
         setFilteredTutorsCount(res.tutorsData.filteredTutorsCount);
@@ -189,7 +181,6 @@ export default function TutorsPage() {
                 id={tutor.id}
                 name={tutor.name}
                 email=""
-                avatarUrl={tutor.avatarUrl}
                 joinedAt={new Date(tutor.createdAt)}
                 knownLanguages={tutor.knownLanguages}
                 yearsOfExperience={`${tutor.yearsOfExperience} years experience`}
@@ -198,11 +189,10 @@ export default function TutorsPage() {
                 isLoading={false}
                 status="Active"
                 hideStatus={true}
-                viewDetailsIcon={<BiExpand size={23} />}
-                onViewDetails={(id: string) => {
-                  router.push(`/tutors/${id}`);
+                onClick={() => {
+                  router.push(`/tutors/${tutor.id}`);
                 }}
-                className="bg-white/50 backdrop-blur-sm"
+                className="bg-white/50 backdrop-blur-sm hover:border-rose-200"
               />
             ))}
           </div>

@@ -2,7 +2,7 @@ import { IUser, UserModel } from '~models/UserModel';
 import { BaseRepository } from './BaseRepository';
 import { User } from '~entities/User';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
-import { Document, PipelineStage } from 'mongoose';
+import { Document, PipelineStage, Types } from 'mongoose';
 
 export class UserRepository
   extends BaseRepository<User, IUser>
@@ -16,39 +16,67 @@ export class UserRepository
     limit: number,
     query: string,
     filter: string,
+    sort: string = 'newest',
+    language: string = 'All',
+    excludeId?: string,
   ): Promise<{
     totalUsersCount: number;
     filteredUsersCount: number;
     users: User[];
   }> {
     const pipeline: PipelineStage[] = [];
-    const totalUsersCount = await this.model.countDocuments({});
     
+    const queryObj: any = { role: 'user' };
+    if (excludeId && Types.ObjectId.isValid(excludeId)) {
+      queryObj._id = { $ne: new Types.ObjectId(excludeId) };
+    } else if (excludeId) {
+       queryObj._id = { $ne: excludeId };
+    }
+    
+    const totalUsersCount = await this.model.countDocuments(queryObj);
+    
+    pipeline.push({ $match: queryObj });
+
     if (filter !== 'All') {
       pipeline.push({
         $match: { isBlocked: filter === 'Blocked' },
       });
     }
+
+    if (language !== 'All') {
+      pipeline.push({
+        $match: { knownLanguages: language },
+      });
+    }
     
     if (query) {
+      const orConditions: any[] = [
+        { name: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+        { knownLanguages: { $elemMatch: { $regex: query, $options: 'i' } } },
+      ];
+
+      if (Types.ObjectId.isValid(query)) {
+        orConditions.push({ _id: new Types.ObjectId(query) });
+      }
+
       pipeline.push({
         $match: {
-          $or: [
-            { name: { $regex: query, $options: 'i' } },
-            { email: { $regex: query, $options: 'i' } },
-            {
-              knownLanguages: { $elemMatch: { $regex: query, $options: 'i' } },
-            },
-          ],
+          $or: orConditions,
         },
       });
     }
+
+    let sortStage: any = { createdAt: -1 };
+    if (sort === 'oldest') sortStage = { createdAt: 1 };
+    else if (sort === 'a-z') sortStage = { name: 1 };
+    else if (sort === 'z-a') sortStage = { name: -1 };
     
     pipeline.push({
       $facet: {
         metadata: [{ $count: 'total' }],
         data: [
-          { $sort: { createdAt: -1, _id: 1 } },
+          { $sort: sortStage },
           { $skip: (page - 1) * limit },
           { $limit: limit },
         ],

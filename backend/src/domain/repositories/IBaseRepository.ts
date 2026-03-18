@@ -24,4 +24,5 @@ export interface IBaseRepository<Entity, ModelSchema> {
   ): Promise<void | boolean>;
   deleteOneById(id: string): Promise<void | boolean>;
   deleteOneByField(filter: FilterQuery<ModelSchema>): Promise<void | boolean>;
+  countRecords(filter: FilterQuery<ModelSchema>): Promise<number>;
 }

@@ -23,6 +23,7 @@
       "~app/*": ["app/*"],
       "~components/*": ["components/*"],
       "~constants/*": ["constants/*"],
+      "~contexts/*": ["contexts/*"],
       "~features/*": ["features/*"],
       "~hooks/*": ["hooks/*"],
       "~services/*": ["services/*"],

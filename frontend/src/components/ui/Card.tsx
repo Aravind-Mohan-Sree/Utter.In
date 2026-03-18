@@ -19,27 +19,29 @@ export type CardType = 'user' | 'tutor' | 'report' | 'session';
 
 interface BaseCardProps {
   id: string;
+  avatarId?: string;
   type: CardType;
   className?: string;
   disabled?: boolean;
+  onClick?: () => void;
 }
 
 interface UserCardProps extends BaseCardProps {
   type: 'user';
   name: string;
   email: string;
-  avatarUrl: string | null;
   joinedAt: Date;
   status: 'Active' | 'Blocked';
   knownLanguages: string[];
+  isOnline?: boolean;
   onToggleStatus?: (id: string) => void;
+  hideStatus?: boolean;
 }
 
 export interface TutorCardProps extends BaseCardProps {
   type: 'tutor';
   name: string;
   email: string;
-  avatarUrl: string;
   joinedAt: Date;
   knownLanguages: string[];
   yearsOfExperience: string;
@@ -63,14 +65,14 @@ interface ReportCardProps extends BaseCardProps {
   type: 'report';
   status: 'Pending' | 'Resolved' | 'Rejected';
   reporter: {
+    id: string;
     name: string;
     email: string;
-    avatarUrl: string;
   };
   reported: {
+    id: string;
     name: string;
     email: string;
-    avatarUrl: string;
   };
   dateTime?: string;
   abuseType?: string;
@@ -115,23 +117,35 @@ export const Card = (props: CardProps) => {
 // User card component
 const UserCard = ({
   id,
+  avatarId,
   name,
   email,
-  avatarUrl,
   joinedAt,
   status,
   knownLanguages,
+  isOnline,
   onToggleStatus,
+  hideStatus,
   className,
+  onClick,
 }: UserCardProps) => (
-  <div className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all ${className || ''}`}>
+  <div 
+    className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all ${onClick ? 'cursor-pointer hover:border-rose-200' : ''} ${className || ''}`}
+    onClick={onClick}
+  >
     <div className="mb-4">
       <div className="flex gap-3 min-w-0 items-start justify-between">
         <div className="flex gap-3 min-w-0 flex-1">
-          <Avatar user={{ name, avatarUrl, role: 'admin' }} size="md" />
+          <div className="relative">
+            <Avatar user={{ id: avatarId || id, name, role: 'user' }} size="md" editable={false} interactive={false} />
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${
+              isOnline ? 'bg-green-500' : 'bg-rose-500'
+            }`}>
+            </div>
+          </div>
           <UserInfo name={name} email={email} />
         </div>
-        <StatusBadge status={status} />
+        {!hideStatus && <StatusBadge status={status} />}
       </div>
     </div>
 
@@ -146,7 +160,7 @@ const UserCard = ({
       <DateAndTime date={joinedAt} label="Joined" />
 
       {onToggleStatus && (
-        <div className="flex justify-end">
+        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
           <Button
             variant="outline"
             icon={
@@ -172,9 +186,9 @@ const UserCard = ({
 // Tutor card component
 const TutorCard = ({
   id,
+  avatarId,
   name,
   email,
-  avatarUrl,
   joinedAt,
   knownLanguages,
   yearsOfExperience,
@@ -194,10 +208,14 @@ const TutorCard = ({
   onCancel,
   className,
   disabled,
+  onClick,
 }: TutorCardProps) => (
-  <div className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all relative group ${disabled ? 'opacity-60 grayscale-[0.2] pointer-events-none' : ''} ${className || ''}`}>
+  <div 
+    onClick={onClick}
+    className={`bg-white rounded-2xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all relative group ${disabled ? 'opacity-60 grayscale-[0.2] pointer-events-none' : ''} ${onClick ? 'cursor-pointer' : ''} ${className || ''}`}
+  >
     {onJoin && (
-      <div className="absolute top-3 right-3 z-10">
+      <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="primary"
           size={1.5}          className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-lg shadow-rose-200"
@@ -212,7 +230,7 @@ const TutorCard = ({
     <div className="mb-4">
       <div className="flex gap-3 min-w-0 items-start justify-between">
         <div className="flex gap-3 min-w-0 flex-1">
-          <Avatar user={{ name, avatarUrl, role: 'admin' }} size="md" />
+          <Avatar user={{ id: avatarId || id, name, role: 'tutor' }} size="md" interactive={false} />
           <UserInfo
             name={name}
             email={email}
@@ -234,7 +252,7 @@ const TutorCard = ({
     <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200">
       <DateAndTime date={joinedAt} label={dateLabel || "Joined"} showTime={showTime} />
 
-      <div className="flex gap-2">
+      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
         {(onToggleStatus || onViewDetails || onBook || onCancel || customActions) && (
           <div className="flex justify-end gap-1">
             {customActions ? (

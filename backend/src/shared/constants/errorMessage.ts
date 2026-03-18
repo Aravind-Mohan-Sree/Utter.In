@@ -23,4 +23,7 @@ export const errorMessage = {
   RATING_MAX: 'Rating cannot exceed 5',
   NOTE_MIN: 'Review note must be at least 5 characters long',
   NOTE_MAX: 'Review note cannot exceed 500 characters',
+  RECEIVER_ID_REQUIRED: 'Receiver ID is required',
+  MESSAGE_TEXT_REQUIRED: 'Message text is required',
+  MESSAGE_TEXT_MAX: 'Message text cannot exceed 1000 characters',
 };

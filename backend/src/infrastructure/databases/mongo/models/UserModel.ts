@@ -8,7 +8,6 @@ export interface IUser extends Document {
   password: string;
   role: string;
   isBlocked: boolean;
-  avatarUrl: string | null;
   googleId: string | null;
   streak: {
     lastActive: Date | null;
@@ -28,7 +27,6 @@ const userSchema = new Schema<IUser>(
     password: { type: String, required: true },
     role: { type: String, required: true },
     isBlocked: { type: Boolean, required: true },
-    avatarUrl: { type: String, default: null },
     googleId: { type: String, default: null },
     streak: {
       lastActive: { type: Date, default: null },

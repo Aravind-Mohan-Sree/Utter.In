@@ -22,6 +22,10 @@ export const API_ROUTES = {
     REVIEWS: '/user/reviews',
     TUTOR_REVIEWS: (tutorId: string) => `/user/tutors/${tutorId}/reviews`,
     REVIEW_ELIGIBILITY: (tutorId: string) => `/user/tutors/${tutorId}/review-eligibility`,
+    CHATS: '/user/chats',
+    CHAT_MESSAGES: (id: string) => `/user/chats/${id}/messages`,
+    SEND_MESSAGE: '/user/chats/messages',
+    CHAT_SEARCH: '/user/chats/search',
   },
   TUTOR: {
     SIGNUP: '/tutor/signup',

@@ -28,7 +28,6 @@ interface TutorModalProps extends BaseModalProps {
     id: string;
     name: string;
     email: string;
-    avatarUrl: string;
     experience: string;
     verified: boolean;
     rejectionReason: string | null;
@@ -45,14 +44,14 @@ interface ReportModalProps extends BaseModalProps {
   report: {
     id: string;
     reporter: {
+      id: string;
       name: string;
       email: string;
-      avatarUrl: string;
     };
     reported: {
+      id: string;
       name: string;
       email: string;
-      avatarUrl: string;
     };
     dateTime?: string;
     abuseType?: string;
@@ -101,9 +100,9 @@ const TutorModalContent = ({
         <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
           <Avatar
             user={{
+              id: tutor.id,
               name: tutor.name,
-              avatarUrl: tutor.avatarUrl,
-              role: 'admin',
+              role: 'tutor',
             }}
             size="md"
           />
@@ -220,9 +219,9 @@ const ReportModalContent = ({
             <div className="flex items-center gap-3">
               <Avatar
                 user={{
+                  id: report.reporter.id,
                   name: report.reporter.name,
-                  avatarUrl: report.reporter.avatarUrl,
-                  role: 'admin',
+                  role: 'user',
                 }}
                 size="md"
               />
@@ -245,9 +244,9 @@ const ReportModalContent = ({
             <div className="flex items-center gap-3">
               <Avatar
                 user={{
-                  name: report.reporter.name,
-                  avatarUrl: report.reporter.avatarUrl,
-                  role: 'admin',
+                  id: report.reported.id,
+                  name: report.reported.name,
+                  role: 'tutor',
                 }}
                 size="md"
               />

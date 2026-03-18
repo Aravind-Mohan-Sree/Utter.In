@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 
 import { fetchSessionCount } from '~features/bookingSlice';
+import { fetchUnreadCount } from '~features/chatSlice';
 import { signout } from '~services/shared/managementService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
@@ -26,8 +27,8 @@ import Notification from './Notification';
 export function Navbar() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { sessionCount } = useSelector((state: RootState) => state.booking);
+  const { unreadCount: chatCount } = useSelector((state: RootState) => state.chat);
   const userRole = user?.role;
-  const [chatCount] = useState(4);
   const [notificationCount] = useState(12);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -41,8 +42,9 @@ export function Navbar() {
   useEffect(() => {
     if (user?.role && user.role !== 'admin') {
       dispatch(fetchSessionCount(user.role));
+      dispatch(fetchUnreadCount(user.id!));
     }
-  }, [dispatch, user?.role]);
+  }, [dispatch, user?.role, user?.id]);
 
   useEffect(() => {
     if (userRole === 'admin' && isAdminPath) {

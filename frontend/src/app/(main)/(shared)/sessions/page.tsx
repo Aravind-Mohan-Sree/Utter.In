@@ -14,7 +14,6 @@ import { Card } from '~components/ui/Card';
 import Loader from '~components/ui/Loader';
 import { Pagination } from '~components/ui/Pagination';
 import { ResultsSummary } from '~components/ui/ResultsSummary';
-import { API_ROUTES } from '~constants/routes';
 import {
   decrementSessionCount,
   fetchSessionCount,
@@ -66,10 +65,6 @@ export default function SessionsPage() {
     router.push(`/video-call/${bookingId}`);
   };
 
-  /**
-   * fetchBookings wrapped in useCallback to stabilize the reference.
-   * This prevents the useEffect from re-running on every render.
-   */
   const fetchBookings = useCallback(async () => {
     if (!user?.role) return;
     const currentVersion = ++fetchVersionRef.current;
@@ -160,15 +155,6 @@ export default function SessionsPage() {
     });
   };
 
-  const getAvatarUrl = (booking: Booking) => {
-    if (booking.otherPartyAvatar) return booking.otherPartyAvatar;
-
-    const baseUrl =
-      booking.otherPartyRole === 'tutor'
-        ? API_ROUTES.TUTOR.FETCH_AVATAR
-        : API_ROUTES.USER.FETCH_AVATAR;
-    return `${baseUrl}/${booking.otherPartyId}.jpeg?v=${Date.now()}`;
-  };
 
   const from = totalResults === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const to = Math.min(currentPage * itemsPerPage, totalResults);
@@ -201,8 +187,8 @@ export default function SessionsPage() {
                     <Card
                       type="tutor"
                       id={booking.id}
+                      avatarId={booking.otherPartyId}
                       name={booking.otherPartyName}
-                      avatarUrl={getAvatarUrl(booking)}
                       email={booking.topic}
                       yearsOfExperience=""
                       knownLanguages={[booking.language]}
@@ -230,7 +216,7 @@ export default function SessionsPage() {
                           title="Cancel Session"
                         />
                       }
-                      className="bg-white/50 backdrop-blur-sm"
+                      className="bg-white/50 backdrop-blur-sm hover:border-rose-200"
                       onCancel={undefined}
                       onJoin={canJoin(booking.date) ? () => handleJoin(booking.id) : undefined}
                     />
@@ -290,8 +276,8 @@ export default function SessionsPage() {
                       key={booking.id}
                       type="tutor"
                       id={booking.id}
+                      avatarId={booking.otherPartyId}
                       name={booking.otherPartyName}
-                      avatarUrl={getAvatarUrl(booking)}
                       email={booking.topic}
                       yearsOfExperience=""
                       knownLanguages={[booking.language]}
@@ -309,6 +295,7 @@ export default function SessionsPage() {
                       rejectionReason={null}
                       isLoading={false}
                       showTime={true}
+                      className="hover:border-rose-200"
                     />
                   ))}
                 </div>

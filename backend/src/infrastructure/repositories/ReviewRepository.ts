@@ -40,14 +40,13 @@ export class ReviewRepository
       doc.createdAt,
       doc.updatedAt,
       (doc as any).userId?.name,
-      (doc as any).userId?.avatarUrl,
     );
   }
 
   async findOneById(id: string): Promise<Review | null> {
     const doc = await ReviewModel.findById(id).populate(
       'userId',
-      'name avatarUrl',
+      'name',
     );
     return this.toEntity(doc);
   }
@@ -55,7 +54,7 @@ export class ReviewRepository
   async findOneByField(filter: FilterQuery<IReview>): Promise<Review | null> {
     const doc = await ReviewModel.findOne(filter).populate(
       'userId',
-      'name avatarUrl',
+      'name',
     );
     return this.toEntity(doc);
   }
@@ -65,7 +64,7 @@ export class ReviewRepository
     options?: { skip?: number; limit?: number },
   ): Promise<Review[]> {
     let query = ReviewModel.find(filter)
-      .populate('userId', 'name avatarUrl')
+      .populate('userId', 'name')
       .sort({ createdAt: -1 });
 
     if (options?.skip !== undefined) query = query.skip(options.skip);

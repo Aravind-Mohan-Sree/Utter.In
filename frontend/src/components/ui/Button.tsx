@@ -7,7 +7,7 @@ interface ButtonProps<T extends unknown[]> extends Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
   'onClick'
 > {
-  variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'danger' | 'transparent';
   fullWidth?: boolean;
   text?: string;
   icon?: React.ReactNode;
@@ -69,6 +69,7 @@ export default function Button<T extends unknown[]>({
     success:
       'from-green-400 to-green-900 hover:to-green-900 hover:from-green-400',
     danger: 'from-red-500 to-red-900 hover:to-red-900 hover:from-red-500',
+    transparent: 'bg-transparent',
   };
 
   return (

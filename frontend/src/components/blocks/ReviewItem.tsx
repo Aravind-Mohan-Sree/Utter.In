@@ -3,7 +3,6 @@ import StarRating from '~components/ui/StarRating';
 import Avatar from '~components/ui/Avatar';
 import { FaPencil, FaTrash } from 'react-icons/fa6';
 import { Review } from '~services/user/reviewService';
-import { API_ROUTES } from '~constants/routes';
 import ReviewForm from './ReviewForm';
 
 interface ReviewItemProps {
@@ -43,8 +42,8 @@ const ReviewItem: React.FC<ReviewItemProps> = ({
         <div className="flex gap-3 items-center">
           <Avatar
             user={{
+              id: review.userId,
               name: review.userName || 'Unknown',
-              avatarUrl: `${API_ROUTES.USER.FETCH_AVATAR}/${review.userId}.jpeg`,
               role: 'user',
             }}
             size="sm"

@@ -8,6 +8,9 @@ export interface IUserRepository extends IBaseRepository<User, IUser> {
     limit: number,
     query: string,
     filter: string,
+    sort: string,
+    language: string,
+    excludeId?: string,
   ): Promise<{
     totalUsersCount: number;
     filteredUsersCount: number;

@@ -68,6 +68,15 @@ import { UpdateReviewUseCase } from '~use-cases/user/reviews/UpdateReviewUseCase
 import { DeleteReviewUseCase } from '~use-cases/user/reviews/DeleteReviewUseCase';
 import { GetReviewEligibilityUseCase } from '~use-cases/user/reviews/GetReviewEligibilityUseCase';
 import { ReviewController } from '~controllers/user/ReviewController';
+import { ConversationRepository } from '~concrete-repositories/ConversationRepository';
+import { MessageRepository } from '~concrete-repositories/MessageRepository';
+import { GetConversationsUseCase } from '~use-cases/user/chat/GetConversationsUseCase';
+import { GetMessagesUseCase } from '~use-cases/user/chat/GetMessagesUseCase';
+import { SendMessageUseCase } from '~use-cases/user/chat/SendMessageUseCase';
+import { SearchChatUseCase } from '~use-cases/user/chat/SearchChatUseCase';
+import { ChatController } from '~controllers/user/ChatController';
+import { EditMessageUseCase } from '~use-cases/user/chat/EditMessageUseCase';
+import { DeleteMessageUseCase } from '~use-cases/user/chat/DeleteMessageUseCase';
 
 // repositories
 const userRepository = new UserRepository();
@@ -77,6 +86,8 @@ const sessionRepository = new SessionRepository();
 const bookingRepository = new BookingRepository();
 const walletRepository = new WalletRepository();
 const reviewRepository = new ReviewRepository();
+const conversationRepository = new ConversationRepository();
+const messageRepository = new MessageRepository();
 
 // services
 const mailService = new MailService();
@@ -195,6 +206,16 @@ const updateReviewUseCase = new UpdateReviewUseCase(reviewRepository);
 const deleteReviewUseCase = new DeleteReviewUseCase(reviewRepository);
 const getReviewEligibilityUseCase = new GetReviewEligibilityUseCase(reviewRepository);
 
+const getConversationsUseCase = new GetConversationsUseCase(conversationRepository);
+const getMessagesUseCase = new GetMessagesUseCase(
+  messageRepository,
+  conversationRepository,
+);
+const sendMessageUseCase = new SendMessageUseCase(messageRepository, conversationRepository);
+const searchChatUseCase = new SearchChatUseCase(messageRepository, userRepository);
+const editMessageUseCase = new EditMessageUseCase(messageRepository);
+const deleteMessageUseCase = new DeleteMessageUseCase(messageRepository);
+
 // controllers
 const authController = new AuthController(
   registerUserUseCase,
@@ -256,6 +277,16 @@ const reviewController = new ReviewController(
   updateReviewUseCase,
   deleteReviewUseCase,
   getReviewEligibilityUseCase,
+  dataValidatorService,
+);
+
+const chatController = new ChatController(
+  getConversationsUseCase,
+  getMessagesUseCase,
+  sendMessageUseCase,
+  searchChatUseCase,
+  editMessageUseCase,
+  deleteMessageUseCase,
   dataValidatorService,
 );
 
@@ -338,5 +369,13 @@ router.post('/reviews', auth.verify(), reviewController.addReview);
 router.patch('/reviews/:id', auth.verify(), reviewController.updateReview);
 router.delete('/reviews/:id', auth.verify(), reviewController.deleteReview);
 router.get('/tutors/:tutorId/review-eligibility', auth.verify(), reviewController.checkEligibility);
+
+// chat
+router.get('/chats', auth.verify(), chatController.getConversations);
+router.get('/chats/:conversationId/messages', auth.verify(), chatController.getMessages);
+router.post('/chats/messages', auth.verify(), chatController.sendMessage);
+router.get('/chats/search', auth.verify(), chatController.search);
+router.patch('/chats/messages/:messageId', auth.verify(), chatController.editMessage);
+router.delete('/chats/messages/:messageId', auth.verify(), chatController.deleteMessage);
 
 export const userRouter = router;

@@ -13,7 +13,6 @@ import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Avatar from '~components/ui/Avatar';
 import Loader from '~components/ui/Loader';
 import ReviewSection from '~components/blocks/ReviewSection';
-import { API_ROUTES } from '~constants/routes';
 import { fetchSessionCount, incrementSessionCount } from '~features/bookingSlice';
 import {
   createBookingOrder,
@@ -233,8 +232,8 @@ export default function TutorDetailsPage() {
               <div className="mb-4">
                 <Avatar
                   user={{
+                    id: tutor.id,
                     name: tutor.name,
-                    avatarUrl: `${API_ROUTES.TUTOR.FETCH_AVATAR}/${tutor.id}.jpeg?v=${Date.now()}`,
                     role: 'tutor',
                   }}
                   size="lg"
