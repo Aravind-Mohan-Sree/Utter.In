@@ -17,7 +17,6 @@
       "~logger/*": ["infrastructure/logger/*"],
       "~concrete-repositories/*": ["infrastructure/repositories/*"],
       "~strategies/*": ["infrastructure/strategies/*"],
-      "~infrastructure-services/*": ["infrastructure/services/*"],
 
       "~controllers/*": ["presentation/controllers/*"],
       "~routes/*": ["presentation/routes/*"],

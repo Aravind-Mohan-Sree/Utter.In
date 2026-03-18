@@ -12,6 +12,7 @@ import Footer from '~components/layout/Footer';
 import { Navbar } from '~components/layout/Navbar';
 import { SocketProvider } from '~contexts/SocketContext';
 import TranslateInit from '~utils/translate-init';
+import CallInvitation from '~components/ui/CallInvitation';
 
 declare global {
   interface Window {
@@ -44,6 +45,7 @@ export default function ClientWrapper({
           {!isVideoCall && <Navbar />}
           {children}
           {!isVideoCall && <Footer />}
+          <CallInvitation />
         </SocketProvider>
       </ReduxProvider>
 

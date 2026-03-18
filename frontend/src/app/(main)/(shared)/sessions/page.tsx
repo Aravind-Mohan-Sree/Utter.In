@@ -61,8 +61,8 @@ export default function SessionsPage() {
     return diffInMinutes <= joinThreshold;
   };
 
-  const handleJoin = (bookingId: string) => {
-    router.push(`/video-call/${bookingId}`);
+  const handleJoin = (bookingId: string, otherId: string) => {
+    router.push(`/video-call/${bookingId}?otherId=${otherId}&type=session`);
   };
 
   const fetchBookings = useCallback(async () => {
@@ -188,6 +188,7 @@ export default function SessionsPage() {
                       type="tutor"
                       id={booking.id}
                       avatarId={booking.otherPartyId}
+                      avatarRole={user?.role === 'tutor' ? 'user' : 'tutor'}
                       name={booking.otherPartyName}
                       email={booking.topic}
                       yearsOfExperience=""
@@ -218,7 +219,7 @@ export default function SessionsPage() {
                       }
                       className="bg-white/50 backdrop-blur-sm hover:border-rose-200"
                       onCancel={undefined}
-                      onJoin={canJoin(booking.date) ? () => handleJoin(booking.id) : undefined}
+                      onJoin={canJoin(booking.date) ? () => handleJoin(booking.id, booking.otherPartyId) : undefined}
                     />
                   </div>
                 ))}
@@ -277,6 +278,7 @@ export default function SessionsPage() {
                       type="tutor"
                       id={booking.id}
                       avatarId={booking.otherPartyId}
+                      avatarRole={user?.role === 'tutor' ? 'user' : 'tutor'}
                       name={booking.otherPartyName}
                       email={booking.topic}
                       yearsOfExperience=""

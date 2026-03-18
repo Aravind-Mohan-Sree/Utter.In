@@ -7,8 +7,7 @@ export class GetDataUseCase implements IGetDataUseCase {
 
   async execute(email: string): Promise<UserResponseDTO | null> {
     const user = await this._userRepo.findOneByField({ email });
-
-    if (!user) return null;
+    if (!user || user.isBlocked) return null;
 
     return UserMapper.toResponse(user);
   }

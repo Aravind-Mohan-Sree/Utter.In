@@ -3,6 +3,7 @@ import { ISessionRepository } from '~repository-interfaces/ISessionRepository';
 import { IRedisService } from '~service-interfaces/IRedisService';
 import { env } from '~config/env';
 import { IPingBookingUseCase } from '~use-case-interfaces/shared/IPingBookingUseCase';
+import { SocketManager } from '~concrete-services/SocketManager';
 
 export class PingBookingUseCase implements IPingBookingUseCase {
     constructor(
@@ -48,6 +49,20 @@ export class PingBookingUseCase implements IPingBookingUseCase {
                     await this._bookingRepository.updateOneById(bookingId, { status: 'Completed' });
                     await this._sessionRepository.updateOneById(booking.sessionId, { status: 'Completed' });
                     completed = true;
+                }
+            }
+
+            if (completed) {
+                try {
+                    const sm = SocketManager.getInstance();
+                    const io = sm.getIO();
+                    const uSocket = sm.getSocketId(booking.userId);
+                    const tSocket = sm.getSocketId(booking.tutorId);
+                    
+                    if (uSocket) io.to(uSocket).emit('session_completed');
+                    if (tSocket) io.to(tSocket).emit('session_completed');
+                } catch (err) {
+                    console.error('Failed to emit session_completed socket event', err);
                 }
             }
         } else {

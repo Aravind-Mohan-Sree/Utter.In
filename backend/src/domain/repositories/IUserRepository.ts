@@ -11,6 +11,7 @@ export interface IUserRepository extends IBaseRepository<User, IUser> {
     sort: string,
     language: string,
     excludeId?: string,
+    isAdmin?: boolean,
   ): Promise<{
     totalUsersCount: number;
     filteredUsersCount: number;

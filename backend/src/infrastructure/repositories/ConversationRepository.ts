@@ -86,12 +86,17 @@ export class ConversationRepository
       .populate({
         path: 'participants',
         model: 'users',
-        select: 'name',
+        select: 'name isBlocked role',
       })
       .sort({ updatedAt: -1 });
 
-    return Promise.all(
+    const filteredDocs = await Promise.all(
       docs.map(async (doc) => {
+        const isAnyOtherBlocked = doc.participants.some(
+          (p: any) => p && String(p._id) !== userId && p.isBlocked,
+        );
+        if (isAnyOtherBlocked) return null;
+
         let lastMsg = (doc as any).lastMessage;
 
         if (
@@ -114,6 +119,7 @@ export class ConversationRepository
         return entity;
       }),
     );
+    return filteredDocs.filter((conv): conv is NonNullable<typeof conv> => conv !== null);
   }
 
   async resetUnreadCount(

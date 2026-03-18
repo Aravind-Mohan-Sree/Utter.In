@@ -50,7 +50,7 @@ export class TutorsController {
       const tutorId = req.params.id;
       const tutor = await this._getTutorDataUC.getOneById(tutorId);
 
-      if (!tutor) {
+      if (!tutor || tutor.isBlocked) {
         throw new Error('Tutor not found');
       }
 

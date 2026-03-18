@@ -117,13 +117,18 @@ const Avatar = ({
   return (
     <div className="relative" ref={containerRef}>
       <div
-        className={`relative ${sizeClasses[size]} mx-auto rounded-full group overflow-hidden flex items-center justify-center bg-rose-50 border-1 border-rose-200 ${editable || (interactive && imgSrc) ? 'cursor-pointer' : ''}`}
+        className={`relative ${sizeClasses[size]} mx-auto rounded-full group/avatar overflow-hidden flex items-center justify-center bg-rose-50 border-1 border-rose-200 ${editable || (interactive && imgSrc) ? 'cursor-pointer' : ''}`}
         onClick={(e) => {
           if (interactive && (editable || imgSrc)) {
             e.stopPropagation();
-            setIsMenuOpen(!isMenuOpen);
+            if (editable) {
+              setIsMenuOpen(!isMenuOpen);
+            } else if (imgSrc) {
+              setIsPreviewOpen(true);
+            }
           }
         }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {imgSrc ? (
           <Image
@@ -145,14 +150,14 @@ const Avatar = ({
           </span>
         )}
 
-        {interactive && (
+        {interactive && (editable || imgSrc) && (
           <div
-            className={`absolute inset-0 ${user.role === 'user' || user.role === 'tutor' || imgSrc
+            className={`absolute inset-0 ${imgSrc || editable
               ? 'bg-black/40 backdrop-blur-[2px]'
               : ''
               }  flex flex-col items-center justify-center gap-4 transition-all duration-200 rounded-full z-10 ${isMenuOpen
                 ? 'opacity-100 pointer-events-auto'
-                : `opacity-0 pointer-events-none lg:group-hover:opacity-100 lg:group-hover:pointer-events-auto`
+                : `opacity-0 pointer-events-none group-hover/avatar:opacity-100 group-hover/avatar:pointer-events-auto`
               } ${isLoading && 'opacity-100'}`}
           >
             {isLoading && <LuLoaderCircle className="animate-spin" size={30} />}
@@ -162,7 +167,7 @@ const Avatar = ({
                 <Button
                   variant="transparent"
                   icon={
-                    <LuImagePlus className="transition-transform hover:scale-135 hover:rotate-12" />
+                    <LuImagePlus className="transition-transform" />
                   }
                   size={0}
                   onClick={() => {
@@ -179,7 +184,7 @@ const Avatar = ({
                   <Button
                     variant='transparent'
                     icon={
-                      <LuMaximize className="transition-transform hover:scale-135 hover:rotate-12" />
+                      <LuMaximize className="transition-transform" />
                     }
                     size={0}
                     onClick={() => {
@@ -194,7 +199,7 @@ const Avatar = ({
                     <Button
                       variant="transparent"
                       icon={
-                        <RiDeleteBin6Line className="transition-transform hover:scale-135 hover:rotate-12" />
+                        <RiDeleteBin6Line className="transition-transform" />
                       }
                       size={0}
                       onClick={handleDelete}

@@ -36,6 +36,7 @@ interface UserCardProps extends BaseCardProps {
   isOnline?: boolean;
   onToggleStatus?: (id: string) => void;
   hideStatus?: boolean;
+  hideOnlineStatus?: boolean;
 }
 
 export interface TutorCardProps extends BaseCardProps {
@@ -59,6 +60,7 @@ export interface TutorCardProps extends BaseCardProps {
   showTime?: boolean;
   onCancel?: (id: string) => void;
   onJoin?: (id: string) => void;
+  avatarRole?: 'user' | 'tutor' | 'admin';
 }
 
 interface ReportCardProps extends BaseCardProps {
@@ -126,6 +128,7 @@ const UserCard = ({
   isOnline,
   onToggleStatus,
   hideStatus,
+  hideOnlineStatus,
   className,
   onClick,
 }: UserCardProps) => (
@@ -136,12 +139,14 @@ const UserCard = ({
     <div className="mb-4">
       <div className="flex gap-3 min-w-0 items-start justify-between">
         <div className="flex gap-3 min-w-0 flex-1">
-          <div className="relative">
-            <Avatar user={{ id: avatarId || id, name, role: 'user' }} size="md" editable={false} interactive={false} />
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${
-              isOnline ? 'bg-green-500' : 'bg-rose-500'
-            }`}>
-            </div>
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <Avatar user={{ id: avatarId || id, name, role: 'user' }} size="md" editable={false} interactive={true} />
+            {!hideOnlineStatus && (
+              <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${
+                isOnline ? 'bg-green-500' : 'bg-rose-500'
+              }`}>
+              </div>
+            )}
           </div>
           <UserInfo name={name} email={email} />
         </div>
@@ -209,6 +214,7 @@ const TutorCard = ({
   className,
   disabled,
   onClick,
+  avatarRole = 'tutor',
 }: TutorCardProps) => (
   <div 
     onClick={onClick}
@@ -229,8 +235,8 @@ const TutorCard = ({
     )}
     <div className="mb-4">
       <div className="flex gap-3 min-w-0 items-start justify-between">
-        <div className="flex gap-3 min-w-0 flex-1">
-          <Avatar user={{ id: avatarId || id, name, role: 'tutor' }} size="md" interactive={false} />
+        <div className="flex gap-3 min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
+          <Avatar user={{ id: avatarId || id, name, role: avatarRole }} size="md" interactive={true} />
           <UserInfo
             name={name}
             email={email}

@@ -18,7 +18,7 @@ import '~strategies/googleTutorStrategy';
 import { tutorRouter } from '~routes/tutorRoutes';
 import { adminRouter } from '~routes/adminRoutes';
 import { createServer } from 'http';
-import { SocketManager } from '~infrastructure-services/SocketManager';
+import { SocketManager } from '~concrete-services/SocketManager';
 
 async function startServer() {
   const app = express();

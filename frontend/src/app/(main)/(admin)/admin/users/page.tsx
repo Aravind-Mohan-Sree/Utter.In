@@ -172,6 +172,7 @@ export default function UsersPage() {
               status={user.isBlocked ? 'Blocked' : 'Active'}
               knownLanguages={user.knownLanguages}
               onToggleStatus={handleToggleStatus}
+              hideOnlineStatus={true}
             />
           ))}
         </div>

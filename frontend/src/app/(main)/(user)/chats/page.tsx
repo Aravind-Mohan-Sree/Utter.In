@@ -73,8 +73,12 @@ export default function ChatsPage() {
   const lastProcessedQueryIdRef = useRef<string | null>(null);
 
   const handleSelectConversation = (conv: Conversation | null, targetMsgId?: string) => {
-    if (userIdFromQuery && (!conv || String(conv.otherUser?.id) !== userIdFromQuery)) {
-      router.replace('/chats');
+    if (conv?.otherUser?.id) {
+      router.replace(`/chats?userId=${conv.otherUser.id}`, { scroll: false });
+      lastProcessedQueryIdRef.current = conv.otherUser.id;
+    } else if (userIdFromQuery) {
+      router.replace('/chats', { scroll: false });
+      lastProcessedQueryIdRef.current = null;
     }
 
     setSelectedConversation(conv);
@@ -127,33 +131,35 @@ export default function ChatsPage() {
 
   useEffect(() => {
     if (socket) {
-      socket.on('receive_message', (message: Message) => {
+      const onReceiveMessage = (message: Message) => {
         if (selectedConversation && message.conversationId === selectedConversation.id) {
           setMessages((prev) => [...prev, message]);
-          getMessages(selectedConversation.id).catch(() => { });
         }
-
         fetchConversations();
-      });
+      };
 
-      socket.on('message_edited', (message: Message) => {
+      const onMessageEdited = (message: Message) => {
         if (selectedConversation && message.conversationId === selectedConversation.id) {
           setMessages((prev) => prev.map((m) => m.id === message.id ? message : m));
         }
         fetchConversations();
-      });
+      };
 
-      socket.on('message_deleted', (message: Message) => {
+      const onMessageDeleted = (message: Message) => {
         if (selectedConversation && message.conversationId === selectedConversation.id) {
           setMessages((prev) => prev.map((m) => m.id === message.id ? message : m));
         }
         fetchConversations();
-      });
+      };
+
+      socket.on('receive_message', onReceiveMessage);
+      socket.on('message_edited', onMessageEdited);
+      socket.on('message_deleted', onMessageDeleted);
 
       return () => {
-        socket.off('receive_message');
-        socket.off('message_edited');
-        socket.off('message_deleted');
+        socket.off('receive_message', onReceiveMessage);
+        socket.off('message_edited', onMessageEdited);
+        socket.off('message_deleted', onMessageDeleted);
       };
     }
   }, [socket, selectedConversation]);
@@ -445,12 +451,11 @@ export default function ChatsPage() {
           } catch (err) { }
         })();
       }
-    }
-
-    if (!userIdFromQuery) {
+    } else if (!userIdFromQuery && lastProcessedQueryIdRef.current !== null) {
+      setSelectedConversation(null);
       lastProcessedQueryIdRef.current = null;
     }
-  }, [userIdFromQuery, conversations, loading, selectedConversation]);
+  }, [userIdFromQuery, conversations, loading]);
 
   const handleSearch = async (val: string) => {
     setSearchQuery(val);
@@ -479,7 +484,19 @@ export default function ChatsPage() {
   };
 
   const startVideoCall = () => {
-    if (!selectedConversation || !selectedConversation.otherUser) return;
+    if (!selectedConversation || !selectedConversation.otherUser || !socket) return;
+
+    socket.emit('initiate_call', {
+      receiverId: selectedConversation.otherUser.id,
+      callerId: user?.id,
+      callerName: user?.name,
+      signalData: {
+        bookingId: selectedConversation.id,
+        type: 'chat',
+        otherId: user?.id,
+      }
+    });
+
     router.push(`/video-call/${selectedConversation.id}?role=user&type=chat&otherId=${selectedConversation.otherUser.id}`);
   };
 
@@ -649,7 +666,7 @@ export default function ChatsPage() {
                   </div>
                   <button
                     onClick={startVideoCall}
-                    className="p-3 bg-rose-50 text-rose-500 hover:bg-rose-100 rounded-2xl transition-all shadow-sm active:scale-95"
+                    className="cursor-pointer p-3 bg-rose-50 text-rose-500 hover:bg-rose-100 rounded-2xl transition-all shadow-sm active:scale-95"
                     title="Start Video Call"
                   >
                     <FaVideo size={18} />

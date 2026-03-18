@@ -1,8 +1,9 @@
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { logger } from '~logger/logger';
+import { ISocketManager } from '~service-interfaces/ISocketManager';
 
-export class SocketManager {
+export class SocketManager implements ISocketManager {
   private static _instance: SocketManager;
   private _io: Server | null = null;
   private _userSocketMap = new Map<string, string>();
@@ -23,6 +24,7 @@ export class SocketManager {
         origin: frontendUrl,
         credentials: true,
       },
+      transports: ['websocket'],
     });
 
     this._io.on('connection', (socket: Socket) => {
@@ -41,7 +43,9 @@ export class SocketManager {
       socket.on('disconnect', () => {
         const userId = this._socketUserMap.get(socket.id);
         if (userId) {
-          this._userSocketMap.delete(userId);
+          if (this._userSocketMap.get(userId) === socket.id) {
+            this._userSocketMap.delete(userId);
+          }
           this._socketUserMap.delete(socket.id);
           logger.info(`User disconnected: ${userId} (${socket.id})`);
 
@@ -71,6 +75,7 @@ export class SocketManager {
       });
 
       socket.on('initiate_call', (data: { receiverId: string; callerId: string; callerName: string; signalData: any }) => {
+        logger.info(`Initiating call from ${data.callerId} to ${data.receiverId}`);
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
           this._io?.to(receiverSocketId).emit('incoming_call', {
@@ -91,9 +96,20 @@ export class SocketManager {
       });
       
       socket.on('end_call', (data: { otherPartyId: string }) => {
+        logger.info(`Ending call: targeting ${data.otherPartyId}`);
         const otherSocketId = this._userSocketMap.get(data.otherPartyId);
         if (otherSocketId) {
+          logger.info(`Found socket ${otherSocketId} for user ${data.otherPartyId}, emitting call_ended`);
           this._io?.to(otherSocketId).emit('call_ended');
+        } else {
+          logger.warn(`Could not find socket for user ${data.otherPartyId} in map`);
+        }
+      });
+
+      socket.on('session_completed', (data: { otherPartyId: string }) => {
+        const otherSocketId = this._userSocketMap.get(data.otherPartyId);
+        if (otherSocketId) {
+          this._io?.to(otherSocketId).emit('session_completed');
         }
       });
     });

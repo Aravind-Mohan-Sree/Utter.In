@@ -21,6 +21,8 @@ import { RootState } from '~store/rootReducer';
 import axiosInstance from '~utils/axiosConfig';
 import { utterToast } from '~utils/utterToast';
 
+import { useSocketContext } from '~contexts/SocketContext';
+
 interface Message {
     senderId: string;
     senderName: string;
@@ -34,11 +36,11 @@ export default function VideoCallPage() {
     const searchParams = useSearchParams();
     const bookingId = params?.id as string;
     const { user } = useSelector((state: RootState) => state.auth);
+    const { socket } = useSocketContext();
 
     const userId = user?.id;
     const userName = user?.name;
     const userRole = user?.role;
-
 
     const forcedRole = searchParams.get('role') as 'user' | 'tutor' | null;
     const myRole = forcedRole || userRole;
@@ -48,7 +50,13 @@ export default function VideoCallPage() {
     const [newMessage, setNewMessage] = useState('');
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(false);
-    const [isChatOpen, setIsChatOpen] = useState(true);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+            setIsChatOpen(true);
+        }
+    }, []);
     const [isConnected, setIsConnected] = useState(false);
     const [isCallConnected, setIsCallConnected] = useState(false);
     const [otherPartyName, setOtherPartyName] = useState('');
@@ -106,7 +114,7 @@ export default function VideoCallPage() {
         scrollToBottom();
     }, [messages]);
 
-    const stopMediaTracks = useCallback(() => {
+    const stopMediaTracks = useCallback((clearState: boolean = true) => {
 
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => {
@@ -140,11 +148,32 @@ export default function VideoCallPage() {
             remoteVideoRef.current.srcObject = null;
             remoteVideoRef.current.load();
         }
-        setLocalStream(null);
-        setRemoteStream(null);
+
+        if (clearState) {
+            setLocalStream(null);
+            setRemoteStream(null);
+        }
     }, []);
 
-    const handleDisconnect = useCallback(() => {
+    const isDisconnectingRef = useRef(false);
+    const retryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleDisconnect = useCallback((emitSocketEvent?: boolean | any) => {
+        const shouldEmit = typeof emitSocketEvent === 'boolean' ? emitSocketEvent : true;
+
+        if (isDisconnectingRef.current) return;
+        isDisconnectingRef.current = true;
+
+        const otherId = searchParams.get('otherId');
+        if (shouldEmit && socket && otherId) {
+            socket.emit('end_call', { otherPartyId: otherId, bookingId });
+        }
+
+        if (retryIntervalRef.current) {
+            clearInterval(retryIntervalRef.current);
+            retryIntervalRef.current = null;
+        }
+
         if (callRef.current) {
             callRef.current.close();
             callRef.current = null;
@@ -158,9 +187,57 @@ export default function VideoCallPage() {
             peerRef.current.destroy();
             peerRef.current = null;
         }
-        stopMediaTracks();
-        router.push('/sessions');
-    }, [router, stopMediaTracks]);
+        stopMediaTracks(false);
+        
+        setTimeout(() => {
+            const isChatCall = searchParams.get('type') === 'chat';
+            router.push(isChatCall ? '/chats' : '/sessions');
+        }, 100);
+    }, [router, stopMediaTracks, socket, searchParams, bookingId]);
+
+    useEffect(() => {
+        const handleUnload = () => {
+             if (socket && !isDisconnectingRef.current) {
+                const otherId = searchParams.get('otherId');
+                if (otherId) {
+                    socket.emit('end_call', { otherPartyId: otherId, bookingId });
+                }
+            }
+        };
+        window.addEventListener('beforeunload', handleUnload);
+        return () => {
+            window.removeEventListener('beforeunload', handleUnload);
+        };
+    }, [socket, bookingId, searchParams]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const onCallEnded = () => {
+            const type = searchParams.get('type');
+            if (type !== 'session') {
+                utterToast.info('The call has ended');
+                handleDisconnect(false);
+            } else {
+                utterToast.info('The other party has left the call');
+                setRemoteStream(null);
+                setIsCallConnected(false);
+            }
+        };
+
+        const onSessionCompleted = () => {
+            utterToast.success('Session completed successfully');
+            handleDisconnect(false);
+        };
+
+        socket.on('call_ended', onCallEnded);
+        socket.on('session_completed', onSessionCompleted);
+
+        return () => {
+            socket.off('call_ended', onCallEnded);
+            socket.off('session_completed', onSessionCompleted);
+        };
+    }, [socket, handleDisconnect]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -174,7 +251,11 @@ export default function VideoCallPage() {
                     const res = await axiosInstance.post(`/${rolePrefix}/bookings/${bookingId}/ping`);
                     if (res.data?.completed) {
                         utterToast.success('Session completed successfully');
-                        handleDisconnect();
+                        const otherId = searchParams.get('otherId');
+                        if (socket && otherId) {
+                            socket.emit('session_completed', { otherPartyId: otherId });
+                        }
+                        handleDisconnect(false);
                     }
                 } catch (err) {
                     console.error('Error pinging session time', err);
@@ -282,20 +363,40 @@ export default function VideoCallPage() {
         }
     };
 
+    const mountTimeRef = useRef(Date.now());
+
     useEffect(() => {
         navigator.mediaDevices.addEventListener('devicechange', getDevices);
         return () => navigator.mediaDevices.removeEventListener('devicechange', getDevices);
     }, []);
 
+    const isCallingRef = useRef(false);
+    const isConnectingDataRef = useRef(false);
+
+    const reinitTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     useEffect(() => {
         if (!user || !bookingId) return;
         let isActive = true;
+        let peerInstance: PeerType | null = null;
 
-        let peerInstance: PeerType;
-        let retryInterval: NodeJS.Timeout;
+        const cleanupPeer = () => {
+            if (peerInstance) {
+                peerInstance.disconnect();
+                peerInstance.destroy();
+                peerInstance = null;
+            }
+            if (reinitTimeoutRef.current) {
+                clearTimeout(reinitTimeoutRef.current);
+                reinitTimeoutRef.current = null;
+            }
+        };
 
         const initPeer = async () => {
             try {
+                if (!isActive) return;
+
+                cleanupPeer();
 
                 if (localStreamRef.current) {
                     localStreamRef.current.getTracks().forEach(t => t.stop());
@@ -317,13 +418,9 @@ export default function VideoCallPage() {
                     localVideoRef.current.srcObject = stream;
                 }
 
-
                 await getDevices();
 
                 const PeerJS = (await import('peerjs')).default;
-
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
                 if (!isActive) return;
 
                 const isChatCall = searchParams.get('type') === 'chat';
@@ -353,29 +450,47 @@ export default function VideoCallPage() {
                 const attemptConnection = () => {
                     if (!peerInstance || peerInstance.destroyed) return;
 
-
-
-
-
-                    if (!isMediaConnectedRef.current) {
+                    if (!isMediaConnectedRef.current && !isCallingRef.current) {
+                        isCallingRef.current = true;
                         if (callRef.current) callRef.current.close();
                         const call = peerInstance.call(targetPeerId, stream);
                         if (call) handleCall(call);
+                        
+                        setTimeout(() => {
+                            if (!isMediaConnectedRef.current) {
+                                isCallingRef.current = false;
+                                call?.close();
+                            }
+                        }, 15000);
                     }
 
-
-                    if (!isDataConnectedRef.current) {
+                    if (!isDataConnectedRef.current && !isConnectingDataRef.current) {
+                        isConnectingDataRef.current = true;
                         if (connRef.current) connRef.current.close();
                         const conn = peerInstance.connect(targetPeerId);
                         if (conn) handleConnection(conn);
+                        
+                        setTimeout(() => {
+                           if (!isDataConnectedRef.current) {
+                               isConnectingDataRef.current = false;
+                               conn?.close();
+                           }
+                        }, 10000);
                     }
                 };
 
                 peerInstance.on('open', (id) => {
                     attemptConnection();
 
+                    if (!reinitTimeoutRef.current) {
+                        reinitTimeoutRef.current = setTimeout(() => {
+                            if (!isMediaConnectedRef.current && isActive) {
+                                initPeer();
+                            }
+                        }, 30000);
+                    }
 
-                    retryInterval = setInterval(() => {
+                    retryIntervalRef.current = setInterval(() => {
                         if (!isMediaConnectedRef.current || !isDataConnectedRef.current) {
                             attemptConnection();
                         }
@@ -383,7 +498,7 @@ export default function VideoCallPage() {
                 });
 
                 peerInstance.on('disconnected', () => {
-                    if (!peerInstance.destroyed) {
+                    if (peerInstance && !peerInstance.destroyed) {
                         peerInstance.reconnect();
                     }
                 });
@@ -399,14 +514,13 @@ export default function VideoCallPage() {
 
                 peerInstance.on('error', (err) => {
                     if (err.type === 'peer-unavailable' || err.type === 'unavailable-id') {
-
-                    } else if (err.type === 'network') {
-                        utterToast.error('Network error. Check your connection.');
+                        isCallingRef.current = false;
+                        isConnectingDataRef.current = false;
                     }
                 });
 
             } catch (err) {
-                utterToast.error('Could not access camera/microphone. Please ensure permissions are granted.');
+                utterToast.error('Could not access camera/microphone.');
             }
         };
 
@@ -418,16 +532,19 @@ export default function VideoCallPage() {
                 setIsCallConnected(true);
                 setIsConnected(true);
                 isMediaConnectedRef.current = true;
+                isCallingRef.current = false;
             });
             call.on('close', () => {
                 setIsCallConnected(false);
                 setRemoteStream(null);
                 isMediaConnectedRef.current = false;
+                isCallingRef.current = false;
             });
             call.on('error', () => {
                 setIsCallConnected(false);
                 setRemoteStream(null);
                 isMediaConnectedRef.current = false;
+                isCallingRef.current = false;
             });
         };
 
@@ -436,6 +553,7 @@ export default function VideoCallPage() {
             conn.on('open', () => {
                 setIsConnected(true);
                 isDataConnectedRef.current = true;
+                isConnectingDataRef.current = false;
 
                 conn.send({ type: 'identity', name: userName });
             });
@@ -443,11 +561,13 @@ export default function VideoCallPage() {
                 setIsConnected(false);
                 setIsCallConnected(false);
                 isDataConnectedRef.current = false;
+                isConnectingDataRef.current = false;
             });
             conn.on('error', () => {
                 setIsConnected(false);
                 setIsCallConnected(false);
                 isDataConnectedRef.current = false;
+                isConnectingDataRef.current = false;
             });
             conn.on('data', (data: unknown) => {
                 const payload = data as { type: string; name?: string; senderId?: string; senderName?: string; text?: string };
@@ -470,16 +590,17 @@ export default function VideoCallPage() {
             isActive = false;
             isDataConnectedRef.current = false;
             isMediaConnectedRef.current = false;
-            if (retryInterval) clearInterval(retryInterval);
+            if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);            
+
             if (peerInstance) {
                 peerInstance.disconnect();
                 peerInstance.destroy();
             }
-            stopMediaTracks();
+            stopMediaTracks(false);
 
-            setTimeout(stopMediaTracks, 100);
+            setTimeout(() => stopMediaTracks(false), 100);
         };
-    }, [bookingId, userId, userName, userRole, myRole, stopMediaTracks]);
+    }, [bookingId, userId, userName, userRole, myRole, stopMediaTracks, socket, searchParams]);
 
     const sendMessage = () => {
         if (!newMessage.trim() || !connRef.current || !user) return;
@@ -559,7 +680,7 @@ export default function VideoCallPage() {
                                     <FaVideo className="text-rose-500 relative z-10" size={40} />
                                 </div>
                                 <h2 className="text-2xl font-bold tracking-tight text-center">
-                                    {isConnected ? 'Connecting Video...' : `Waiting for ${myRole === 'user' ? 'Tutor' : 'Student'} to join...`}
+                                    {isConnected ? 'Connecting Video...' : `Waiting...`}
                                 </h2>
                             </div>
                         )}

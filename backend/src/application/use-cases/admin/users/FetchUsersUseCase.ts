@@ -21,6 +21,10 @@ export class FetchUsersUseCase implements IFetchUsersUseCase {
         data.limit,
         data.query,
         data.filter,
+        'newest',
+        'All',
+        undefined,
+        true,
       );
 
     const fetchedUsers = users.map(UserMapper.toResponse);

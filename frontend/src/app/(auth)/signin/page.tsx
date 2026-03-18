@@ -135,7 +135,6 @@ const SignIn: React.FC = () => {
         if (message.toLowerCase().includes('password')) {
           setError((prev) => ({ ...prev, password: 'Wrong password' }));
         } else {
-          // Keep other errors as they are, but clear password if not a password error
           setError((prev) => {
             const newState = { ...prev, password: '' };
             if (message.toLowerCase().includes('email')) {

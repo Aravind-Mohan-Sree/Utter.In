@@ -19,6 +19,7 @@ export class UserRepository
     sort: string = 'newest',
     language: string = 'All',
     excludeId?: string,
+    isAdmin: boolean = false,
   ): Promise<{
     totalUsersCount: number;
     filteredUsersCount: number;
@@ -27,6 +28,11 @@ export class UserRepository
     const pipeline: PipelineStage[] = [];
     
     const queryObj: any = { role: 'user' };
+
+    if (!isAdmin) {
+      queryObj.isBlocked = false;
+    }
+
     if (excludeId && Types.ObjectId.isValid(excludeId)) {
       queryObj._id = { $ne: new Types.ObjectId(excludeId) };
     } else if (excludeId) {
@@ -37,7 +43,7 @@ export class UserRepository
     
     pipeline.push({ $match: queryObj });
 
-    if (filter !== 'All') {
+    if (isAdmin && filter !== 'All') {
       pipeline.push({
         $match: { isBlocked: filter === 'Blocked' },
       });

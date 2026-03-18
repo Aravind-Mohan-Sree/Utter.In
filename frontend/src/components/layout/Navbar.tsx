@@ -42,7 +42,9 @@ export function Navbar() {
   useEffect(() => {
     if (user?.role && user.role !== 'admin') {
       dispatch(fetchSessionCount(user.role));
-      dispatch(fetchUnreadCount(user.id!));
+      if (user.role === 'user') {
+        dispatch(fetchUnreadCount(user.id!));
+      }
     }
   }, [dispatch, user?.role, user?.id]);
 
