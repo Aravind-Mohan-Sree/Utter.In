@@ -77,6 +77,14 @@ import { SearchChatUseCase } from '~use-cases/user/chat/SearchChatUseCase';
 import { ChatController } from '~controllers/user/ChatController';
 import { EditMessageUseCase } from '~use-cases/user/chat/EditMessageUseCase';
 import { DeleteMessageUseCase } from '~use-cases/user/chat/DeleteMessageUseCase';
+import { QuizRepository } from '~concrete-repositories/QuizRepository';
+import { GeminiService } from '~concrete-services/GeminiService';
+import { GenerateQuizUseCase } from '~use-cases/user/quiz/GenerateQuizUseCase';
+import { CheckAnswerUseCase } from '~use-cases/user/quiz/CheckAnswerUseCase';
+import { CompleteQuizUseCase } from '~use-cases/user/quiz/CompleteQuizUseCase';
+import { GetQuizHistoryUseCase } from '~use-cases/user/quiz/GetQuizHistoryUseCase';
+import { GetQuizLeaderboardUseCase } from '~use-cases/user/quiz/GetQuizLeaderboardUseCase';
+import { QuizController } from '~controllers/user/QuizController';
 
 // repositories
 const userRepository = new UserRepository();
@@ -88,6 +96,7 @@ const walletRepository = new WalletRepository();
 const reviewRepository = new ReviewRepository();
 const conversationRepository = new ConversationRepository();
 const messageRepository = new MessageRepository();
+const quizRepository = new QuizRepository();
 
 // services
 const mailService = new MailService();
@@ -103,6 +112,7 @@ const s3Service = new S3Service({
 const axiosImageGatewayService = new AxiosImageGatewayService();
 const razorpayService = new RazorpayService();
 const redisService = new RedisService();
+const geminiService = new GeminiService();
 
 // use-cases
 const registerUserUseCase = new RegisterUserUseCase(
@@ -216,6 +226,13 @@ const searchChatUseCase = new SearchChatUseCase(messageRepository, userRepositor
 const editMessageUseCase = new EditMessageUseCase(messageRepository);
 const deleteMessageUseCase = new DeleteMessageUseCase(messageRepository);
 
+// quiz use cases
+const generateQuizUseCase = new GenerateQuizUseCase(quizRepository, geminiService);
+const checkAnswerUseCase = new CheckAnswerUseCase(quizRepository);
+const completeQuizUseCase = new CompleteQuizUseCase(quizRepository, userRepository);
+const getQuizHistoryUseCase = new GetQuizHistoryUseCase(quizRepository);
+const getQuizLeaderboardUseCase = new GetQuizLeaderboardUseCase(quizRepository);
+
 // controllers
 const authController = new AuthController(
   registerUserUseCase,
@@ -288,6 +305,14 @@ const chatController = new ChatController(
   editMessageUseCase,
   deleteMessageUseCase,
   dataValidatorService,
+);
+
+const quizController = new QuizController(
+  generateQuizUseCase,
+  checkAnswerUseCase,
+  completeQuizUseCase,
+  getQuizHistoryUseCase,
+  getQuizLeaderboardUseCase,
 );
 
 // wire auth middlewares
@@ -377,5 +402,12 @@ router.post('/chats/messages', auth.verify(), chatController.sendMessage);
 router.get('/chats/search', auth.verify(), chatController.search);
 router.patch('/chats/messages/:messageId', auth.verify(), chatController.editMessage);
 router.delete('/chats/messages/:messageId', auth.verify(), chatController.deleteMessage);
+
+// quiz
+router.post('/quizzes', auth.verify(), quizController.generateQuiz);
+router.post('/quizzes/check-answer', auth.verify(), quizController.checkAnswer);
+router.post('/quizzes/complete', auth.verify(), quizController.completeQuiz);
+router.get('/quizzes/history', auth.verify(), quizController.getHistory);
+router.get('/quizzes/leaderboard', auth.verify(), quizController.getLeaderboard);
 
 export const userRouter = router;

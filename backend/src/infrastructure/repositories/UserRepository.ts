@@ -111,6 +111,7 @@ export class UserRepository
       isBlocked: entity.isBlocked,
       googleId: entity.googleId!,
       streak: entity.streak!,
+      quizStats: entity.quizStats!,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
@@ -127,6 +128,7 @@ export class UserRepository
       doc.password,
       doc.googleId,
       doc.streak,
+      doc.quizStats,
       doc.role,
       doc.isBlocked,
       String(doc._id),

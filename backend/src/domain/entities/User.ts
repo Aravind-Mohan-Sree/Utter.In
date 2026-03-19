@@ -10,7 +10,12 @@ export class User {
       lastActive: Date | null;
       currentStreak: number;
       highestStreak: number;
-    } | null,
+    },
+    public quizStats: {
+      totalQuizzes: number;
+      averageAccuracy: number;
+      averageSpeed: number;
+    },
     public role: string,  
     public isBlocked: boolean,
     public id?: string,

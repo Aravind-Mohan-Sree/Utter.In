@@ -14,6 +14,11 @@ export interface IUser extends Document {
     currentStreak: number;
     highestStreak: number;
   };
+  quizStats: {
+    totalQuizzes: number;
+    averageAccuracy: number;
+    averageSpeed: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,8 +35,13 @@ const userSchema = new Schema<IUser>(
     googleId: { type: String, default: null },
     streak: {
       lastActive: { type: Date, default: null },
-      currentStreak: { type: Number },
-      highestStreak: { type: Number },
+      currentStreak: { type: Number, default: 0 },
+      highestStreak: { type: Number, default: 0 },
+    },
+    quizStats: {
+      totalQuizzes: { type: Number, default: 0 },
+      averageAccuracy: { type: Number, default: 0 },
+      averageSpeed: { type: Number, default: 0 },
     },
   },
   { timestamps: true },
