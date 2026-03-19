@@ -12,6 +12,7 @@ import { IWalletRepository } from '~repository-interfaces/IWalletRepository';
 import { Wallet } from '~entities/Wallet';
 import { IWallet } from '~models/WalletModel';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
+import { ICreateNotificationUseCase } from '~use-case-interfaces/shared/INotificationUseCase';
 
 export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase {
   constructor(
@@ -22,6 +23,7 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
     private _paymentService: IPaymentService,
     private _mailService: IMailService,
     private _walletRepository: IWalletRepository,
+    private _createNotificationUseCase: ICreateNotificationUseCase,
   ) { }
 
   async execute(data: {
@@ -111,6 +113,12 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
       await Promise.all([
         this._mailService.sendBookingConfirmation(tutor.name, tutor.email, session.topic, session.language, formattedDate, true),
         this._mailService.sendBookingConfirmation(user.name, user.email, session.topic, session.language, formattedDate, false),
+        this._createNotificationUseCase.execute({
+          recipientId: tutor.id!,
+          recipientRole: 'tutor',
+          message: `${user.name} booked your session on ${session.topic}`,
+          type: 'booking',
+        }),
       ]);
     }
 

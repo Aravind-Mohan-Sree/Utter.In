@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { io, Socket } from 'socket.io-client';
-import { incrementUnreadCount } from '~features/chatSlice';
+import { incrementUnreadCount as incrementChatCount } from '~features/chatSlice';
+import { incrementUnreadCount as incrementNotificationCount, prependNotification } from '~features/notificationSlice';
 import { RootState } from '~store/rootReducer';
 
 interface IncomingCall {
@@ -85,7 +86,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     newSocket.on('receive_message', () => {
-      dispatch(incrementUnreadCount());
+      dispatch(incrementChatCount());
+    });
+
+    newSocket.on('new_notification', (notification) => {
+      dispatch(incrementNotificationCount());
+      dispatch(prependNotification(notification));
     });
 
     newSocket.on('incoming_call', (data: IncomingCall) => {

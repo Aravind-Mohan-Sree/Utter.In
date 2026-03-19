@@ -62,6 +62,10 @@ import { GetWalletTransactionsUseCase } from '~use-cases/shared/GetWalletTransac
 import { WalletController } from '~controllers/shared/WalletController';
 import { PingBookingUseCase } from '~use-cases/shared/PingBookingUseCase';
 import { RedisService } from '~concrete-services/RedisService';
+import { SocketManager } from '~concrete-services/SocketManager';
+import { NotificationRepository } from '~concrete-repositories/NotificationRepository';
+import { CreateNotificationUseCase } from '~use-cases/shared/notification/CreateNotificationUseCase';
+import { getNotificationRouter } from './notificationRoutes';
 
 // repositories
 const userRepository = new UserRepository();
@@ -70,6 +74,7 @@ const pendingTutorRepository = new PendingTutorRepository();
 const sessionRepository = new SessionRepository();
 const bookingRepository = new BookingRepository();
 const walletRepository = new WalletRepository();
+const notificationRepository = new NotificationRepository();
 
 // services
 const mailService = new MailService();
@@ -158,6 +163,8 @@ const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
 );
 
 // controllers
+const socketManager = SocketManager.getInstance();
+const createNotificationUseCase = new CreateNotificationUseCase(notificationRepository, socketManager);
 const authController = new AuthController(
   registerTutorUseCase,
   finishRegisterTutorUseCase,
@@ -218,6 +225,7 @@ const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
   razorpayService,
   mailService,
   walletRepository,
+  createNotificationUseCase,
 );
 const getBookingsUseCase = new GetBookingsUseCase(bookingRepository);
 const cancelBookingUseCase = new CancelBookingUseCase(
@@ -227,6 +235,7 @@ const cancelBookingUseCase = new CancelBookingUseCase(
   tutorRepository,
   walletRepository,
   mailService,
+  createNotificationUseCase,
 );
 const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService);
 
@@ -313,5 +322,8 @@ router.post('/bookings/:id/ping', auth.verify(), bookingController.pingSession);
 
 // wallet
 router.get('/wallet', auth.verify(), walletController.getTransactions);
+
+// notifications
+router.use('/notifications', getNotificationRouter(auth));
 
 export const tutorRouter = router;

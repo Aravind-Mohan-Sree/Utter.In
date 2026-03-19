@@ -26,6 +26,10 @@ export const API_ROUTES = {
     CHAT_MESSAGES: (id: string) => `/user/chats/${id}/messages`,
     SEND_MESSAGE: '/user/chats/messages',
     CHAT_SEARCH: '/user/chats/search',
+    NOTIFICATIONS: '/user/notifications',
+    MARK_READ: (id: string) => `/user/notifications/${id}/read`,
+    MARK_ALL_READ: '/user/notifications/read-all',
+    UNREAD_COUNT: '/user/notifications/unread-count',
   },
   TUTOR: {
     SIGNUP: '/tutor/signup',
@@ -50,6 +54,10 @@ export const API_ROUTES = {
     CREATE_SESSION: '/tutor/create-session',
     GET_SESSIONS: '/tutor/get-sessions',
     CANCEL_SESSION: '/tutor/cancel-session',
+    NOTIFICATIONS: '/tutor/notifications',
+    MARK_READ: (id: string) => `/tutor/notifications/${id}/read`,
+    MARK_ALL_READ: '/tutor/notifications/read-all',
+    UNREAD_COUNT: '/tutor/notifications/unread-count',
   },
   ADMIN: {
     SIGNIN: '/admin/signin',

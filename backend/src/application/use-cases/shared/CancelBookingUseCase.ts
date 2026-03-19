@@ -10,6 +10,7 @@ import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IMailService } from '~service-interfaces/IMailService';
+import { ICreateNotificationUseCase } from '~use-case-interfaces/shared/INotificationUseCase';
 
 export class CancelBookingUseCase implements ICancelBookingUseCase {
   constructor(
@@ -19,6 +20,7 @@ export class CancelBookingUseCase implements ICancelBookingUseCase {
         private _tutorRepository: ITutorRepository,
         private _walletRepository: IWalletRepository,
         private _mailService: IMailService,
+        private _createNotificationUseCase: ICreateNotificationUseCase,
   ) { }
 
   async execute(bookingId: string, userId: string, role: string): Promise<boolean> {
@@ -92,8 +94,20 @@ export class CancelBookingUseCase implements ICancelBookingUseCase {
 
       if (role === 'tutor') {                
         await this._mailService.sendBookingCancellation(user.name, user.email, session.topic, session.language, formattedDate, refundAmount);
+        await this._createNotificationUseCase.execute({
+          recipientId: user.id!,
+          recipientRole: 'user',
+          message: `Your session on ${session.topic} was cancelled by ${tutor.name}`,
+          type: 'cancellation',
+        });
       } else {                
         await this._mailService.sendBookingCancellation(tutor.name, tutor.email, session.topic, session.language, formattedDate);
+        await this._createNotificationUseCase.execute({
+          recipientId: tutor.id!,
+          recipientRole: 'tutor',
+          message: `The session with ${user.name} on ${session.topic} was cancelled`,
+          type: 'cancellation',
+        });
 
         await this._mailService.sendBookingCancellation(user.name, user.email, session.topic, session.language, formattedDate, refundAmount);
       }

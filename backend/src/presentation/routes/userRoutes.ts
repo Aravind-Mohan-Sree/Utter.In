@@ -61,6 +61,10 @@ import { WalletController } from '~controllers/shared/WalletController';
 import { WalletRepository } from '~concrete-repositories/WalletRepository';
 import { PingBookingUseCase } from '~use-cases/shared/PingBookingUseCase';
 import { RedisService } from '~concrete-services/RedisService';
+import { SocketManager } from '~concrete-services/SocketManager';
+import { NotificationRepository } from '~concrete-repositories/NotificationRepository';
+import { CreateNotificationUseCase } from '~use-cases/shared/notification/CreateNotificationUseCase';
+import { getNotificationRouter } from './notificationRoutes';
 import { ReviewRepository } from '~concrete-repositories/ReviewRepository';
 import { AddReviewUseCase } from '~use-cases/user/reviews/AddReviewUseCase';
 import { GetReviewsUseCase } from '~use-cases/user/reviews/GetReviewsUseCase';
@@ -97,6 +101,7 @@ const reviewRepository = new ReviewRepository();
 const conversationRepository = new ConversationRepository();
 const messageRepository = new MessageRepository();
 const quizRepository = new QuizRepository();
+const notificationRepository = new NotificationRepository();
 
 // services
 const mailService = new MailService();
@@ -114,7 +119,9 @@ const razorpayService = new RazorpayService();
 const redisService = new RedisService();
 const geminiService = new GeminiService();
 
-// use-cases
+// use cases
+const socketManager = SocketManager.getInstance();
+const createNotificationUseCase = new CreateNotificationUseCase(notificationRepository, socketManager);
 const registerUserUseCase = new RegisterUserUseCase(
   userRepository,
   pendingUserRepository,
@@ -198,6 +205,7 @@ const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
   razorpayService,
   mailService,
   walletRepository,
+  createNotificationUseCase,
 );
 const getBookingsUseCase = new GetBookingsUseCase(bookingRepository);
 const cancelBookingUseCase = new CancelBookingUseCase(
@@ -207,6 +215,7 @@ const cancelBookingUseCase = new CancelBookingUseCase(
   tutorRepository,
   walletRepository,
   mailService,
+  createNotificationUseCase,
 );
 const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService);
 
@@ -221,7 +230,13 @@ const getMessagesUseCase = new GetMessagesUseCase(
   messageRepository,
   conversationRepository,
 );
-const sendMessageUseCase = new SendMessageUseCase(messageRepository, conversationRepository);
+const sendMessageUseCase = new SendMessageUseCase(
+  messageRepository,
+  conversationRepository,
+  userRepository,
+  tutorRepository,
+  createNotificationUseCase,
+);
 const searchChatUseCase = new SearchChatUseCase(messageRepository, userRepository);
 const editMessageUseCase = new EditMessageUseCase(messageRepository);
 const deleteMessageUseCase = new DeleteMessageUseCase(messageRepository);
@@ -409,5 +424,8 @@ router.post('/quizzes/check-answer', auth.verify(), quizController.checkAnswer);
 router.post('/quizzes/complete', auth.verify(), quizController.completeQuiz);
 router.get('/quizzes/history', auth.verify(), quizController.getHistory);
 router.get('/quizzes/leaderboard', auth.verify(), quizController.getLeaderboard);
+
+// notifications
+router.use('/notifications', getNotificationRouter(auth));
 
 export const userRouter = router;
