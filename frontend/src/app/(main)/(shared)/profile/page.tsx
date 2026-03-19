@@ -18,7 +18,6 @@ import Avatar from '~components/ui/Avatar';
 import Button from '~components/ui/Button';
 import { DateAndTime } from '~components/ui/DateAndTime';
 import Loader from '~components/ui/Loader';
-import { API_ROUTES } from '~constants/routes';
 import {
   changePassword,
   getAccountDetails,
@@ -384,13 +383,13 @@ export default function ProfilePage() {
       )}
       <AbstractShapesBackground />
 
-      <main className="pt-24 px-4 pb-6 max-w-7xl mx-auto">
+      <main className="pt-24 px-4 sm:px-6 lg:px-8 pb-6 max-w-7xl mx-auto">
         <div
-          className={`relative grid grid-cols-1 gap-8 items-start ${isEditMode ? 'lg:grid-cols-2' : 'max-w-3xl mx-auto'
+          className={`grid grid-cols-1 gap-8 items-start ${isEditMode ? 'lg:grid-cols-2' : 'max-w-3xl mx-auto'
             }`}
         >
           {/* Profile Overview Card */}
-          <div className="bg-white/20 rounded-2xl shadow-lg p-6 h-fit backdrop-blur-xs">
+          <div className="bg-white/20 rounded-2xl shadow-lg p-6 h-fit backdrop-blur-md">
             <div className="flex items-center gap-4 mb-6">
               <Avatar
                 size="xxl"
@@ -471,7 +470,7 @@ export default function ProfilePage() {
 
           {/* Edit Profile Form */}
           {isEditMode && (
-            <div className="bg-white/20 rounded-2xl shadow-lg p-6 backdrop-blur-xs">
+            <div className="bg-white/20 rounded-2xl shadow-lg p-6 backdrop-blur-md">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">
                   Edit Profile

@@ -2,7 +2,7 @@ import { INotificationRepository } from '~repository-interfaces/INotificationRep
 import { IMarkAllNotificationsReadUseCase } from '~use-case-interfaces/shared/INotificationUseCase';
 
 export class MarkAllNotificationsReadUseCase
-  implements IMarkAllNotificationsReadUseCase {
+implements IMarkAllNotificationsReadUseCase {
   constructor(private _notificationRepository: INotificationRepository) { }
 
   async execute(userId: string): Promise<boolean> {

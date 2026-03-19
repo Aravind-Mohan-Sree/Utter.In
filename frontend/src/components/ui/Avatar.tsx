@@ -7,11 +7,10 @@ import { LuImagePlus, LuLoaderCircle, LuMaximize } from 'react-icons/lu';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 
 import Button from '~components/ui/Button';
+import { API_ROUTES } from '~constants/routes';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
-
-import { API_ROUTES } from '~constants/routes';
 
 import AvatarUploadModal from '../modals/AvatarUploadModal';
 
@@ -69,6 +68,7 @@ const Avatar = ({
 
   useEffect(() => {
     setImgSrc(getAvatarUrl());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id, user.role, version]);
 
   useEffect(() => {

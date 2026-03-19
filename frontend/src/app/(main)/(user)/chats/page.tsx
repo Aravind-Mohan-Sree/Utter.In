@@ -1,21 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FaSearch, FaPaperPlane, FaVideo, FaCircle, FaUserCircle, FaArrowLeft, FaChevronDown } from 'react-icons/fa';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { FaArrowLeft, FaChevronDown, FaCircle, FaPaperPlane, FaSearch, FaVideo } from 'react-icons/fa';
+import { MdContentCopy, MdDelete, MdEdit } from 'react-icons/md';
+import { useDispatch, useSelector } from 'react-redux';
+
+import Avatar from '~components/ui/Avatar';
+import Loader from '~components/ui/Loader';
 import { useSocketContext } from '~contexts/SocketContext';
-import { getConversations, getMessages, sendMessage, searchChat, editMessage, deleteMessage } from '~services/user/chatService';
-import { MdEdit, MdDelete, MdContentCopy } from 'react-icons/md';
 import { setUnreadCount } from '~features/chatSlice';
+import { deleteMessage, editMessage, getConversations, getMessages, searchChat, sendMessage } from '~services/user/chatService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
-import { utterToast } from '~utils/utterToast';
 import { utterAlert } from '~utils/utterAlert';
-import Loader from '~components/ui/Loader';
-import Image from 'next/image';
-import { API_ROUTES } from '~constants/routes';
-import Avatar from '~components/ui/Avatar';
+import { utterToast } from '~utils/utterToast';
 
 interface User {
   id: string;
@@ -66,21 +65,47 @@ export default function ChatsPage() {
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isJumpingRef = useRef(false);
   const lastProcessedQueryIdRef = useRef<string | null>(null);
 
-  const handleSelectConversation = (conv: Conversation | null, targetMsgId?: string) => {
-    if (conv?.otherUser?.id) {
-      router.replace(`/chats?userId=${conv.otherUser.id}`, { scroll: false });
-      lastProcessedQueryIdRef.current = conv.otherUser.id;
-    } else if (userIdFromQuery) {
-      router.replace('/chats', { scroll: false });
-      lastProcessedQueryIdRef.current = null;
-    }
+  const fetchConversations = useCallback(async () => {
+    try {
+      const res = await getConversations();
+      const userId = user?.id;
+      const mapped: Conversation[] = res.conversations.map((c: { _id?: string; id?: string; participants: string[]; participantsData?: { _id: string; name: string }[]; lastMessageText?: string; lastMessageTime?: string; unreadCount?: Record<string, number> }) => {
+        const otherParticipant = c.participantsData?.find((p: { _id: string; name: string }) => String(p._id) !== String(userId));
+        const isSelected = selectedConversation && (String(selectedConversation.id) === String(c._id) || String(selectedConversation.id) === String(c.id));
 
+        return {
+          id: String(c._id || c.id),
+          participants: c.participants,
+          lastMessageText: c.lastMessageText,
+          lastMessageTime: c.lastMessageTime,
+          unreadCount: isSelected && userId
+            ? { ...c.unreadCount, [userId]: 0 }
+            : c.unreadCount,
+          otherUser: otherParticipant ? {
+            id: String(otherParticipant._id),
+            name: otherParticipant.name,
+          } : undefined
+        };
+      });
+      setConversations(mapped);
+      if (userId) {
+        const totalUnread = mapped.reduce((acc: number, conv: Conversation) => acc + (conv.unreadCount?.[userId] || 0), 0);
+        dispatch(setUnreadCount(totalUnread));
+      }
+    } catch (err) {
+      utterToast.error(errorHandler(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, selectedConversation, dispatch]);
+
+  const handleSelectConversation = useCallback((conv: Conversation | null, targetMsgId?: string) => {
     setSelectedConversation(conv);
 
     if (conv) {
@@ -94,23 +119,45 @@ export default function ChatsPage() {
       }
     }
     if (conv && conv.id !== 'new') {
-      const currentUnread = conv.unreadCount?.[user?.id!] || 0;
+      const userId = user?.id;
+      if (!userId) return;
+      const currentUnread = conv.unreadCount?.[userId] || 0;
       if (currentUnread > 0) {
         const updatedConversations = conversations.map(c =>
           c.id === conv.id
-            ? { ...c, unreadCount: { ...c.unreadCount, [user?.id!]: 0 } }
+            ? { ...c, unreadCount: { ...c.unreadCount, [userId]: 0 } }
             : c
         );
         setConversations(updatedConversations);
-        const totalUnread = updatedConversations.reduce((acc, c) => acc + (c.unreadCount?.[user?.id!] || 0), 0);
+        const totalUnread = updatedConversations.reduce((acc, c) => acc + (c.unreadCount?.[userId] || 0), 0);
         dispatch(setUnreadCount(totalUnread));
       }
     }
-  };
+  }, [conversations, user?.id, dispatch]);
+
+  const fetchMessages = useCallback(async (convId: string, pageNum: number = 1, targetId?: string) => {
+    if (convId === 'new') return;
+    setMessagesLoading(true);
+    try {
+      const res = await getMessages(convId, {
+        page: targetId ? undefined : pageNum,
+        limit: 30,
+        targetId
+      });
+      setMessages(res.messages);
+      setPage(res.page);
+      setHasMore(res.messages.length >= 30);
+      fetchConversations();
+    } catch (err) {
+      utterToast.error(errorHandler(err));
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, [fetchConversations]);
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [fetchConversations]);
 
   useEffect(() => {
     if (selectedConversation && selectedConversation.id !== 'new') {
@@ -120,7 +167,7 @@ export default function ChatsPage() {
       setPage(1);
       setHasMore(false);
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, fetchMessages, highlightedMessageId]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -131,25 +178,25 @@ export default function ChatsPage() {
 
   useEffect(() => {
     if (socket) {
-      const onReceiveMessage = (message: Message) => {
-        if (selectedConversation && message.conversationId === selectedConversation.id) {
-          setMessages((prev) => [...prev, message]);
-        }
+      const onReceiveMessage = () => {
         fetchConversations();
+        if (selectedConversation?.id) {
+          fetchMessages(selectedConversation.id, 1);
+        }
       };
 
-      const onMessageEdited = (message: Message) => {
-        if (selectedConversation && message.conversationId === selectedConversation.id) {
-          setMessages((prev) => prev.map((m) => m.id === message.id ? message : m));
-        }
+      const onMessageEdited = () => {
         fetchConversations();
+        if (selectedConversation?.id) {
+          fetchMessages(selectedConversation.id, 1);
+        }
       };
 
-      const onMessageDeleted = (message: Message) => {
-        if (selectedConversation && message.conversationId === selectedConversation.id) {
-          setMessages((prev) => prev.map((m) => m.id === message.id ? message : m));
-        }
+      const onMessageDeleted = () => {
         fetchConversations();
+        if (selectedConversation?.id) {
+          fetchMessages(selectedConversation.id, 1);
+        }
       };
 
       socket.on('receive_message', onReceiveMessage);
@@ -162,7 +209,13 @@ export default function ChatsPage() {
         socket.off('message_deleted', onMessageDeleted);
       };
     }
-  }, [socket, selectedConversation]);
+  }, [socket, selectedConversation, fetchConversations, fetchMessages]);
+
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  };
 
   useEffect(() => {
     if (page === 1 && !isJumpingRef.current && !messagesLoading) {
@@ -184,12 +237,6 @@ export default function ChatsPage() {
       }
     }
   }, [messages, highlightedMessageId]);
-
-  const scrollToBottom = () => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -231,54 +278,6 @@ export default function ChatsPage() {
     }
   };
 
-  const fetchConversations = async () => {
-    try {
-      const res = await getConversations();
-      const mapped = res.conversations.map((c: any) => {
-        const otherParticipant = c.participantsData?.find((p: any) => String(p._id) !== String(user?.id));
-        const isSelected = selectedConversation && (String(selectedConversation.id) === String(c._id) || String(selectedConversation.id) === String(c.id));
-
-        return {
-          ...c,
-          unreadCount: isSelected
-            ? { ...c.unreadCount, [user?.id!]: 0 }
-            : c.unreadCount,
-          otherUser: otherParticipant ? {
-            id: String(otherParticipant._id),
-            name: otherParticipant.name,
-          } : undefined
-        };
-      });
-      setConversations(mapped);
-      const totalUnread = mapped.reduce((acc: number, conv: any) => acc + (conv.unreadCount?.[user?.id!] || 0), 0);
-      dispatch(setUnreadCount(totalUnread));
-    } catch (err) {
-      utterToast.error(errorHandler(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMessages = async (convId: string, pageNum: number = 1, targetId?: string) => {
-    if (convId === 'new') return;
-    setMessagesLoading(true);
-    try {
-      const res = await getMessages(convId, {
-        page: targetId ? undefined : pageNum,
-        limit: 30,
-        targetId
-      });
-      setMessages(res.messages);
-      setPage(res.page);
-      setHasMore(res.messages.length >= 30);
-      fetchConversations();
-    } catch (err) {
-      utterToast.error(errorHandler(err));
-    } finally {
-      setMessagesLoading(false);
-    }
-  };
-
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !selectedConversation.otherUser) return;
 
@@ -298,7 +297,7 @@ export default function ChatsPage() {
     }
   };
 
-  const handleContextMenu = (e: React.MouseEvent | React.TouchEvent, messageId: string, _senderId: string) => {
+  const handleContextMenu = (e: React.MouseEvent | React.TouchEvent, messageId: string) => {
     const msg = messages.find(m => m.id === messageId);
     if (msg?.isDeleted || editingMessageId === messageId) return;
 
@@ -397,20 +396,21 @@ export default function ChatsPage() {
     });
   };
 
-  const selectOrStartChat = (otherUser: User) => {
+  const selectOrStartChat = useCallback((otherUser: User) => {
     const existing = conversations.find((c) => String(c.otherUser?.id) === String(otherUser.id));
     if (existing) {
       handleSelectConversation(existing);
     } else {
+      if (!user?.id) return;
       handleSelectConversation({
         id: 'new',
-        participants: [user!.id, otherUser.id],
+        participants: [user.id, otherUser.id],
         otherUser,
       });
     }
     setSearchResults(null);
     setSearchQuery('');
-  };
+  }, [conversations, user?.id, handleSelectConversation]);
 
   const isMessageEditable = (createdAt: string) => {
     const FIFTEEN_MINUTES = 15 * 60 * 1000;
@@ -440,7 +440,7 @@ export default function ChatsPage() {
         (async () => {
           try {
             const exactRes = await searchChat({ q: userIdFromQuery });
-            const found = exactRes.users.find((u: any) => String(u.id) === userIdFromQuery);
+            const found = exactRes.users.find((u: { id: string; name: string }) => String(u.id) === userIdFromQuery);
             if (found) {
               selectOrStartChat({
                 id: found.id,
@@ -448,14 +448,14 @@ export default function ChatsPage() {
               });
               lastProcessedQueryIdRef.current = userIdFromQuery;
             }
-          } catch (err) { }
+          } catch { }
         })();
       }
     } else if (!userIdFromQuery && lastProcessedQueryIdRef.current !== null) {
       setSelectedConversation(null);
       lastProcessedQueryIdRef.current = null;
     }
-  }, [userIdFromQuery, conversations, loading]);
+  }, [userIdFromQuery, conversations, loading, selectedConversation, selectOrStartChat]);
 
   const handleSearch = async (val: string) => {
     setSearchQuery(val);
@@ -478,7 +478,7 @@ export default function ChatsPage() {
           conversations.some(c => c.id === msg.conversationId)
         )
       });
-    } catch (err) {
+    } catch {
       setSearchResults({ conversations: matchingConvs, messages: [] });
     }
   };
@@ -576,10 +576,10 @@ export default function ChatsPage() {
                             <div className="flex justify-between items-baseline">
                               <h4 className="text-xs font-bold text-gray-800">{conv.otherUser?.name}</h4>
                               <span className="text-[10px] text-gray-400">
-                                {new Date(msg.createdAt!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {msg.createdAt && new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-500 line-clamp-1 italic">"{msg.text}"</p>
+                            <p className="text-xs text-gray-500 line-clamp-1 italic">&quot;{msg.text}&quot;</p>
                           </button>
                         );
                       })}
@@ -619,9 +619,9 @@ export default function ChatsPage() {
                       </div>
                       <p className="text-xs text-gray-500 truncate">{conv.lastMessageText || 'No messages yet'}</p>
                     </div>
-                    {(conv.unreadCount?.[user?.id!] ?? 0) > 0 && (
+                    {user?.id && (conv.unreadCount?.[user.id] ?? 0) > 0 && (
                       <div className="bg-rose-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                        {conv.unreadCount?.[user?.id!]}
+                        {conv.unreadCount?.[user.id]}
                       </div>
                     )}
                   </button>
@@ -691,8 +691,8 @@ export default function ChatsPage() {
                       <p className="text-sm font-medium">Say hello to {selectedConversation.otherUser?.name}!</p>
                     </div>
                   ) : (
-                    messages.filter(msg => !msg.hiddenBy?.includes(user?.id!)).map((msg, idx) => {
-                      const isMe = msg.senderId === user?.id;
+                    messages.filter(msg => !msg.hiddenBy?.includes(user?.id || '')).map((msg, idx) => {
+                      const isMe = user?.id && msg.senderId === user.id;
                       const isHighlighted = highlightedMessageId === msg.id;
                       return (
                         <div
@@ -705,10 +705,10 @@ export default function ChatsPage() {
                             className={`relative group max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm select-none transition-all ${!msg.isDeleted ? 'cursor-pointer' : 'cursor-default'
                               } ${isMe ? 'bg-rose-500 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none'
                               }`}
-                            onContextMenu={(e) => handleContextMenu(e, msg.id, msg.senderId)}
+                            onContextMenu={(e) => handleContextMenu(e, msg.id)}
                             onTouchStart={(e) => {
                               if (msg.isDeleted || editingMessageId === msg.id) return;
-                              const timer = setTimeout(() => handleContextMenu(e, msg.id, msg.senderId), 500);
+                              const timer = setTimeout(() => handleContextMenu(e, msg.id), 500);
                               e.currentTarget.addEventListener('touchend', () => clearTimeout(timer), { once: true });
                               e.currentTarget.addEventListener('touchmove', () => clearTimeout(timer), { once: true });
                             }}

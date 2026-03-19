@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { BiHistory, BiAward, BiTimer, BiInfinite } from 'react-icons/bi';
+import React, { useCallback, useEffect, useRef,useState } from 'react';
+import { BiAward, BiHistory, BiInfinite,BiTimer } from 'react-icons/bi';
+
 import quizService from '../../services/user/quizService';
 
 interface QuizAttempt {
@@ -58,6 +59,7 @@ const QuizHistory: React.FC = () => {
 
   useEffect(() => {
     fetchHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   return (

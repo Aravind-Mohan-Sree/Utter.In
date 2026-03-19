@@ -26,7 +26,7 @@ export class ReviewController {
     try {
       const dto = new AddReviewDTO(req.body, this._validator);
 
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const review = await this._addReviewUseCase.execute(
         userId,
         dto.tutorId,
@@ -72,7 +72,7 @@ export class ReviewController {
       const { id } = req.params;
       const dto = new UpdateReviewDTO(req.body, this._validator);
 
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const review = await this._updateReviewUseCase.execute(
         id,
         userId,
@@ -94,7 +94,7 @@ export class ReviewController {
   deleteReview = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       await this._deleteReviewUseCase.execute(id, userId);
 
       return res.status(200).json({
@@ -110,7 +110,7 @@ export class ReviewController {
   checkEligibility = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { tutorId } = req.params;
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const eligibility = await this._getReviewEligibilityUseCase.execute(
         userId,
         tutorId,

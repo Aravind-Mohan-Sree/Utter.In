@@ -2,6 +2,7 @@ import { IUser, UserModel } from '~models/UserModel';
 import { BaseRepository } from './BaseRepository';
 import { User } from '~entities/User';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
+import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 import { Document, PipelineStage, Types } from 'mongoose';
 
 export class UserRepository
@@ -16,10 +17,10 @@ export class UserRepository
     limit: number,
     query: string,
     filter: string,
-    sort: string = 'newest',
-    language: string = 'All',
+    sort = 'newest',
+    language = 'All',
     excludeId?: string,
-    isAdmin: boolean = false,
+    isAdmin = false,
   ): Promise<{
     totalUsersCount: number;
     filteredUsersCount: number;
@@ -27,7 +28,7 @@ export class UserRepository
   }> {
     const pipeline: PipelineStage[] = [];
     
-    const queryObj: any = { role: 'user' };
+    const queryObj: Record<string, unknown> = { role: 'user' };
 
     if (!isAdmin) {
       queryObj.isBlocked = false;
@@ -36,10 +37,10 @@ export class UserRepository
     if (excludeId && Types.ObjectId.isValid(excludeId)) {
       queryObj._id = { $ne: new Types.ObjectId(excludeId) };
     } else if (excludeId) {
-       queryObj._id = { $ne: excludeId };
+      queryObj._id = { $ne: excludeId };
     }
     
-    const totalUsersCount = await this.model.countDocuments(queryObj);
+    const totalUsersCount = await this.model.countDocuments(queryObj as FilterQuery<IUser>);
     
     pipeline.push({ $match: queryObj });
 
@@ -56,7 +57,7 @@ export class UserRepository
     }
     
     if (query) {
-      const orConditions: any[] = [
+      const orConditions: Record<string, unknown>[] = [
         { name: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } },
         { knownLanguages: { $elemMatch: { $regex: query, $options: 'i' } } },
@@ -73,7 +74,7 @@ export class UserRepository
       });
     }
 
-    let sortStage: any = { createdAt: -1 };
+    let sortStage: Record<string, 1 | -1> = { createdAt: -1 };
     if (sort === 'oldest') sortStage = { createdAt: 1 };
     else if (sort === 'a-z') sortStage = { name: 1 };
     else if (sort === 'z-a') sortStage = { name: -1 };
@@ -96,7 +97,7 @@ export class UserRepository
     return {
       totalUsersCount,
       filteredUsersCount,
-      users: users.map(this.toEntity),
+      users: users.map((u: IUser & Document) => this.toEntity(u)!),
     };
   }
 

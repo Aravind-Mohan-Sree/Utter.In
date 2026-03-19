@@ -55,7 +55,7 @@ export class QuizController {
       logger.error('Error generating quiz:', error);
       next(error);
     }
-  }
+  };
 
   checkAnswer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -87,7 +87,7 @@ export class QuizController {
       logger.error('Error checking answer:', error);
       next(error);
     }
-  }
+  };
 
   completeQuiz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -116,7 +116,7 @@ export class QuizController {
       logger.error('Error completing quiz:', error);
       next(error);
     }
-  }
+  };
 
   getHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -143,7 +143,7 @@ export class QuizController {
       logger.error('Error fetching quiz history:', error);
       next(error);
     }
-  }
+  };
 
   getLeaderboard = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -160,5 +160,5 @@ export class QuizController {
       logger.error('Error fetching leaderboard:', error);
       next(error);
     }
-  }
+  };
 }

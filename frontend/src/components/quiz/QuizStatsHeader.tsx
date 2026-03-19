@@ -1,5 +1,5 @@
 import React from 'react';
-import { BiTrophy, BiTimer, BiCalendar, BiHistory } from 'react-icons/bi';
+import { BiCalendar, BiHistory,BiTimer, BiTrophy } from 'react-icons/bi';
 
 interface QuizStatsHeaderProps {
   currentStreak: number;

@@ -1,21 +1,23 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback,useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '~store/rootReducer';
-import {
-  getTutorReviews,
-  checkReviewEligibility,
-  addReview,
-  updateReview,
-  deleteReview,
-  Review,
-} from '~services/user/reviewService';
-import ReviewItem from './ReviewItem';
-import ReviewForm from './ReviewForm';
-import { utterToast } from '~utils/utterToast';
-import { errorHandler } from '~utils/errorHandler';
-import { utterAlert } from '~utils/utterAlert';
+
 import Loader from '~components/ui/Loader';
 import { Pagination } from '~components/ui/Pagination';
+import {
+  addReview,
+  checkReviewEligibility,
+  deleteReview,
+  getTutorReviews,
+  Review,
+  updateReview,
+} from '~services/user/reviewService';
+import { RootState } from '~store/rootReducer';
+import { errorHandler } from '~utils/errorHandler';
+import { utterAlert } from '~utils/utterAlert';
+import { utterToast } from '~utils/utterToast';
+
+import ReviewForm from './ReviewForm';
+import ReviewItem from './ReviewItem';
 
 interface ReviewSectionProps {
   tutorId: string;
@@ -45,7 +47,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({ tutorId }) => {
         canReview: eligibilityRes.canReview,
         alreadyReviewed: eligibilityRes.alreadyReviewed,
       });
-    } catch (error) {
+    } catch {
     } finally {
       setLoading(false);
     }

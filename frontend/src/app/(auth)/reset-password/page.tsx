@@ -144,7 +144,7 @@ const ResetPassword: React.FC = () => {
 
             {/* Go back */}
             <Button
-              variant="outline"
+              variant="transparent"
               size={0}
               fontSize={14}
               icon={<FiArrowLeft />}

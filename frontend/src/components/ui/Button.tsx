@@ -69,7 +69,7 @@ export default function Button<T extends unknown[]>({
     success:
       'from-green-400 to-green-900 hover:to-green-900 hover:from-green-400',
     danger: 'from-red-500 to-red-900 hover:to-red-900 hover:from-red-500',
-    transparent: 'bg-transparent',
+    transparent: 'bg-transparent shadow-none!',
   };
 
   return (

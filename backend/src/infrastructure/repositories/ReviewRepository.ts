@@ -6,6 +6,13 @@ import { BookingModel } from '~models/BookingModel';
 import mongoose from 'mongoose';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 
+interface PopulatedReview extends Omit<IReview, 'userId'> {
+  userId: {
+    _id: mongoose.Types.ObjectId;
+    name: string;
+  };
+}
+
 export class ReviewRepository
   extends BaseRepository<Review, IReview>
   implements IReviewRepository
@@ -28,8 +35,9 @@ export class ReviewRepository
   protected toEntity(doc: IReview | null): Review | null {
     if (!doc) return null;
 
-    const userId = (doc.userId as any)?._id || doc.userId;
-    const tutorId = (doc.tutorId as any)?._id || doc.tutorId;
+    const populatedDoc = doc as unknown as PopulatedReview;
+    const userId = populatedDoc.userId?._id || doc.userId;
+    const tutorId = doc.tutorId;
 
     return new Review(
       String(doc._id),
@@ -39,7 +47,7 @@ export class ReviewRepository
       doc.note,
       doc.createdAt,
       doc.updatedAt,
-      (doc as any).userId?.name,
+      populatedDoc.userId?.name,
     );
   }
 

@@ -1,20 +1,21 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { useEffect, useRef,useState } from 'react';
+import { FaSpinner } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '~store/rootReducer';
+
 import {
   addNotifications,
   incrementPage,
-  markRead,
   markAllRead,
+  markRead,
   resetNotifications,
   setHasMore,
   setUnreadCount,
 } from '~features/notificationSlice';
-import { getNotifications, markAsRead, markAllAsRead as apiMarkAllAsRead } from '~services/shared/notificationService';
-import { formatDistanceToNow } from 'date-fns';
-import { FaSpinner } from 'react-icons/fa';
+import { getNotifications, markAllAsRead as apiMarkAllAsRead,markAsRead } from '~services/shared/notificationService';
+import { RootState } from '~store/rootReducer';
 
 interface NotificationProps {
   onClose: () => void;
@@ -47,7 +48,7 @@ export default function Notification({ onClose }: NotificationProps) {
         dispatch(setHasMore(true));
         dispatch(incrementPage());
       }
-    } catch (error) {
+    } catch {
       // Handle error
     } finally {
       setLoading(false);
@@ -56,6 +57,7 @@ export default function Notification({ onClose }: NotificationProps) {
 
   useEffect(() => {
     fetchNotifications(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const handleScroll = () => {
@@ -70,8 +72,8 @@ export default function Notification({ onClose }: NotificationProps) {
     try {
       await markAsRead(role, id);
       dispatch(markRead(id));
-      const unreadRes = await getNotifications(role, { filter: 'unread', page: 1, limit: 1 });
-    } catch (error) {
+      await getNotifications(role, { filter: 'unread', page: 1, limit: 1 });
+    } catch {
       // Handle error
     }
   };
@@ -81,7 +83,7 @@ export default function Notification({ onClose }: NotificationProps) {
       await apiMarkAllAsRead(role);
       dispatch(markAllRead());
       dispatch(setUnreadCount(0));
-    } catch (error) {
+    } catch {
       // Handle error
     }
   };

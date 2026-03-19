@@ -4,7 +4,7 @@ export class Notification {
     public readonly recipientRole: 'user' | 'tutor',
     public readonly message: string,
     public readonly type: string,
-    public readonly isRead: boolean = false,
+    public readonly isRead = false,
     public readonly createdAt?: Date,
     public readonly updatedAt?: Date,
     public readonly id?: string,

@@ -1,4 +1,5 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createAsyncThunk,createSlice } from '@reduxjs/toolkit';
+
 import { getConversations } from '~services/user/chatService';
 
 interface ChatState {
@@ -15,7 +16,7 @@ export const fetchUnreadCount = createAsyncThunk(
   'chat/fetchUnreadCount',
   async (userId: string) => {
     const res = await getConversations();
-    const totalUnread = res.conversations.reduce((acc: number, conv: any) => {
+    const totalUnread = res.conversations.reduce((acc: number, conv: { unreadCount?: Record<string, number> }) => {
       return acc + (conv.unreadCount?.[userId] || 0);
     }, 0);
     return totalUnread;

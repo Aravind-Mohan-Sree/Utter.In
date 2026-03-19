@@ -32,7 +32,11 @@ export class CheckAnswerUseCase implements ICheckAnswerUseCase {
 
     const isCorrect = question.correctAnswerIndex === selectedOption;
 
-    const updateData: any = {
+    const updateData: {
+      totalTimeTaken: number;
+      correctAnswersValue?: number;
+      score?: number;
+    } = {
       totalTimeTaken: quiz.totalTimeTaken + timeTaken,
     };
 

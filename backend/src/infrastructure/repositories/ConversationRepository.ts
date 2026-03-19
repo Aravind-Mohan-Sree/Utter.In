@@ -1,9 +1,21 @@
 import { Conversation } from '~entities/Conversation';
 import { IConversationRepository } from '~repository-interfaces/IConversationRepository';
 import { ConversationModel, IConversation } from '~models/ConversationModel';
-import { MessageModel } from '~models/MessageModel';
+import { MessageModel, IMessage } from '~models/MessageModel';
 import { BaseRepository } from './BaseRepository';
 import mongoose from 'mongoose';
+
+interface PopulatedParticipant {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  isBlocked: boolean;
+  role: string;
+}
+
+interface PopulatedConversation extends Omit<IConversation, 'lastMessage' | 'participants'> {
+  lastMessage: IMessage | null;
+  participants: PopulatedParticipant[];
+}
 
 export class ConversationRepository
   extends BaseRepository<Conversation, IConversation>
@@ -39,27 +51,30 @@ export class ConversationRepository
       });
     }
 
-    const participantsData: any[] = [];
+    const participantsData: { _id: string; name: string }[] = [];
     const participants: string[] = [];
 
-    doc.participants.forEach((p: any) => {
-      if (p && typeof p === 'object' && p._id) {
-        participants.push(String(p._id));
+    doc.participants.forEach((p: mongoose.Types.ObjectId | PopulatedParticipant) => {
+      if (p && typeof p === 'object' && 'name' in p) {
+        const populated = p as PopulatedParticipant;
+        participants.push(String(populated._id));
         participantsData.push({
-          _id: String(p._id),
-          name: p.name,
+          _id: String(populated._id),
+          name: populated.name,
         });
       } else if (p) {
         participants.push(String(p));
       }
     });
 
+    const populatedDoc = doc as unknown as PopulatedConversation;
+
     return new Conversation(
       participants,
       participantsData.length > 0 ? participantsData : undefined,
       doc.lastMessage ? String(doc.lastMessage) : undefined,
-      (doc as any).lastMessage?.text,
-      (doc as any).lastMessage?.createdAt,
+      populatedDoc.lastMessage?.text,
+      populatedDoc.lastMessage?.createdAt,
       unreadCountObj,
       String(doc._id),
       doc.createdAt,
@@ -92,16 +107,17 @@ export class ConversationRepository
 
     const filteredDocs = await Promise.all(
       docs.map(async (doc) => {
-        const isAnyOtherBlocked = doc.participants.some(
-          (p: any) => p && String(p._id) !== userId && p.isBlocked,
+        const populatedDoc = doc as unknown as PopulatedConversation;
+        const isAnyOtherBlocked = populatedDoc.participants.some(
+          (p) => p && String(p._id) !== userId && p.isBlocked,
         );
         if (isAnyOtherBlocked) return null;
 
-        let lastMsg = (doc as any).lastMessage;
+        const lastMsg = populatedDoc.lastMessage;
 
         if (
           lastMsg &&
-          lastMsg.hiddenBy?.some((id: any) => String(id) === String(userId))
+          lastMsg.hiddenBy?.some((id) => String(id) === String(userId))
         ) {
           const actualLastMsg = await MessageModel.findOne({
             conversationId: doc._id,
@@ -109,9 +125,9 @@ export class ConversationRepository
           }).sort({ createdAt: -1 });
 
           if (actualLastMsg) {
-            (doc as any).lastMessage = actualLastMsg;
+            populatedDoc.lastMessage = actualLastMsg;
           } else {
-            (doc as any).lastMessage = null;
+            populatedDoc.lastMessage = null;
           }
         }
 

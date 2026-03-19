@@ -48,7 +48,7 @@ const VerificationPending: React.FC = () => {
 
               {/* Login Button */}
               <Button
-                variant="outline"
+                variant="transparent"
                 size={0}
                 fontSize={14}
                 icon={<FiArrowLeft />}

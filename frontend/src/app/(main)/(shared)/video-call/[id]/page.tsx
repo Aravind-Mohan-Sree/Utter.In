@@ -17,11 +17,10 @@ import {
 import { useSelector } from 'react-redux';
 
 import Loader from '~components/ui/Loader';
+import { useSocketContext } from '~contexts/SocketContext';
 import { RootState } from '~store/rootReducer';
 import axiosInstance from '~utils/axiosConfig';
 import { utterToast } from '~utils/utterToast';
-
-import { useSocketContext } from '~contexts/SocketContext';
 
 interface Message {
     senderId: string;
@@ -71,7 +70,6 @@ export default function VideoCallPage() {
     const [isCamMenuOpen, setIsCamMenuOpen] = useState(false);
 
     const peerRef = useRef<PeerType | null>(null);
-    const isInitializing = useRef(false);
     const isDataConnectedRef = useRef(false);
     const isMediaConnectedRef = useRef(false);
     const localStreamRef = useRef<MediaStream | null>(null);
@@ -158,7 +156,7 @@ export default function VideoCallPage() {
     const isDisconnectingRef = useRef(false);
     const retryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const handleDisconnect = useCallback((emitSocketEvent?: boolean | any) => {
+    const handleDisconnect = useCallback((emitSocketEvent?: boolean) => {
         const shouldEmit = typeof emitSocketEvent === 'boolean' ? emitSocketEvent : true;
 
         if (isDisconnectingRef.current) return;
@@ -237,7 +235,7 @@ export default function VideoCallPage() {
             socket.off('call_ended', onCallEnded);
             socket.off('session_completed', onSessionCompleted);
         };
-    }, [socket, handleDisconnect]);
+    }, [socket, handleDisconnect, searchParams]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -266,7 +264,7 @@ export default function VideoCallPage() {
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isCallConnected, bookingId, myRole, handleDisconnect, searchParams]);
+    }, [isCallConnected, bookingId, myRole, handleDisconnect, searchParams, socket]);
 
     const getDevices = async () => {
         try {
@@ -350,8 +348,8 @@ export default function VideoCallPage() {
     const switchSpeaker = async (deviceId: string) => {
         try {
             const video = remoteVideoRef.current;
-            if (video && (video as any).setSinkId) {
-                await (video as any).setSinkId(deviceId);
+            if (video && ('setSinkId' in video)) {
+                await (video as HTMLVideoElement & { setSinkId: (id: string) => Promise<void> }).setSinkId(deviceId);
                 setSelectedSpeakerId(deviceId);
                 utterToast.success("Speaker changed successfully");
             } else {
@@ -362,8 +360,6 @@ export default function VideoCallPage() {
             utterToast.error("Failed to switch speaker.");
         }
     };
-
-    const mountTimeRef = useRef(Date.now());
 
     useEffect(() => {
         navigator.mediaDevices.addEventListener('devicechange', getDevices);
@@ -479,7 +475,7 @@ export default function VideoCallPage() {
                     }
                 };
 
-                peerInstance.on('open', (id) => {
+                peerInstance.on('open', () => {
                     attemptConnection();
 
                     if (!reinitTimeoutRef.current) {
@@ -519,7 +515,7 @@ export default function VideoCallPage() {
                     }
                 });
 
-            } catch (err) {
+            } catch {
                 utterToast.error('Could not access camera/microphone.');
             }
         };
@@ -600,7 +596,7 @@ export default function VideoCallPage() {
 
             setTimeout(() => stopMediaTracks(false), 100);
         };
-    }, [bookingId, userId, userName, userRole, myRole, stopMediaTracks, socket, searchParams]);
+    }, [bookingId, userId, userName, userRole, myRole, stopMediaTracks, socket, searchParams, user]);
 
     const sendMessage = () => {
         if (!newMessage.trim() || !connRef.current || !user) return;
@@ -812,7 +808,7 @@ export default function VideoCallPage() {
                         <FaComments size={18} className="md:w-5 md:h-5" />
                     </button>
                     <button
-                        onClick={handleDisconnect}
+                        onClick={() => handleDisconnect()}
                         className="cursor-pointer p-2.5 md:p-3 rounded-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/30 transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-12"
                         title="End Meeting"
                     >

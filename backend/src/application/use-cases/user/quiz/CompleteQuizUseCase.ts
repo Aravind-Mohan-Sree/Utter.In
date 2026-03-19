@@ -2,6 +2,7 @@ import { IQuizRepository } from '~repository-interfaces/IQuizRepository';
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ICompleteQuizUseCase } from '~use-case-interfaces/user/ICompleteQuizUseCase';
 import { Quiz } from '~entities/Quiz';
+import { User } from '~entities/User';
 
 export class CompleteQuizUseCase implements ICompleteQuizUseCase {
   constructor(
@@ -84,7 +85,7 @@ export class CompleteQuizUseCase implements ICompleteQuizUseCase {
           averageAccuracy: newAverageAccuracy,
           averageSpeed: newAverageSpeed,
         },
-      } as any);
+      } as Partial<User>);
     }
 
     return updatedQuiz;

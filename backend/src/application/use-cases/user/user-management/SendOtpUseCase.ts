@@ -6,7 +6,6 @@ import { IRedisService } from '~service-interfaces/IRedisService';
 
 import {
   BadRequestError,
-  InternalServerError,
   NotFoundError,
 } from '~errors/HttpError';
 
@@ -18,7 +17,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
   ) { }
 
   async execute(email: string): Promise<void> {
-    let user = await this._pendingUserRepo.findOneByField({ email });
+    const user = await this._pendingUserRepo.findOneByField({ email });
 
     if (!user) throw new NotFoundError(errorMessage.OTP_EXPIRED);
 

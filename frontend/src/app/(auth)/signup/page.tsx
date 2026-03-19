@@ -411,7 +411,7 @@ const SignUp: React.FC = () => {
 
               {(rejectionReason || responseMessage === 'finishSignup') && (
                 <Button
-                  variant="outline"
+                  variant="transparent"
                   size={0}
                   fontSize={14}
                   icon={<FiArrowLeft />}

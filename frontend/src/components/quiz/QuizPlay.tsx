@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { BiChevronRight, BiTimeFive, BiXCircle, BiCheckCircle } from 'react-icons/bi';
+import React, { useCallback,useEffect, useState } from 'react';
+import { BiCheckCircle,BiChevronRight, BiTimeFive, BiXCircle } from 'react-icons/bi';
+
 import quizService from '../../services/user/quizService';
 
 interface Question {
@@ -41,24 +42,7 @@ const QuizPlay: React.FC<QuizPlayProps> = ({ quizId, questions, onComplete, onCa
     }
   }, [currentIdx, questions.length, onComplete]);
 
-  useEffect(() => {
-    if (feedback) return;
-
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleAnswer(-1, 0); // timeout
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [currentIdx, feedback]);
-
-  const handleAnswer = async (optionIdx: number, timeSpent: number) => {
+  const handleAnswer = useCallback(async (optionIdx: number, timeSpent: number) => {
     if (isAnswering || feedback) return;
 
     setIsAnswering(true);
@@ -79,7 +63,24 @@ const QuizPlay: React.FC<QuizPlayProps> = ({ quizId, questions, onComplete, onCa
       console.error('Failed to check answer', error);
       setIsAnswering(false);
     }
-  };
+  }, [quizId, currentIdx, isAnswering, feedback]);
+
+  useEffect(() => {
+    if (feedback) return;
+
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleAnswer(-1, 0); // timeout
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [currentIdx, feedback, handleAnswer]);
 
   return (
     <div className="w-full max-w-xl mx-auto flex flex-col min-h-[400px] border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white/60 backdrop-blur-md">
@@ -149,7 +150,7 @@ const QuizPlay: React.FC<QuizPlayProps> = ({ quizId, questions, onComplete, onCa
           <div className="animate-in slide-in-from-bottom-4 duration-500 bg-slate-50/80 backdrop-blur-sm border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 mt-6 transition-all border-l-8 border-l-rose-500">
             <p className="text-slate-800 mb-4 line-clamp-4 leading-relaxed font-semibold italic text-base sm:text-lg px-2">
               <span className="text-rose-500 mr-2 uppercase text-[10px] font-black tracking-widest not-italic">Insight:</span>
-              "{feedback.explanation}"
+              &quot;{feedback.explanation}&quot;
             </p>
             <button
               onClick={handleNext}

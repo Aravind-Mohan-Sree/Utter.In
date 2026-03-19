@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaStar, FaRegStar } from 'react-icons/fa6';
+import { FaRegStar,FaStar } from 'react-icons/fa6';
 
 interface StarRatingProps {
   rating: number;

@@ -1,7 +1,7 @@
 import { Message } from '~entities/Message';
 import { IMessageRepository } from '~repository-interfaces/IMessageRepository';
 import { IDeleteMessageUseCase } from '~use-case-interfaces/user/IChatUseCase';
-import { UnauthorizedError, NotFoundError } from '~errors/HttpError';
+import { NotFoundError } from '~errors/HttpError';
 
 export class DeleteMessageUseCase implements IDeleteMessageUseCase {
   constructor(private _messageRepository: IMessageRepository) {}

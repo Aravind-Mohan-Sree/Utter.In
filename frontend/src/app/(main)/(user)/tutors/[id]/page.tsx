@@ -6,13 +6,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ProfileDetail from '~components/blocks/ProfileDetail';
+import ReviewSection from '~components/blocks/ReviewSection';
 import SessionList, {
   Session as FrontendSession,
 } from '~components/blocks/SessionList';
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Avatar from '~components/ui/Avatar';
 import Loader from '~components/ui/Loader';
-import ReviewSection from '~components/blocks/ReviewSection';
 import { fetchSessionCount, incrementSessionCount } from '~features/bookingSlice';
 import {
   createBookingOrder,

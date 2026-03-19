@@ -9,7 +9,9 @@ export class SocketManager implements ISocketManager {
   private _userSocketMap = new Map<string, string>();
   private _socketUserMap = new Map<string, string>();
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor for singleton
+  }
 
   public static getInstance(): SocketManager {
     if (!SocketManager._instance) {
@@ -53,28 +55,28 @@ export class SocketManager implements ISocketManager {
         }
       });
       
-      socket.on('send_message', (data: { receiverId: string; message: any }) => {
+      socket.on('send_message', (data: { receiverId: string; message: Record<string, unknown> }) => {
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
           this._io?.to(receiverSocketId).emit('receive_message', data.message);
         }
       });
 
-      socket.on('edit_message', (data: { receiverId: string; message: any }) => {
+      socket.on('edit_message', (data: { receiverId: string; message: Record<string, unknown> }) => {
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
           this._io?.to(receiverSocketId).emit('message_edited', data.message);
         }
       });
 
-      socket.on('delete_message', (data: { receiverId: string; message: any }) => {
+      socket.on('delete_message', (data: { receiverId: string; message: Record<string, unknown> }) => {
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
           this._io?.to(receiverSocketId).emit('message_deleted', data.message);
         }
       });
 
-      socket.on('initiate_call', (data: { receiverId: string; callerId: string; callerName: string; signalData: any }) => {
+      socket.on('initiate_call', (data: { receiverId: string; callerId: string; callerName: string; signalData: Record<string, unknown> }) => {
         logger.info(`Initiating call from ${data.callerId} to ${data.receiverId}`);
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
@@ -86,7 +88,7 @@ export class SocketManager implements ISocketManager {
         }
       });
 
-      socket.on('answer_call', (data: { callerId: string; signalData: any }) => {
+      socket.on('answer_call', (data: { callerId: string; signalData: Record<string, unknown> }) => {
         const callerSocketId = this._userSocketMap.get(data.callerId);
         if (callerSocketId) {
           this._io?.to(callerSocketId).emit('call_answered', {

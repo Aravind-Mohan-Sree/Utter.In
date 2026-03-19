@@ -2,9 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { FaPhone, FaPhoneSlash } from 'react-icons/fa';
+
 import { useSocketContext } from '~contexts/SocketContext';
+
 import Avatar from './Avatar';
-import { useEffect, useState } from 'react';
 
 export default function CallInvitation() {
   const { incomingCall, setIncomingCall, socket } = useSocketContext();

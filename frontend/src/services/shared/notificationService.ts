@@ -1,5 +1,5 @@
-import axios from '~utils/axiosConfig';
 import { API_ROUTES } from '~constants/routes';
+import axios from '~utils/axiosConfig';
 
 export const getNotifications = async (role: 'user' | 'tutor', params: { filter: 'all' | 'unread', page: number, limit: number }) => {
   const route = role === 'user' ? API_ROUTES.USER.NOTIFICATIONS : API_ROUTES.TUTOR.NOTIFICATIONS;

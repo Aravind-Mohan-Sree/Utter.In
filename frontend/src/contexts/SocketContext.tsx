@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { io, Socket } from 'socket.io-client';
+
 import { incrementUnreadCount as incrementChatCount } from '~features/chatSlice';
 import { incrementUnreadCount as incrementNotificationCount, prependNotification } from '~features/notificationSlice';
 import { RootState } from '~store/rootReducer';
@@ -42,14 +43,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
 
   useEffect(() => {
-    if (!user?.id) {
-      setIncomingCall(null);
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
-      }
-      return;
-    }
+    if (!user?.id) return;
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000/api';
     const socketUrl = baseUrl.replace(/\/api\/?$/, '');
@@ -59,7 +53,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       transports: ['websocket'],
     });
 
-    setSocket(newSocket);
+    setTimeout(() => {
+      setSocket(newSocket);
+    }, 0);
 
     newSocket.on('connect', () => {
       setIsConnected(true);
@@ -105,6 +101,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       newSocket.disconnect();
       setSocket(null);
+      setIncomingCall(null);
     };
   }, [user?.id, dispatch]);
 

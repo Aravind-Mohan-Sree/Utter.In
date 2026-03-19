@@ -5,7 +5,6 @@ import { IMailService } from '~service-interfaces/IMailService';
 import { IRedisService } from '~service-interfaces/IRedisService';
 import {
   BadRequestError,
-  InternalServerError,
   NotFoundError,
 } from '~errors/HttpError';
 
@@ -17,7 +16,7 @@ export class SendOtpUseCase implements ISendOtpUseCase {
   ) { }
 
   async execute(email: string): Promise<void> {
-    let tutor = await this._pendingTutorRepo.findOneByField({ email });
+    const tutor = await this._pendingTutorRepo.findOneByField({ email });
 
     if (!tutor) throw new NotFoundError(errorMessage.OTP_EXPIRED);
 

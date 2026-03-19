@@ -1,0 +1,10 @@
+
+> frontend@0.1.0 lint
+> eslint
+
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\quiz\QuizHistory.tsx
+  62:6  warning  React Hook useEffect has a missing dependency: 'fetchHistory'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Γ£û 1 problem (0 errors, 1 warning)
+

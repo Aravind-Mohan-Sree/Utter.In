@@ -3,7 +3,7 @@ import { Quiz } from '~entities/Quiz';
 import { IQuiz, QuizModel } from '~models/QuizModel';
 import { IQuizRepository } from '~repository-interfaces/IQuizRepository';
 import { BaseRepository } from './BaseRepository';
-import { UserModel } from '~models/UserModel';
+import { UserModel, IUser } from '~models/UserModel';
 
 export class QuizRepository
   extends BaseRepository<Quiz, IQuiz>
@@ -27,7 +27,7 @@ export class QuizRepository
     return docs.map((doc) => this.toEntity(doc)) as Quiz[];
   }
 
-  async getLeaderboard(skip: number, limit: number): Promise<any[]> {
+  async getLeaderboard(skip: number, limit: number): Promise<IUser[]> {
     const users = await UserModel.find({ role: 'user', isBlocked: false })
       .sort({
         'streak.currentStreak': -1,

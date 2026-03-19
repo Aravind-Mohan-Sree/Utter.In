@@ -1,6 +1,5 @@
-import axios from '~utils/axiosConfig';
-
 import { API_ROUTES } from '~constants/routes';
+import axios from '~utils/axiosConfig';
 
 export const fetchUsers = async (params: {
   q?: string;

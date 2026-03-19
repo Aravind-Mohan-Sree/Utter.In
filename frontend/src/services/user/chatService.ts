@@ -1,5 +1,5 @@
-import axios from '~utils/axiosConfig';
 import { API_ROUTES } from '~constants/routes';
+import axios from '~utils/axiosConfig';
 
 export const getConversations = async () => {
   const response = await axios.get(API_ROUTES.USER.CHATS);

@@ -10,9 +10,9 @@ import { Toaster } from 'sonner';
 
 import Footer from '~components/layout/Footer';
 import { Navbar } from '~components/layout/Navbar';
+import CallInvitation from '~components/ui/CallInvitation';
 import { SocketProvider } from '~contexts/SocketContext';
 import TranslateInit from '~utils/translate-init';
-import CallInvitation from '~components/ui/CallInvitation';
 
 declare global {
   interface Window {

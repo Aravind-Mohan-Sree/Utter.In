@@ -42,7 +42,7 @@ export class GeminiService implements IGeminiService {
 
     try {
       const result = await this._model.generateContent(prompt);
-      const response = await result.response;
+      const response = result.response;
       const text = response.text();
       return JSON.parse(text) as IQuestion[];
     } catch (error: unknown) {

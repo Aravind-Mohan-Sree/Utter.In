@@ -1,4 +1,5 @@
 import { Quiz } from '~entities/Quiz';
+import { IUser } from '~models/UserModel';
 
 export class QuizMapper {
   static toBriefResponseDTO(quiz: Quiz) {
@@ -32,7 +33,7 @@ export class QuizMapper {
     };
   }
 
-  static toLeaderboardResponseDTO(user: any) {
+  static toLeaderboardResponseDTO(user: IUser) {
     return {
       id: String(user._id),
       name: user.name,

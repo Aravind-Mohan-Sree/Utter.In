@@ -1,0 +1,16 @@
+
+> frontend@0.1.0 lint
+> eslint
+
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\contexts\SocketContext.tsx
+   56:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  105:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\hooks\useSocket.ts
+  16:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
+  43:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+Γ£û 4 problems (0 errors, 4 warnings)
+  0 errors and 4 warnings potentially fixable with the `--fix` option.
+

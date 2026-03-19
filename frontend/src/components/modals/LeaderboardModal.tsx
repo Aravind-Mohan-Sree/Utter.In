@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { BaseModal } from './BaseModal';
-import { BiTrophy, BiTimer, BiTargetLock, BiTimeFive, BiHash } from 'react-icons/bi';
+import React, { useEffect, useRef,useState } from 'react';
+import { BiHash,BiTargetLock, BiTimeFive, BiTimer, BiTrophy } from 'react-icons/bi';
+
 import quizService from '../../services/user/quizService';
+import { BaseModal } from './BaseModal';
 
 interface LeaderboardUser {
   id: string;
@@ -21,7 +22,7 @@ interface LeaderboardUser {
 interface LeaderboardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentUser?: any;
+  currentUser?: { email?: string; quizStats?: { totalQuizzes?: number; averageAccuracy?: number; averageSpeed?: number }; [key: string]: unknown };
 }
 
 const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, currentUser }) => {
@@ -32,8 +33,8 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, cu
 
   const myRank = users.findIndex(u => u.email === currentUser?.email) + 1;
 
-  const fetchLeaderboard = async (currPage: number) => {
-    if (isLoading || !hasMore) return;
+  const fetchLeaderboard = async (currPage: number, force: boolean = false) => {
+    if ((isLoading || !hasMore) && !force) return;
     setIsLoading(true);
     try {
       const response = await quizService.getLeaderboard(currPage, 20);
@@ -52,9 +53,12 @@ const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ isOpen, onClose, cu
   };
 
   useEffect(() => {
-    if (isOpen && users.length === 0) {
-      fetchLeaderboard(1);
+    if (isOpen) {
+      setUsers([]);
+      setHasMore(true);
+      fetchLeaderboard(1, true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {

@@ -36,6 +36,7 @@ export class FinishRegisterUserUseCase implements IFinishRegisterUserUseCase {
       ' ',
       pendingUser.googleId!,
       { lastActive: null, currentStreak: 0, highestStreak: 0 },
+      { totalQuizzes: 0, averageAccuracy: 0, averageSpeed: 0 },
       'user',
       false,
     );

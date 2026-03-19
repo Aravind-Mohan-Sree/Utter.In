@@ -101,7 +101,7 @@ const ForgotPassword: React.FC = () => {
 
             {/* Back to Login Link */}
             <Button
-              variant="outline"
+              variant="transparent"
               size={0}
               fontSize={14}
               icon={<FiArrowLeft />}

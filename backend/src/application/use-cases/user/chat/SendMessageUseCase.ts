@@ -43,11 +43,10 @@ export class SendMessageUseCase implements ISendMessageUseCase {
       unreadCount,
     });
 
-    const [senderUser, senderTutor, receiverUser, receiverTutor] = await Promise.all([
+    const [senderUser, senderTutor, receiverUser] = await Promise.all([
       this._userRepository.findOneById(senderId),
       this._tutorRepository.findOneById(senderId),
       this._userRepository.findOneById(receiverId),
-      this._tutorRepository.findOneById(receiverId),
     ]);
 
     const senderName = senderUser?.name || senderTutor?.name || 'Someone';

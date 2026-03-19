@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import StarRating from '~components/ui/StarRating';
+
 import Button from '~components/ui/Button';
+import StarRating from '~components/ui/StarRating';
 import { utterToast } from '~utils/utterToast';
-import { errorHandler } from '~utils/errorHandler';
 
 interface ReviewFormProps {
   initialRating?: number;
@@ -52,9 +52,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         setRating(0);
         setNote('');
       }
-    } catch (error) {
-      // Error handling is likely done in the parent (ReviewSection) or via errorHandler
-      // We catch it here to stop the loading state
+    } catch {
     } finally {
       setLoading(false);
     }

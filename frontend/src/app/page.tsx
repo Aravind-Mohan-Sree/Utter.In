@@ -1,21 +1,21 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { MdPeople } from 'react-icons/md';
+import { useSelector } from 'react-redux';
 
+import { commonLanguages as languagesList } from '~components/form/LanguagesInput';
+import { SearchAndFilter } from '~components/form/SearchAndFilter';
+import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Button from '~components/ui/Button';
-import { RootState } from '~store/rootReducer';
+import { Card } from '~components/ui/Card';
+import Loader from '~components/ui/Loader';
+import { Pagination } from '~components/ui/Pagination';
+import { ResultsSummary } from '~components/ui/ResultsSummary';
 import { useSocketContext } from '~contexts/SocketContext';
 import { fetchUsers } from '~services/user/userService';
-import { Card } from '~components/ui/Card';
-import { SearchAndFilter } from '~components/form/SearchAndFilter';
-import { ResultsSummary } from '~components/ui/ResultsSummary';
-import { Pagination } from '~components/ui/Pagination';
-import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
-import Loader from '~components/ui/Loader';
-import { commonLanguages as languagesList } from '~components/form/LanguagesInput';
+import { RootState } from '~store/rootReducer';
 
 const commonLanguages = ['All', ...languagesList];
 
@@ -73,7 +73,7 @@ export default function Home() {
           setUsers(res.users);
           setTotalUsersCount(res.totalUsersCount);
           setFilteredUsersCount(res.filteredUsersCount);
-        } catch (err) { } finally {
+        } catch { } finally {
           setLoading(false);
         }
       })();

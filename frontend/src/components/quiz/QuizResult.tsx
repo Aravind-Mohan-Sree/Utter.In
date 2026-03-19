@@ -1,5 +1,5 @@
 import React from 'react';
-import { BiTrophy, BiRefresh, BiTargetLock, BiTimeFive, BiCheckCircle } from 'react-icons/bi';
+import { BiCheckCircle,BiRefresh, BiTargetLock, BiTimeFive, BiTrophy } from 'react-icons/bi';
 
 interface QuizResultProps {
   score: number;

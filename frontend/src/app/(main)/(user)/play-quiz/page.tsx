@@ -1,32 +1,51 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import axios from '~utils/axiosConfig';
-import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
-import QuizStatsHeader from '~components/quiz/QuizStatsHeader';
+
+import LeaderboardModal from '~components/modals/LeaderboardModal';
+import QuizHistoryModal from '~components/modals/QuizHistoryModal';
 import QuizConfig from '~components/quiz/QuizConfig';
 import QuizPlay from '~components/quiz/QuizPlay';
 import QuizResult from '~components/quiz/QuizResult';
-import LeaderboardModal from '~components/modals/LeaderboardModal';
-import QuizHistoryModal from '~components/modals/QuizHistoryModal';
-import quizService from '~services/user/quizService';
-import { utterToast } from '~utils/utterToast';
+import QuizStatsHeader from '~components/quiz/QuizStatsHeader';
+import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Loader from '~components/ui/Loader';
+import quizService from '~services/user/quizService';
+import axios from '~utils/axiosConfig';
+import { utterToast } from '~utils/utterToast';
 
 type QuizState = 'CONFIG' | 'PLAYING' | 'RESULT';
 
+interface QuizData {
+  id: string;
+  score?: number;
+  totalQuestions?: number;
+  correctAnswers?: number;
+  totalTimeTaken?: number;
+  questions?: { text: string; options: string[]; [key: string]: unknown }[]; 
+}
+
+interface UserData {
+  streak?: {
+    currentStreak: number;
+    highestStreak: number;
+    lastActive: string;
+  };
+  [key: string]: unknown;
+}
+
 export default function PlayQuizPage() {
   const [gameState, setGameState] = useState<QuizState>('CONFIG');
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [currentQuiz, setCurrentQuiz] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<QuizData | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
-  const authUser = useSelector((state: any) => state.auth.user);
+  const authUser = useSelector((state: { auth: { user: { email?: string } | null } }) => state.auth.user);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!authUser?.email) return;
     try {
       const response = await axios.get(`/user/get-account-details/${authUser.email}`);
@@ -36,11 +55,11 @@ export default function PlayQuizPage() {
     } finally {
       setIsDataLoading(false);
     }
-  };
+  }, [authUser?.email]);
 
   useEffect(() => {
     fetchUserData();
-  }, [authUser]);
+  }, [fetchUserData]);
 
   const handleStartQuiz = async (language: string, difficultyStr: string, volume: number) => {
     setIsLoading(true);
@@ -58,6 +77,7 @@ export default function PlayQuizPage() {
   };
 
   const handleQuizComplete = async () => {
+    if (!currentQuiz) return;
     try {
       const response = await quizService.completeQuiz({ quizId: currentQuiz.id });
       setCurrentQuiz(response.data);
@@ -91,7 +111,7 @@ export default function PlayQuizPage() {
             <QuizStatsHeader
               currentStreak={currentUser.streak?.currentStreak || 0}
               highestStreak={currentUser.streak?.highestStreak || 0}
-              lastParticipation={currentUser.streak?.lastActive}
+              lastParticipation={currentUser.streak?.lastActive || null}
               onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
               onOpenHistory={() => setIsHistoryOpen(true)}
             />
@@ -109,7 +129,7 @@ export default function PlayQuizPage() {
             <div className="animate-in slide-in-from-right duration-500">
               <QuizPlay
                 quizId={currentQuiz.id}
-                questions={currentQuiz.questions}
+                questions={currentQuiz.questions || []}
                 onComplete={handleQuizComplete}
                 onCancel={() => setGameState('CONFIG')}
               />
@@ -119,11 +139,11 @@ export default function PlayQuizPage() {
           {gameState === 'RESULT' && currentQuiz && (
             <div className="animate-in slide-in-from-bottom duration-500">
               <QuizResult
-                score={currentQuiz.score}
-                totalQuestions={currentQuiz.totalQuestions}
-                correctAnswers={currentQuiz.correctAnswers}
-                accuracy={(currentQuiz.correctAnswers / currentQuiz.totalQuestions) * 100}
-                totalTimeTaken={currentQuiz.totalTimeTaken}
+                score={currentQuiz.score || 0}
+                totalQuestions={currentQuiz.totalQuestions || 0}
+                correctAnswers={currentQuiz.correctAnswers || 0}
+                accuracy={((currentQuiz.correctAnswers || 0) / (currentQuiz.totalQuestions || 1)) * 100}
+                totalTimeTaken={currentQuiz.totalTimeTaken || 0}
                 onRestart={handleRestart}
               />
             </div>
@@ -133,7 +153,7 @@ export default function PlayQuizPage() {
         <LeaderboardModal
           isOpen={isLeaderboardOpen}
           onClose={() => setIsLeaderboardOpen(false)}
-          currentUser={currentUser}
+          currentUser={currentUser || undefined}
         />
         
         <QuizHistoryModal

@@ -7,4 +7,3 @@ export interface IRedisService {
     deleteOtp(email: string): Promise<void>;
     getOtpTtl(email: string): Promise<number>;
 }
-

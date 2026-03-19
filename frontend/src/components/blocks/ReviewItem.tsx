@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import StarRating from '~components/ui/StarRating';
-import Avatar from '~components/ui/Avatar';
 import { FaPencil, FaTrash } from 'react-icons/fa6';
+
+import Avatar from '~components/ui/Avatar';
+import StarRating from '~components/ui/StarRating';
 import { Review } from '~services/user/reviewService';
+
 import ReviewForm from './ReviewForm';
 
 interface ReviewItemProps {

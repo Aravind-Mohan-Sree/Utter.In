@@ -16,8 +16,8 @@ import { useDispatch } from 'react-redux';
 import { fetchSessionCount } from '~features/bookingSlice';
 import { fetchUnreadCount } from '~features/chatSlice';
 import { setUnreadCount } from '~features/notificationSlice';
-import { getNotifications, getUnreadCount } from '~services/shared/notificationService';
 import { signout } from '~services/shared/managementService';
+import { getUnreadCount } from '~services/shared/notificationService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
@@ -52,7 +52,7 @@ export function Navbar() {
         try {
           const res = await getUnreadCount(user.role as 'user' | 'tutor');
           dispatch(setUnreadCount(res.count));
-        } catch (error) {
+        } catch {
           // silent
         }
       };

@@ -3,7 +3,7 @@ import {
   IGetNotificationsUseCase, 
   IMarkNotificationReadUseCase, 
   IMarkAllNotificationsReadUseCase, 
-  IGetNotificationCountUseCase 
+  IGetNotificationCountUseCase, 
 } from '~use-case-interfaces/shared/INotificationUseCase';
 import { NotificationMapper } from '~mappers/NotificationMapper';
 import { logger } from '~logger/logger';

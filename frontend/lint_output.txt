@@ -1,0 +1,118 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\app\(main)\(shared)\sessions\page.tsx
+  106:6  warning  React Hook useCallback has a missing dependency: 'dispatch'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\app\(main)\(shared)\video-call\[id]\page.tsx
+   73:11  warning  'isInitializing' is assigned a value but never used                                                              @typescript-eslint/no-unused-vars
+  160:71  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  239:8   warning  React Hook useEffect has a missing dependency: 'searchParams'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  268:8   warning  React Hook useEffect has a missing dependency: 'socket'. Either include it or remove the dependency array        react-hooks/exhaustive-deps
+  352:36  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  353:33  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  365:11  warning  'mountTimeRef' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+  481:42  warning  'id' is defined but never used. Allowed unused args must match /^_/u                                             @typescript-eslint/no-unused-vars
+  521:22  warning  'err' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  602:8   warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array          react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\app\(main)\(user)\chats\page.tsx
+   78:64  error    Unexpected any. Specify a different type                                                                                       @typescript-eslint/no-explicit-any
+   79:63  error    Unexpected any. Specify a different type                                                                                       @typescript-eslint/no-explicit-any
+  413:6   warning  React Hook useCallback has a missing dependency: 'handleSelectConversation'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  443:51  error    Unexpected any. Specify a different type                                                                                       @typescript-eslint/no-explicit-any
+  451:20  warning  'err' is defined but never used                                                                                                @typescript-eslint/no-unused-vars
+  481:14  warning  'err' is defined but never used                                                                                                @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\app\(main)\(user)\play-quiz\page.tsx
+  22:50  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  23:50  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  28:40  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  44:6   warning  React Hook useEffect has a missing dependency: 'fetchUserData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\app\page.tsx
+  76:18  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\blocks\ReviewForm.tsx
+   5:10  warning  'errorHandler' is defined but never used  @typescript-eslint/no-unused-vars
+  56:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\blocks\ReviewSection.tsx
+  50:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\layout\Navbar.tsx
+  20:10  warning  'getNotifications' is defined but never used  @typescript-eslint/no-unused-vars
+  55:18  warning  'error' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\layout\Notification.tsx
+  51:14  warning  'error' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+  60:6   warning  React Hook useEffect has a missing dependency: 'fetchNotifications'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  74:13  warning  'unreadRes' is assigned a value but never used                                                                         @typescript-eslint/no-unused-vars
+  75:14  warning  'error' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+  85:14  warning  'error' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\modals\LeaderboardModal.tsx
+  25:17  error    Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  59:6   warning  React Hook useEffect has missing dependencies: 'fetchLeaderboard' and 'users.length'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\modals\QuizHistoryModal.tsx
+   2:30  warning  'BiInfinite' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+  71:6   warning  React Hook useEffect has missing dependencies: 'fetchHistory' and 'history.length'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  77:6   warning  React Hook useEffect has a missing dependency: 'fetchHistory'. Either include it or remove the dependency array                         react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\quiz\QuizHistory.tsx
+  62:6  warning  React Hook useEffect has a missing dependency: 'fetchHistory'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\ui\Avatar.tsx
+  71:6  warning  React Hook useEffect has a missing dependency: 'getAvatarUrl'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\components\ui\CallInvitation.tsx
+  4:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+  4:21  warning  'useState' is defined but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\contexts\SocketContext.tsx
+    1:55  warning  'useRef' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   47:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\contexts\SocketContext.tsx:47:7
+  45 |   useEffect(() => {
+  46 |     if (!user?.id) {
+> 47 |       setIncomingCall(null);
+     |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  48 |       if (socket) {
+  49 |         socket.disconnect();
+  50 |         setSocket(null);  react-hooks/set-state-in-effect
+  110:6   warning  React Hook useEffect has a missing dependency: 'socket'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\features\chatSlice.ts
+  19:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\features\notificationSlice.ts
+  1:10  warning  'createAsyncThunk' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\hooks\useSocket.ts
+   1:21  warning  'useRef' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  11:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mailu\Desktop\Utter.In\frontend\src\hooks\useSocket.ts:11:7
+   9 |   useEffect(() => {
+  10 |     if (!userId) {
+> 11 |       setSocket(null);
+     |       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  12 |       setIsConnected(false);
+  13 |       return;
+  14 |     }  react-hooks/set-state-in-effect
+
+Γ£û 48 problems (13 errors, 35 warnings)
+

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { BaseModal } from './BaseModal';
-import { BiHistory, BiAward, BiTimer, BiInfinite } from 'react-icons/bi';
+import React, { useCallback, useEffect, useRef,useState } from 'react';
+import { BiAward, BiHistory, BiTimer } from 'react-icons/bi';
+
 import quizService from '../../services/user/quizService';
+import { BaseModal } from './BaseModal';
 
 interface QuizAttempt {
   id: string;
@@ -43,8 +44,8 @@ const QuizHistoryModal: React.FC<QuizHistoryModalProps> = ({ isOpen, onClose }) 
     [isLoading, hasMore],
   );
 
-  const fetchHistory = async (currPage: number) => {
-    if (isLoading || (!hasMore && currPage > 1)) return;
+  const fetchHistory = async (currPage: number, force: boolean = false) => {
+    if ((isLoading || (!hasMore && currPage > 1)) && !force) return;
     setIsLoading(true);
     try {
       const response = await quizService.getHistory(currPage, 5);
@@ -64,15 +65,20 @@ const QuizHistoryModal: React.FC<QuizHistoryModalProps> = ({ isOpen, onClose }) 
   };
 
   useEffect(() => {
-    if (isOpen && history.length === 0) {
-      fetchHistory(1);
+    if (isOpen) {
+      setHistory([]);
+      setPage(1);
+      setHasMore(true);
+      fetchHistory(1, true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   useEffect(() => {
     if (page > 1) {
       fetchHistory(page);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   return (
@@ -120,9 +126,9 @@ const QuizHistoryModal: React.FC<QuizHistoryModalProps> = ({ isOpen, onClose }) 
           ))}
 
           {!isLoading && history.length === 0 && (
-            <div className="text-center py-10 opacity-30 select-none">
+            <div className="text-center py-10 select-none">
                <BiHistory className="text-4xl mx-auto mb-2" />
-               <p className="text-[10px] font-black uppercase tracking-[0.3em]">No Attempts Yet</p>
+               <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">No Attempts Yet</p>
             </div>
           )}
 

@@ -6,7 +6,7 @@ import { ISocketManager } from '~service-interfaces/ISocketManager';
 export class CreateNotificationUseCase implements ICreateNotificationUseCase {
   constructor(
     private _notificationRepository: INotificationRepository,
-    private _socketManager: ISocketManager
+    private _socketManager: ISocketManager,
   ) { }
 
   async execute(data: {

@@ -103,7 +103,7 @@ export default function SessionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, search, sort, language, date, user?.role]);
+  }, [currentPage, itemsPerPage, search, sort, language, date, user?.role, dispatch]);
 
   useEffect(() => {
     fetchBookings();

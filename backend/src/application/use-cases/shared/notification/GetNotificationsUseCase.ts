@@ -12,7 +12,7 @@ export class GetNotificationsUseCase implements IGetNotificationsUseCase {
     limit: number,
   ): Promise<Notification[]> {
     const skip = (page - 1) * limit;
-    const query: any = { recipientId: userId };
+    const query: { recipientId: string; isRead?: boolean } = { recipientId: userId };
 
     if (filter === 'unread') {
       query.isRead = false;

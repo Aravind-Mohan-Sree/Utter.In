@@ -26,7 +26,7 @@ export class ChatController {
 
   getConversations = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const conversations = await this._getConversationsUseCase.execute(userId);
       return res.status(200).json({
         success: true,
@@ -42,7 +42,7 @@ export class ChatController {
     try {
       const { conversationId } = req.params;
       const { page, limit, targetId } = req.query;
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const result = await this._getMessagesUseCase.execute(
         conversationId,
         userId,
@@ -66,7 +66,7 @@ export class ChatController {
   sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto = new SendMessageDTO(req.body, this._validator);
-      const senderId = (req as any).user.id;
+      const senderId = req.user!.id;
       const message = await this._sendMessageUseCase.execute(
         senderId,
         dto.receiverId,
@@ -85,7 +85,7 @@ export class ChatController {
   search = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { q, page, limit, sort, language } = req.query;
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const results = await this._searchChatUseCase.execute(userId, {
         q: String(q || ''),
         page: Number(page) || 1,
@@ -110,7 +110,7 @@ export class ChatController {
     try {
       const { messageId } = req.params;
       const { text } = req.body;
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const message = await this._editMessageUseCase.execute(
         messageId,
         userId,
@@ -129,7 +129,7 @@ export class ChatController {
   deleteMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { messageId } = req.params;
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const message = await this._deleteMessageUseCase.execute(
         messageId,
         userId,
