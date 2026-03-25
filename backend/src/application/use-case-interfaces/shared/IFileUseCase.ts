@@ -17,6 +17,15 @@ export interface IUploadFileUseCase {
   ): Promise<void>;
 }
 
+export interface IUploadChatAttachmentUseCase {
+  execute(
+    prefix: Prefix,
+    filename: string,
+    filepath: string,
+    contentType: ContentType,
+  ): Promise<string>;
+}
+
 export interface IUpdateFileUseCase {
   execute(
     oldPrefix: Prefix,

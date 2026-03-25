@@ -18,7 +18,10 @@ export interface ISendMessageUseCase {
   execute(
     senderId: string,
     receiverId: string,
-    text: string,
+    text?: string,
+    fileUrl?: string,
+    fileType?: string,
+    fileName?: string,
   ): Promise<Message>;
 }
 
@@ -45,5 +48,5 @@ export interface IEditMessageUseCase {
 }
 
 export interface IDeleteMessageUseCase {
-  execute(messageId: string, userId: string): Promise<Message>;
+  execute(messageId: string, userId: string, forEveryone: boolean): Promise<Message>;
 }

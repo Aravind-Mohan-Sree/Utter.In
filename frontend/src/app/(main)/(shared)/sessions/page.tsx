@@ -14,6 +14,7 @@ import { Card } from '~components/ui/Card';
 import Loader from '~components/ui/Loader';
 import { Pagination } from '~components/ui/Pagination';
 import { ResultsSummary } from '~components/ui/ResultsSummary';
+import { useSocketContext } from '~contexts/SocketContext';
 import {
   decrementSessionCount,
   fetchSessionCount,
@@ -34,6 +35,7 @@ export default function SessionsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { socket } = useSocketContext();
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, Action>>();
   const [upcomingSessions, setUpcomingSessions] = useState<Booking[]>([]);
   const [completedSessions, setCompletedSessions] = useState<Booking[]>([]);
@@ -61,8 +63,22 @@ export default function SessionsPage() {
     return diffInMinutes <= joinThreshold;
   };
 
-  const handleJoin = (bookingId: string, otherId: string) => {
-    router.push(`/video-call/${bookingId}?otherId=${otherId}&type=session`);
+  const handleJoin = (bookingId: string, otherId: string, otherName: string) => {
+    const callId = Date.now().toString();
+    if (socket) {
+      socket.emit('initiate_call', {
+        receiverId: otherId,
+        callerId: user?.id,
+        callerName: user?.name,
+        signalData: {
+          bookingId: bookingId,
+          callId: callId,
+          type: 'session',
+          otherId: user?.id,
+        }
+      });
+    }
+    router.push(`/video-call/${bookingId}?otherId=${otherId}&type=session&callId=${callId}`);
   };
 
   const fetchBookings = useCallback(async () => {
@@ -219,7 +235,7 @@ export default function SessionsPage() {
                       }
                       className="bg-white/50 backdrop-blur-sm hover:border-rose-200"
                       onCancel={undefined}
-                      onJoin={canJoin(booking.date) ? () => handleJoin(booking.id, booking.otherPartyId) : undefined}
+                      onJoin={canJoin(booking.date) ? () => handleJoin(booking.id, booking.otherPartyId, booking.otherPartyName) : undefined}
                     />
                   </div>
                 ))}

@@ -30,6 +30,9 @@ export class MessageRepository
       isDeleted: entity.isDeleted,
       isEdited: entity.isEdited,
       hiddenBy: entity.hiddenBy?.map((id) => new mongoose.Types.ObjectId(id)),
+      fileUrl: entity.fileUrl,
+      fileType: entity.fileType,
+      fileName: entity.fileName,
     } as Partial<IMessage>;
   }
 
@@ -44,6 +47,9 @@ export class MessageRepository
       doc.isDeleted,
       doc.isEdited,
       doc.hiddenBy?.map((id) => String(id)),
+      doc.fileUrl,
+      doc.fileType,
+      doc.fileName,
       String(doc._id),
       doc.createdAt,
       doc.updatedAt,

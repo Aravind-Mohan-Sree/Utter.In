@@ -53,6 +53,7 @@ import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
 import { UploadAvatarUseCase } from '~use-cases/shared/UploadAvatarUseCase';
 import { FinishRegisterUserUseCase } from '~use-cases/user/auth/FinishRegisterUserUseCase';
 import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
+import { UploadChatAttachmentUseCase } from '~use-cases/shared/UploadChatAttachmentUseCase';
 import { MailService } from '~concrete-services/MailService';
 import { GetBookingsUseCase } from '~use-cases/shared/GetBookingsUseCase';
 import { CancelBookingUseCase } from '~use-cases/shared/CancelBookingUseCase';
@@ -184,6 +185,7 @@ const uploadAvatarUseCase = new UploadAvatarUseCase(
   s3Service,
   axiosImageGatewayService,
 );
+const uploadChatAttachmentUseCase = new UploadChatAttachmentUseCase(s3Service);
 
 // shared use cases
 const getUserDataUseCase = new GetEntityDataUseCase<User, IUser>(
@@ -239,7 +241,7 @@ const sendMessageUseCase = new SendMessageUseCase(
 );
 const searchChatUseCase = new SearchChatUseCase(messageRepository, userRepository);
 const editMessageUseCase = new EditMessageUseCase(messageRepository);
-const deleteMessageUseCase = new DeleteMessageUseCase(messageRepository);
+const deleteMessageUseCase = new DeleteMessageUseCase(messageRepository, s3Service);
 
 // quiz use cases
 const generateQuizUseCase = new GenerateQuizUseCase(quizRepository, geminiService);
@@ -319,6 +321,7 @@ const chatController = new ChatController(
   searchChatUseCase,
   editMessageUseCase,
   deleteMessageUseCase,
+  uploadChatAttachmentUseCase,
   dataValidatorService,
 );
 
@@ -414,6 +417,7 @@ router.get('/tutors/:tutorId/review-eligibility', auth.verify(), reviewControlle
 router.get('/chats', auth.verify(), chatController.getConversations);
 router.get('/chats/:conversationId/messages', auth.verify(), chatController.getMessages);
 router.post('/chats/messages', auth.verify(), chatController.sendMessage);
+router.post('/chats/attachments', auth.verify(), uploadMiddleware, chatController.uploadAttachment);
 router.get('/chats/search', auth.verify(), chatController.search);
 router.patch('/chats/messages/:messageId', auth.verify(), chatController.editMessage);
 router.delete('/chats/messages/:messageId', auth.verify(), chatController.deleteMessage);

@@ -14,9 +14,24 @@ export default function CallInvitation() {
   if (!incomingCall) return null;
 
   const handleAccept = () => {
-    const { bookingId, type, otherId } = incomingCall.signalData;
+    const { bookingId, type, otherId, callId } = incomingCall.signalData;
     setIncomingCall(null);
-    router.push(`/video-call/${bookingId}?role=${type === 'chat' ? 'user' : 'tutor'}&type=${type}${otherId ? `&otherId=${otherId}` : ''}`);
+    
+    let path = `/video-call/${bookingId}?type=${type}`;
+    
+    if (type === 'chat') {
+      path += '&role=user';
+    }
+    
+    if (otherId) {
+      path += `&otherId=${otherId}`;
+    }
+
+    if (callId) {
+      path += `&callId=${callId}`;
+    }
+    
+    router.push(path);
   };
 
   const handleDecline = () => {

@@ -9,6 +9,9 @@ export interface IMessage extends Document {
   isDeleted: boolean;
   isEdited: boolean;
   hiddenBy: mongoose.Types.ObjectId[];
+  fileUrl?: string;
+  fileType?: string;
+  fileName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,7 +25,10 @@ const messageSchema = new Schema<IMessage>(
     },
     senderId: { type: Schema.Types.ObjectId, ref: 'users', required: true },
     receiverId: { type: Schema.Types.ObjectId, ref: 'users', required: true },
-    text: { type: String, required: true },
+    text: { type: String, default: '' },
+    fileUrl: { type: String, default: null },
+    fileType: { type: String, default: null },
+    fileName: { type: String, default: null },
     isRead: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     isEdited: { type: Boolean, default: false },

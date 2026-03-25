@@ -19,7 +19,10 @@ export class SendMessageUseCase implements ISendMessageUseCase {
   async execute(
     senderId: string,
     receiverId: string,
-    text: string,
+    text = '',
+    fileUrl?: string,
+    fileType?: string,
+    fileName?: string,
   ): Promise<Message> {
     let conversation = await this._conversationRepository.findByParticipants([
       senderId,
@@ -33,7 +36,19 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     }
 
     const message = await this._messageRepository.create(
-      new Message(senderId, receiverId, text, conversation.id!),
+      new Message(
+        senderId,
+        receiverId,
+        text,
+        conversation.id!,
+        false,
+        false,
+        false,
+        [],
+        fileUrl,
+        fileType,
+        fileName,
+      ),
     );
     const unreadCount = conversation.unreadCount || {};
     unreadCount[receiverId] = (unreadCount[receiverId] || 0) + 1;

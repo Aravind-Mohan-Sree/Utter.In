@@ -25,6 +25,9 @@ export class ChatMapper {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       hiddenBy: msg.hiddenBy,
+      fileUrl: msg.fileUrl,
+      fileType: msg.fileType,
+      fileName: msg.fileName,
       createdAt: msg.createdAt,
     };
   }

@@ -11,6 +11,7 @@ interface IncomingCall {
   callerName: string;
   signalData: {
     bookingId: string;
+    callId?: string;
     type: 'chat' | 'session';
     otherId?: string;
   };
@@ -45,8 +46,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (!user?.id) return;
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000/api';
-    const socketUrl = baseUrl.replace(/\/api\/?$/, '');
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    const socketUrl = baseUrl?.replace(/\/api\/?$/, '');
 
     const newSocket = io(socketUrl, {
       query: { userId: String(user.id) },

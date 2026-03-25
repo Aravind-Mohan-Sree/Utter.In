@@ -2,15 +2,17 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FaArrowLeft, FaChevronDown, FaCircle, FaPaperPlane, FaSearch, FaVideo } from 'react-icons/fa';
+import { FaArrowLeft, FaChevronDown, FaCircle, FaDownload, FaFile, FaFileAlt, FaFileArchive, FaFileImage, FaFilePdf, FaFileWord, FaPaperclip, FaPaperPlane, FaRegSmile, FaSearch, FaTimes, FaVideo } from 'react-icons/fa';
+import { FaFileCircleXmark } from 'react-icons/fa6';
 import { MdContentCopy, MdDelete, MdEdit } from 'react-icons/md';
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import Avatar from '~components/ui/Avatar';
 import Loader from '~components/ui/Loader';
 import { useSocketContext } from '~contexts/SocketContext';
 import { setUnreadCount } from '~features/chatSlice';
-import { deleteMessage, editMessage, getConversations, getMessages, searchChat, sendMessage } from '~services/user/chatService';
+import { deleteMessage, editMessage, getConversations, getMessages, searchChat, sendMessage, uploadAttachment } from '~services/user/chatService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
@@ -31,6 +33,9 @@ interface Message {
   isDeleted?: boolean;
   isEdited?: boolean;
   hiddenBy?: string[];
+  fileUrl?: string;
+  fileType?: string;
+  fileName?: string;
 }
 
 interface Conversation {
@@ -40,6 +45,222 @@ interface Conversation {
   lastMessageTime?: string;
   unreadCount?: Record<string, number>;
   otherUser?: User;
+}
+
+interface MessageBubbleProps {
+  msg: Message;
+  user: any;
+  isMe: boolean;
+  isHighlighted: boolean;
+  editingMessageId: string | null;
+  editValue: string;
+  setEditValue: (val: string | ((prev: string) => string)) => void;
+  setEditingMessageId: (id: string | null) => void;
+  handleContextMenu: (e: any, id: string) => void;
+  handleSaveEdit: () => void;
+  fileError: Record<string, boolean>;
+  setMediaError: (id: string) => void;
+  setActivePreview: (preview: { url: string; type: string } | null) => void;
+  getFullFileUrl: (url?: string) => string;
+  getFileIcon: (type?: string, isMe?: boolean) => React.ReactNode;
+  showEditEmojiPicker: boolean;
+  setShowEditEmojiPicker: (show: boolean) => void;
+  onEditEmojiClick: (emojiData: EmojiClickData) => void;
+  scrollToBottom: () => void;
+  showScrollBottom: boolean;
+}
+
+function MessageBubble({
+  msg,
+  user,
+  isMe,
+  isHighlighted,
+  editingMessageId,
+  editValue,
+  setEditValue,
+  setEditingMessageId,
+  handleContextMenu,
+  handleSaveEdit,
+  fileError,
+  setMediaError,
+  setActivePreview,
+  getFullFileUrl,
+  getFileIcon,
+  showEditEmojiPicker,
+  setShowEditEmojiPicker,
+  onEditEmojiClick,
+  scrollToBottom,
+  showScrollBottom
+}: MessageBubbleProps) {
+  const editAreaRef = useRef<HTMLTextAreaElement>(null);
+  const [pickerDirection, setPickerDirection] = useState<'top' | 'bottom'>('top');
+  useEffect(() => {
+    if (msg.fileUrl && !msg.fileType?.startsWith('image/') && !msg.fileType?.startsWith('video/') && !msg.isDeleted && !fileError[msg.id]) {
+      fetch(getFullFileUrl(msg.fileUrl), { method: 'HEAD' })
+        .then(res => { if (!res.ok) setMediaError(msg.id); })
+        .catch(() => setMediaError(msg.id));
+    }
+  }, [msg.fileUrl, msg.fileType, msg.isDeleted, msg.id, fileError, getFullFileUrl, setMediaError]);
+
+  const isOnlyEmojis = (text: string) => {
+    if (!text) return false;
+    const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/g;
+    return emojiRegex.test(text.trim());
+  };
+
+  return (
+    <div
+      id={`msg-${msg.id}`}
+      className={`flex w-full px-6 py-1 transition-colors duration-1000 ${isMe ? 'justify-end' : 'justify-start'
+        } ${isHighlighted ? 'bg-rose-500/10' : ''}`}
+    >
+      <div
+        className={`relative group max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm select-none transition-all ${editingMessageId === msg.id ? 'cursor-default' : 'cursor-pointer'
+          } ${isMe ? 'bg-rose-500 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none'
+          }`}
+        onContextMenu={(e) => handleContextMenu(e, msg.id)}
+        onTouchStart={(e) => {
+          if (editingMessageId === msg.id) return;
+          const timer = setTimeout(() => handleContextMenu(e, msg.id), 500);
+          e.currentTarget.addEventListener('touchend', () => clearTimeout(timer), { once: true });
+          e.currentTarget.addEventListener('touchmove', () => clearTimeout(timer), { once: true });
+        }}
+      >
+        {editingMessageId === msg.id ? (
+          <div className="flex flex-col gap-2 min-w-[140px] w-64 max-w-full">
+            <div className="relative">
+              <textarea
+                ref={editAreaRef}
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="w-full bg-white/10 text-white p-2 pr-10 rounded-xl border border-white/20 focus:outline-none resize-none no-scrollbar overflow-y-auto text-sm max-h-32 mb-1"
+                rows={2}
+                autoFocus
+                onFocus={(e) => {
+                  const val = e.currentTarget.value;
+                  e.currentTarget.setSelectionRange(val.length, val.length);
+                }}
+                onInput={(e) => {
+                  e.currentTarget.style.height = 'auto';
+                  e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSaveEdit();
+                  }
+                }}
+              />
+              <button
+                id="edit-emoji-btn"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const spaceBelow = window.innerHeight - rect.bottom;
+                  setPickerDirection(spaceBelow > 400 ? 'bottom' : 'top');
+                  e.stopPropagation();
+                  setShowEditEmojiPicker(!showEditEmojiPicker);
+                }}
+                className="absolute top-2 right-2 text-white/60 hover:text-white transition-all cursor-pointer"
+              >
+                <FaRegSmile size={18} />
+              </button>
+              {showEditEmojiPicker && (
+                <div 
+                  id="edit-emoji-picker-container" 
+                  className={`absolute z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200 
+                    ${pickerDirection === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} 
+                    ${isMe ? `right-0 ${pickerDirection === 'top' ? 'origin-bottom-right' : 'origin-top-right'}` : `left-0 ${pickerDirection === 'top' ? 'origin-bottom-left' : 'origin-top-left'}`}`}
+                >
+                  <EmojiPicker
+                    onEmojiClick={(emojiData) => {
+                      onEditEmojiClick(emojiData);
+                      setTimeout(() => editAreaRef.current?.focus(), 0);
+                    }}
+                    theme={Theme.LIGHT}
+                    width={280}
+                    height={350}
+                    skinTonesDisabled
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setEditingMessageId(null)} className="text-[10px] hover:underline cursor-pointer">Cancel</button>
+              <button onClick={handleSaveEdit} className="text-[10px] bg-white text-rose-500 px-3 py-1.5 rounded-lg font-bold shadow-sm active:scale-95 transition-all cursor-pointer">Save</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {msg.fileUrl && !msg.isDeleted && (
+              <div className="mb-2">
+                {fileError[msg.id] ? (
+                  <div className={`p-4 rounded-xl border flex flex-col items-center gap-2 ${isMe ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-100'}`}>
+                    <FaFileCircleXmark size={24} className={isMe ? 'text-white' : 'text-gray-800'} />
+                    <p className={`text-[10px] font-medium ${isMe ? 'text-white/90' : 'text-gray-800/90'}`}>Attachment Unavailable</p>
+                  </div>
+                ) : msg.fileType?.startsWith('image/') ? (
+                  <img
+                    src={getFullFileUrl(msg.fileUrl)}
+                    alt={msg.fileName}
+                    className="max-w-[250px] w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity outline-none"
+                    onClick={() => !fileError[msg.id] && setActivePreview({ url: getFullFileUrl(msg.fileUrl), type: msg.fileType! })}
+                    onError={() => setMediaError(msg.id)}
+                    onLoad={() => {
+                      setTimeout(() => {
+                        if (!showScrollBottom) scrollToBottom();
+                      }, 100);
+                    }}
+                  />
+                ) : msg.fileType?.startsWith('video/') ? (
+                  <div className="relative group max-w-[250px]">
+                    <video
+                      src={getFullFileUrl(msg.fileUrl)}
+                      className="w-full h-auto rounded-lg"
+                      muted
+                      onError={() => setMediaError(msg.id)}
+                      onLoadedData={() => {
+                        setTimeout(() => {
+                          if (!showScrollBottom) scrollToBottom();
+                        }, 100);
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-all rounded-lg cursor-pointer"
+                      onClick={() => !fileError[msg.id] && setActivePreview({ url: getFullFileUrl(msg.fileUrl), type: msg.fileType! })}
+                    >
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30">
+                        <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent ml-1"></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={`flex items-center gap-3 p-3 rounded-xl border ${isMe ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-100'
+                      } cursor-pointer hover:bg-opacity-80 transition-all`}
+                    onClick={() => !fileError[msg.id] && window.open(getFullFileUrl(msg.fileUrl), '_blank')}
+                  >
+                    <div className="shrink-0">
+                      {getFileIcon(msg.fileType, !!isMe)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-bold truncate ${isMe ? 'text-white' : 'text-gray-800'}`}>{msg.fileName}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {msg.text && (
+              <p className={`break-words whitespace-pre-wrap ${isOnlyEmojis(msg.text) ? 'text-2xl' : 'text-sm'} ${msg.isDeleted ? `italic ${isMe ? 'text-white/70' : 'text-gray-400'}` : ''}`}>{msg.text}</p>
+            )}
+            <div className={`flex justify-end items-center gap-1.5 mt-1 text-[10px] ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
+              {msg.isEdited && !msg.isDeleted && <span>(edited)</span>}
+              <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function ChatsPage() {
@@ -64,12 +285,24 @@ export default function ChatsPage() {
   const [editValue, setEditValue] = useState('');
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showEditEmojiPicker, setShowEditEmojiPicker] = useState(false);
+  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
+  const [activePreview, setActivePreview] = useState<{ url: string; type: string } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<Record<string, boolean>>({});
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const attachmentRef = useRef<HTMLDivElement>(null);
   const isJumpingRef = useRef(false);
   const lastProcessedQueryIdRef = useRef<string | null>(null);
+  const isSelfSelectRef = useRef(false);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -211,6 +444,24 @@ export default function ChatsPage() {
     }
   }, [socket, selectedConversation, fetchConversations, fetchMessages]);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+      if (attachmentRef.current && !attachmentRef.current.contains(event.target as Node)) {
+        setShowAttachmentOptions(false);
+      }
+      const editEmojiBtn = document.getElementById('edit-emoji-btn');
+      const editEmojiPicker = document.getElementById('edit-emoji-picker-container');
+      if (editEmojiBtn && !editEmojiBtn.contains(event.target as Node) && (!editEmojiPicker || !editEmojiPicker.contains(event.target as Node))) {
+        setShowEditEmojiPicker(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -279,12 +530,31 @@ export default function ChatsPage() {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !selectedConversation.otherUser) return;
+    if ((!newMessage.trim() && !selectedFile) || !selectedConversation || !selectedConversation.otherUser) return;
 
     try {
-      const res = await sendMessage(selectedConversation.otherUser.id, newMessage);
+      let fileUrl, fileType, fileName;
+      if (selectedFile) {
+        setUploadProgress(true);
+        const uploadRes = await uploadAttachment(selectedFile);
+        fileUrl = uploadRes.url;
+        fileType = uploadRes.fileType;
+        fileName = uploadRes.fileName;
+      }
+
+      const res = await sendMessage(
+        selectedConversation.otherUser.id,
+        newMessage.trim() || undefined,
+        fileUrl,
+        fileType,
+        fileName
+      );
+
       setMessages((prev) => [...prev, res.message]);
       setNewMessage('');
+      setSelectedFile(null);
+      setFilePreview(null);
+      setUploadProgress(false);
 
       socket?.emit('send_message', {
         receiverId: selectedConversation.otherUser.id,
@@ -299,7 +569,7 @@ export default function ChatsPage() {
 
   const handleContextMenu = (e: React.MouseEvent | React.TouchEvent, messageId: string) => {
     const msg = messages.find(m => m.id === messageId);
-    if (msg?.isDeleted || editingMessageId === messageId) return;
+    if (!msg || editingMessageId === messageId) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -341,6 +611,28 @@ export default function ChatsPage() {
     setContextMenu(null);
   };
 
+  const handleSaveFile = async (messageId: string) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (msg?.fileUrl) {
+      try {
+        const url = getFullFileUrl(msg.fileUrl);
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = msg.fileName || 'file';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        window.open(getFullFileUrl(msg.fileUrl), '_blank');
+      }
+    }
+    setContextMenu(null);
+  };
+
   const handleSaveEdit = async () => {
     if (!editingMessageId || !editValue.trim()) return;
     try {
@@ -357,17 +649,13 @@ export default function ChatsPage() {
     }
   };
 
-  const handleDeleteMessage = async (messageId: string) => {
+  const handleDeleteMessage = async (messageId: string, forEveryone: boolean) => {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
 
     const isSender = msg.senderId === user?.id;
-    const createdAt = new Date(msg.createdAt).getTime();
-    const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
-    const isWithinTwoDays = Date.now() - createdAt < TWO_DAYS;
-
-    const confirmTitle = isSender && isWithinTwoDays ? 'Delete for Everyone?' : 'Delete for Me?';
-    const confirmText = isSender && isWithinTwoDays
+    const confirmTitle = forEveryone ? 'Delete for Everyone?' : 'Delete for Me?';
+    const confirmText = forEveryone
       ? 'This will delete the message for both you and the recipient.'
       : 'This will only remove the message from your view.';
 
@@ -380,7 +668,7 @@ export default function ChatsPage() {
       cancelText: 'Cancel',
       onConfirm: async () => {
         try {
-          const res = await deleteMessage(messageId);
+          const res = await deleteMessage(messageId, forEveryone);
           setMessages((prev) => prev.map((m) => m.id === messageId ? res.message : m));
           socket?.emit('delete_message', {
             receiverId: selectedConversation?.otherUser?.id,
@@ -388,7 +676,7 @@ export default function ChatsPage() {
           });
           setContextMenu(null);
           fetchConversations();
-          utterToast.success(isSender && isWithinTwoDays ? 'Message deleted for everyone' : 'Message hidden');
+          utterToast.success(forEveryone ? 'Message deleted for everyone' : 'Message hidden');
         } catch (err) {
           utterToast.error(errorHandler(err));
         }
@@ -483,21 +771,82 @@ export default function ChatsPage() {
     }
   };
 
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setNewMessage(prev => prev + emojiData.emoji);
+  };
+
+  const onEditEmojiClick = (emojiData: EmojiClickData) => {
+    setEditValue(prev => prev + emojiData.emoji);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        utterToast.error('File too large (max 10MB)');
+        return;
+      }
+      setSelectedFile(file);
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = () => setFilePreview(reader.result as string);
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
+    }
+    e.target.value = '';
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const getFileIcon = (type?: string, isMe?: boolean) => {
+    if (!type) return <FaFile size={28} />;
+    if (type.startsWith('image/')) return <FaFileImage size={28} className={isMe ? 'text-white' : 'text-blue-500'} />;
+    if (type === 'application/pdf') return <FaFilePdf size={28} className={isMe ? 'text-white' : 'text-rose-500'} />;
+    if (type.includes('word')) return <FaFileWord size={28} className={isMe ? 'text-white' : 'text-blue-600'} />;
+    if (type.includes('zip') || type.includes('rar')) return <FaFileArchive size={28} className={isMe ? 'text-white' : 'text-purple-500'} />;
+    return <FaFileAlt size={28} className={isMe ? 'text-white' : 'text-gray-500'} />;
+  };
+
+  const getFullFileUrl = (url?: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = process.env.NEXT_PUBLIC_S3_OBJECT_URL;
+    return `${baseUrl}/${url}`;
+  };
+
+  const setMediaError = (id: string) => {
+    setFileError(prev => ({ ...prev, [id]: true }));
+  };
+
+  const isOnlyEmojis = (text: string) => {
+    if (!text) return false;
+    const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/g;
+    return emojiRegex.test(text.trim());
+  };
+
   const startVideoCall = () => {
     if (!selectedConversation || !selectedConversation.otherUser || !socket) return;
 
+    const callId = Date.now().toString();
     socket.emit('initiate_call', {
       receiverId: selectedConversation.otherUser.id,
       callerId: user?.id,
       callerName: user?.name,
       signalData: {
         bookingId: selectedConversation.id,
+        callId: callId,
         type: 'chat',
         otherId: user?.id,
       }
     });
 
-    router.push(`/video-call/${selectedConversation.id}?role=user&type=chat&otherId=${selectedConversation.otherUser.id}`);
+    router.push(`/video-call/${selectedConversation.id}?role=user&type=chat&otherId=${selectedConversation.otherUser.id}&callId=${callId}`);
   };
 
   const isOnline = (userId: string) => onlineUsers.has(userId);
@@ -676,7 +1025,7 @@ export default function ChatsPage() {
                 {/* Messages */}
                 <div
                   ref={messagesContainerRef}
-                  className="flex-1 overflow-y-auto overflow-x-hidden space-y-2 py-6 bg-gray-50/20 no-scrollbar scroll-smooth"
+                  className="flex-1 overflow-y-auto space-y-2 py-6 bg-gray-50/20 no-scrollbar scroll-smooth"
                   onScroll={handleScroll}
                 >
                   {isFetchingMore && (
@@ -691,65 +1040,31 @@ export default function ChatsPage() {
                       <p className="text-sm font-medium">Say hello to {selectedConversation.otherUser?.name}!</p>
                     </div>
                   ) : (
-                    messages.filter(msg => !msg.hiddenBy?.includes(user?.id || '')).map((msg, idx) => {
-                      const isMe = user?.id && msg.senderId === user.id;
-                      const isHighlighted = highlightedMessageId === msg.id;
-                      return (
-                        <div
-                          key={msg.id || idx}
-                          id={`msg-${msg.id}`}
-                          className={`flex w-full px-6 py-1 transition-colors duration-1000 ${isMe ? 'justify-end' : 'justify-start'
-                            } ${isHighlighted ? 'bg-rose-500/10' : ''}`}
-                        >
-                          <div
-                            className={`relative group max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm select-none transition-all ${!msg.isDeleted ? 'cursor-pointer' : 'cursor-default'
-                              } ${isMe ? 'bg-rose-500 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-700 rounded-tl-none'
-                              }`}
-                            onContextMenu={(e) => handleContextMenu(e, msg.id)}
-                            onTouchStart={(e) => {
-                              if (msg.isDeleted || editingMessageId === msg.id) return;
-                              const timer = setTimeout(() => handleContextMenu(e, msg.id), 500);
-                              e.currentTarget.addEventListener('touchend', () => clearTimeout(timer), { once: true });
-                              e.currentTarget.addEventListener('touchmove', () => clearTimeout(timer), { once: true });
-                            }}
-                          >
-                            {editingMessageId === msg.id ? (
-                              <div className="flex flex-col gap-2 min-w-[140px] w-64 max-w-full">
-                                <textarea
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  className="w-full bg-white/10 text-white p-2 rounded-xl border border-white/20 focus:outline-none resize-none no-scrollbar overflow-y-auto text-sm max-h-32"
-                                  rows={2}
-                                  autoFocus
-                                  onInput={(e) => {
-                                    e.currentTarget.style.height = 'auto';
-                                    e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                      e.preventDefault();
-                                      handleSaveEdit();
-                                    }
-                                  }}
-                                />
-                                <div className="flex justify-end gap-2">
-                                  <button onClick={() => setEditingMessageId(null)} className="text-[10px] hover:underline cursor-pointer">Cancel</button>
-                                  <button onClick={handleSaveEdit} className="text-[10px] bg-white text-rose-500 px-3 py-1.5 rounded-lg font-bold shadow-sm active:scale-95 transition-all cursor-pointer">Save</button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <p className={`break-words whitespace-pre-wrap ${msg.isDeleted ? `italic ${isMe ? 'text-white/70' : 'text-gray-400'}` : ''}`}>{msg.text}</p>
-                                <div className={`flex justify-end items-center gap-1.5 mt-1 text-[10px] ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
-                                  {msg.isEdited && !msg.isDeleted && <span>(edited)</span>}
-                                  <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
+                    messages.filter(msg => !msg.hiddenBy?.includes(user?.id || '')).map((msg, idx) => (
+                      <MessageBubble
+                        key={msg.id || idx}
+                        msg={msg}
+                        user={user}
+                        isMe={user?.id === msg.senderId}
+                        isHighlighted={highlightedMessageId === msg.id}
+                        editingMessageId={editingMessageId}
+                        editValue={editValue}
+                        setEditValue={setEditValue}
+                        setEditingMessageId={setEditingMessageId}
+                        handleContextMenu={handleContextMenu}
+                        handleSaveEdit={handleSaveEdit}
+                        fileError={fileError}
+                        setMediaError={setMediaError}
+                        setActivePreview={setActivePreview}
+                        getFullFileUrl={getFullFileUrl}
+                        getFileIcon={getFileIcon}
+                        showEditEmojiPicker={showEditEmojiPicker}
+                        setShowEditEmojiPicker={setShowEditEmojiPicker}
+                        onEditEmojiClick={onEditEmojiClick}
+                        scrollToBottom={scrollToBottom}
+                        showScrollBottom={showScrollBottom}
+                      />
+                    ))
                   )}
                   <div ref={messagesEndRef} />
                 </div>
@@ -767,7 +1082,88 @@ export default function ChatsPage() {
 
                 {/* Chat Input */}
                 <div className="p-4 border-t border-gray-100 bg-white">
-                  <div className="flex gap-3 items-end">
+                  {selectedFile && (
+                    <div className="mb-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-3 animate-in slide-in-from-bottom-2 duration-300">
+                          {filePreview ? (
+                            <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-100 relative group">
+                              <img src={filePreview} alt="preview" className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-100">
+                              {getFileIcon(selectedFile.type, false)}
+                            </div>
+                          )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-gray-800 truncate">{selectedFile.name}</p>
+                        <p className="text-[10px] text-gray-500">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                      </div>
+                      <button onClick={removeFile} className="p-2 hover:bg-gray-200 rounded-full transition-all text-gray-400 hover:text-rose-500 active:scale-95 cursor-pointer">
+                        <FaTimes size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 items-end">
+                    <div className="flex gap-1 mb-2">
+                      <div className="relative" ref={emojiPickerRef}>
+                        <button
+                          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                          className={`p-2 rounded-full transition-all active:scale-90 cursor-pointer ${showEmojiPicker ? 'text-rose-500 bg-rose-50' : 'text-gray-400 hover:text-rose-500 hover:bg-gray-50'}`}
+                        >
+                          <FaRegSmile size={20} />
+                        </button>
+                        {showEmojiPicker && (
+                          <div className="absolute bottom-12 left-0 z-50 shadow-2xl rounded-2xl overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 origin-bottom-left">
+                            <EmojiPicker
+                              onEmojiClick={onEmojiClick}
+                              theme={Theme.LIGHT}
+                              width={320}
+                              height={400}
+                              skinTonesDisabled
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative" ref={attachmentRef}>
+                        <button
+                          onClick={() => setShowAttachmentOptions(!showAttachmentOptions)}
+                          className={`p-2 rounded-full transition-all active:scale-90 cursor-pointer ${showAttachmentOptions ? 'text-rose-500 bg-rose-50' : 'text-gray-400 hover:text-rose-500 hover:bg-gray-50'}`}
+                        >
+                          <FaPaperclip size={18} />
+                        </button>
+                        {showAttachmentOptions && (
+                          <div className="absolute bottom-12 left-0 z-50 bg-white shadow-2xl rounded-2xl border border-gray-100 p-2 min-w-[140px] flex flex-col gap-1 animate-in slide-in-from-bottom-2 duration-200">
+                            {[
+                              { label: 'Image', icon: FaFileImage, color: 'text-blue-500', accept: 'image/*' },
+                              { label: 'Video', icon: FaVideo, color: 'text-rose-500', accept: 'video/*' },
+                              { label: 'Document', icon: FaFileAlt, color: 'text-purple-500', accept: '.pdf,.doc,.docx,.xls,.xlsx,.txt' },
+                            ].map((opt) => (
+                              <button
+                                key={opt.label}
+                                onClick={() => {
+                                  if (fileInputRef.current) {
+                                    fileInputRef.current.accept = opt.accept;
+                                    fileInputRef.current.click();
+                                  }
+                                  setShowAttachmentOptions(false);
+                                }}
+                                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 transition-all text-xs font-medium text-gray-700 cursor-pointer"
+                              >
+                                <opt.icon size={16} className={opt.color} />
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </div>
+
                     <textarea
                       ref={textareaRef}
                       placeholder="Type a message..."
@@ -784,10 +1180,14 @@ export default function ChatsPage() {
                     />
                     <button
                       onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                      className="cursor-pointer h-[46px] w-[46px] shrink-0 bg-rose-500 text-white rounded-2xl hover:bg-rose-600 transition-all shadow-md shadow-rose-500/20 disabled:opacity-40 active:scale-95 flex items-center justify-center"
+                      disabled={(!newMessage.trim() && !selectedFile) || uploadProgress}
+                      className="cursor-pointer h-[46px] w-[46px] shrink-0 bg-rose-500 text-white rounded-2xl hover:bg-rose-600 transition-all shadow-md shadow-rose-500/20 disabled:opacity-40 active:scale-95 flex items-center justify-center relative overflow-hidden"
                     >
-                      <FaPaperPlane size={16} />
+                      {uploadProgress ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      ) : (
+                        <FaPaperPlane size={16} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -812,40 +1212,64 @@ export default function ChatsPage() {
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
           onClick={(e) => e.stopPropagation()}
         >
-          {messages.find((m) => m.id === contextMenu.messageId) && (
-            <>
-              {/* Copy Option (Available for all) */}
-              <button
-                onClick={() => handleCopyMessage(contextMenu.messageId)}
-                className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left whitespace-nowrap"
-              >
-                <MdContentCopy className="text-gray-400" /> Copy
-              </button>
+          {(() => {
+            const msg = messages.find((m) => m.id === contextMenu.messageId);
+            if (!msg) return null;
+            return (
+              <>
+                {!msg.isDeleted && (
+                  <>
+                    {/* Copy Option */}
+                    {msg.text && (
+                      <button
+                        onClick={() => handleCopyMessage(msg.id)}
+                        className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left whitespace-nowrap"
+                      >
+                        <MdContentCopy className="text-gray-400" /> Copy
+                      </button>
+                    )}
 
-              {/* Edit Option (Only for sender) */}
-              {messages.find((m) => m.id === contextMenu.messageId)!.senderId === user?.id &&
-                isMessageEditable(messages.find((m) => m.id === contextMenu.messageId)!.createdAt) && (
-                  <button
-                    onClick={() => handleEditMessage(contextMenu.messageId)}
-                    className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left whitespace-nowrap"
-                  >
-                    <MdEdit className="text-gray-400" /> Edit
-                  </button>
+                    {/* Save Option */}
+                    {msg.fileUrl && !fileError[msg.id] && (
+                      <button
+                        onClick={() => handleSaveFile(msg.id)}
+                        className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left whitespace-nowrap"
+                      >
+                        <FaDownload className="text-gray-400" size={16} /> Save
+                      </button>
+                    )}
+
+                    {/* Edit Option (Only for sender and text-only) */}
+                    {msg.senderId === user?.id && !msg.fileUrl && isMessageEditable(msg.createdAt) && (
+                      <button
+                        onClick={() => handleEditMessage(msg.id)}
+                        className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left whitespace-nowrap"
+                      >
+                        <MdEdit className="text-gray-400" /> Edit
+                      </button>
+                    )}
+                  </>
                 )}
 
-              {/* Delete Option */}
-              <button
-                onClick={() => handleDeleteMessage(contextMenu.messageId)}
-                className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-gray-50 text-left whitespace-nowrap"
-              >
-                <MdDelete className="text-rose-400" />
-                {messages.find((m) => m.id === contextMenu.messageId)!.senderId === user?.id &&
-                  isWithinTwoDays(messages.find((m) => m.id === contextMenu.messageId)!.createdAt)
-                  ? 'Delete for Everyone'
-                  : 'Delete for Me'}
-              </button>
-            </>
-          )}
+                {/* Delete Options */}
+                <button
+                  onClick={() => handleDeleteMessage(msg.id, false)}
+                  className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-gray-50 text-left whitespace-nowrap"
+                >
+                  <MdDelete className="text-rose-400" /> Delete for Me
+                </button>
+
+                {!msg.isDeleted && !fileError[msg.id] && msg.senderId === user?.id && isWithinTwoDays(msg.createdAt) && (
+                  <button
+                    onClick={() => handleDeleteMessage(msg.id, true)}
+                    className="cursor-pointer w-full flex items-center gap-2 px-4 py-2 text-sm text-rose-600 hover:bg-gray-50 text-left whitespace-nowrap"
+                  >
+                    <MdDelete className="text-rose-400" /> Delete for Everyone
+                  </button>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 
@@ -859,6 +1283,40 @@ export default function ChatsPage() {
             setContextMenu(null);
           }}
         />
+      )}
+
+      {/* Media Preview Modal */}
+      {activePreview && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300 backdrop-blur-md bg-black/80"
+          onClick={() => setActivePreview(null)}
+        >
+          <button
+            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all active:scale-90 z-[120]"
+            onClick={() => setActivePreview(null)}
+          >
+            <FaTimes size={20} />
+          </button>
+          <div
+            className="relative max-w-5xl w-full h-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {activePreview.type.startsWith('image/') ? (
+              <img
+                src={activePreview.url}
+                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-300"
+                alt="Large preview"
+              />
+            ) : (
+              <video
+                src={activePreview.url}
+                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-300"
+                controls
+                autoPlay
+              />
+            )}
+          </div>
+        </div>
       )}
     </>
   );

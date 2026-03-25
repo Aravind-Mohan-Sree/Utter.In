@@ -25,4 +25,5 @@ export interface IValidateDataService {
   validateRating(rating: number): ValidatedData;
   validateReviewNote(note: string): ValidatedData;
   validateMessageText(text: string): ValidatedData;
+  validateAttachment(file: FileInput): ValidatedData;
 }

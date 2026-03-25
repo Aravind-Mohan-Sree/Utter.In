@@ -10,6 +10,7 @@ export const filePrefixes = {
   TUTOR_AVATAR: 'tutors/avatars/',
   TUTOR_VIDEO: 'tutors/videos/',
   TUTOR_CERTIFICATE: 'tutors/certificates/',
+  CHAT_ATTACHMENT: 'chats/attachments/',
 } as const;
 
 export const contentTypes = {

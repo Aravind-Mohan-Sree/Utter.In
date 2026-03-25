@@ -31,7 +31,7 @@ const userSchema = new Schema<IUser>(
     bio: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, required: true },
-    isBlocked: { type: Boolean, required: true },
+    isBlocked: { type: Boolean, required: true, default: false },
     googleId: { type: String, default: null },
     streak: {
       lastActive: { type: Date, default: null },

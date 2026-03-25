@@ -11,7 +11,12 @@ import { ChatMapper } from '~mappers/ChatMapper';
 import { logger } from '~logger/logger';
 import { UserMapper } from '~mappers/UserMapper';
 import { SendMessageDTO } from '~dtos/ChatDTO';
-import { IValidateDataService } from '~service-interfaces/IValidateDataService';
+import { IValidateDataService, FileInput } from '~service-interfaces/IValidateDataService';
+import { IUploadChatAttachmentUseCase, ContentType } from '~use-case-interfaces/shared/IFileUseCase';
+import { UploadedFiles } from '~middlewares/multer';
+import { BadRequestError } from '~errors/HttpError';
+import { filePrefixes } from '~constants/fileConstants';
+import { unlink } from 'fs/promises';
 
 export class ChatController {
   constructor(
@@ -21,6 +26,7 @@ export class ChatController {
     private _searchChatUseCase: ISearchChatUseCase,
     private _editMessageUseCase: IEditMessageUseCase,
     private _deleteMessageUseCase: IDeleteMessageUseCase,
+    private _uploadChatAttachmentUseCase: IUploadChatAttachmentUseCase,
     private _validator: IValidateDataService,
   ) {}
 
@@ -71,6 +77,9 @@ export class ChatController {
         senderId,
         dto.receiverId,
         dto.text,
+        dto.fileUrl,
+        dto.fileType,
+        dto.fileName,
       );
       return res.status(201).json({
         success: true,
@@ -129,16 +138,54 @@ export class ChatController {
   deleteMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { messageId } = req.params;
+      const { forEveryone } = req.query;
       const userId = req.user!.id;
       const message = await this._deleteMessageUseCase.execute(
         messageId,
         userId,
+        forEveryone === 'true'
       );
       return res.status(200).json({
         success: true,
         message: ChatMapper.toMessageResponse(message),
       });
     } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  };
+
+  uploadAttachment = async (req: Request, res: Response, next: NextFunction) => {
+    const files = req.files as UploadedFiles;
+    const attachment = files.attachment ? files.attachment[0] : null;
+
+    try {
+      if (!attachment) {
+        throw new BadRequestError('Attachment is required');
+      }
+
+      const validationRes = this._validator.validateAttachment(attachment as FileInput);
+      if (!validationRes.success) {
+        throw new BadRequestError(validationRes.message);
+      }
+
+      const url = await this._uploadChatAttachmentUseCase.execute(
+        filePrefixes.CHAT_ATTACHMENT,
+        attachment.originalname,
+        attachment.path,
+        attachment.mimetype as ContentType,
+      );
+
+      return res.status(200).json({
+        success: true,
+        url,
+        fileName: attachment.originalname,
+        fileType: attachment.mimetype,
+      });
+    } catch (error) {
+      if (attachment?.path) {
+        await unlink(attachment.path).catch(() => {});
+      }
       logger.error(error);
       next(error);
     }

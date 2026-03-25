@@ -13,10 +13,13 @@ export const getMessages = async (conversationId: string, params?: { page?: numb
   return response.data;
 };
 
-export const sendMessage = async (receiverId: string, text: string) => {
+export const sendMessage = async (receiverId: string, text?: string, fileUrl?: string, fileType?: string, fileName?: string) => {
   const response = await axios.post(API_ROUTES.USER.SEND_MESSAGE, {
     receiverId,
     text,
+    fileUrl,
+    fileType,
+    fileName,
   });
   return response.data;
 };
@@ -41,7 +44,20 @@ export const editMessage = async (messageId: string, text: string) => {
   return response.data;
 };
 
-export const deleteMessage = async (messageId: string) => {
-  const response = await axios.delete(`${API_ROUTES.USER.CHATS}/messages/${messageId}`);
+export const deleteMessage = async (messageId: string, forEveryone: boolean = false) => {
+  const response = await axios.delete(`${API_ROUTES.USER.CHATS}/messages/${messageId}`, {
+    params: { forEveryone }
+  });
+  return response.data;
+};
+
+export const uploadAttachment = async (file: File) => {
+  const formData = new FormData();
+  formData.append('attachment', file);
+  const response = await axios.post(`${API_ROUTES.USER.CHATS}/attachments`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };

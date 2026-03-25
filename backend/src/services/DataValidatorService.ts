@@ -269,9 +269,22 @@ export class DataValidatorService implements IValidateDataService {
     const chatSchema = z.object({
       text: z
         .string()
-        .min(1, errorMessage.MESSAGE_TEXT_REQUIRED)
         .max(1000, errorMessage.MESSAGE_TEXT_MAX),
     });
     return toValidatedData(chatSchema.safeParse({ text }));
+  }
+
+  validateAttachment(file: FileInput): ValidatedData {
+    const attachmentSchema = z.any().superRefine((file, ctx) => {
+      if (!file || typeof file !== 'object') {
+        ctx.addIssue({ code: 'custom', message: 'Attachment is required' });
+        return;
+      }
+      if (file.size > 10_000_000) {
+        ctx.addIssue({ code: 'custom', message: 'Attachment too large (max 10MB)' });
+      }
+    });
+
+    return toValidatedData(z.object({ file: attachmentSchema }).safeParse({ file }));
   }
 }

@@ -212,15 +212,8 @@ export default function VideoCallPage() {
         if (!socket) return;
 
         const onCallEnded = () => {
-            const type = searchParams.get('type');
-            if (type !== 'session') {
-                utterToast.info('The call has ended');
-                handleDisconnect(false);
-            } else {
-                utterToast.info('The other party has left the call');
-                setRemoteStream(null);
-                setIsCallConnected(false);
-            }
+            utterToast.info('The call has ended');
+            handleDisconnect(false);
         };
 
         const onSessionCompleted = () => {
@@ -421,13 +414,19 @@ export default function VideoCallPage() {
 
                 const isChatCall = searchParams.get('type') === 'chat';
                 const otherId = searchParams.get('otherId');
+                const callId = searchParams.get('callId');
 
                 let myPeerId = `${bookingId}_${myRole}`;
                 let targetPeerId = `${bookingId}_${myRole === 'user' ? 'tutor' : 'user'}`;
 
-                if (isChatCall && userId && otherId) {
+                if (userId && otherId) {
                     myPeerId = `${bookingId}_${userId}`;
                     targetPeerId = `${bookingId}_${otherId}`;
+                }
+
+                if (callId) {
+                    myPeerId = `${myPeerId}_${callId}`;
+                    targetPeerId = `${targetPeerId}_${callId}`;
                 }
 
                 peerInstance = new PeerJS(myPeerId, {

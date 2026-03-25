@@ -73,7 +73,7 @@ export class ConversationRepository
       participants,
       participantsData.length > 0 ? participantsData : undefined,
       doc.lastMessage ? String(doc.lastMessage) : undefined,
-      populatedDoc.lastMessage?.text,
+      populatedDoc.lastMessage?.text || (populatedDoc.lastMessage?.fileUrl ? (populatedDoc.lastMessage.fileType?.startsWith('image/') ? 'Photo' : populatedDoc.lastMessage.fileType?.startsWith('video/') ? 'Video' : 'File') : undefined),
       populatedDoc.lastMessage?.createdAt,
       unreadCountObj,
       String(doc._id),
