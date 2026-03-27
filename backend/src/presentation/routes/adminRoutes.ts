@@ -27,11 +27,16 @@ import { SignoutController } from '~controllers/shared/SignoutController';
 import { DeleteFileUseCase } from '~use-cases/shared/DeleteFileUseCase';
 import { MailService } from '~concrete-services/MailService';
 import { UpdateFileUseCase } from '~use-cases/shared/UpdateFileUseCase';
+import { AbuseReportRepository } from '~concrete-repositories/AbuseReportRepository';
+import { GetAbuseReportsUseCase } from '~use-cases/admin/report/GetAbuseReportsUseCase';
+import { HandleAbuseReportUseCase } from '~use-cases/admin/report/HandleAbuseReportUseCase';
+import { AdminAbuseReportController } from '~controllers/admin/AbuseReportController';
 
 // repositories
 const adminRepository = new AdminRepository();
 const userRepository = new UserRepository();
 const tutorRepository = new TutorRepository();
+const abuseReportRepository = new AbuseReportRepository();
 
 // services
 const mailService = new MailService();
@@ -60,6 +65,9 @@ const rejectUseCase = new RejectUseCase(tutorRepository, mailService);
 const updateFileUseCase = new UpdateFileUseCase(s3Service);
 const deleteFileUseCase = new DeleteFileUseCase(s3Service);
 
+const getAbuseReportsUseCase = new GetAbuseReportsUseCase(abuseReportRepository, userRepository, tutorRepository);
+const handleAbuseReportUseCase = new HandleAbuseReportUseCase(abuseReportRepository, userRepository, tutorRepository, mailService);
+
 // shared use cases
 const getAdminDataUseCase = new GetEntityDataUseCase<Admin, IAdmin>(
   adminRepository,
@@ -80,6 +88,7 @@ const tutorsController = new TutorsController(
   updateFileUseCase,
   deleteFileUseCase,
 );
+const abuseReportController = new AdminAbuseReportController(getAbuseReportsUseCase, handleAbuseReportUseCase);
 
 // wire auth middlewares
 const authenticate = new Authenticate<Admin>(jwtService, getAdminDataUseCase);
@@ -105,5 +114,9 @@ router.patch(
 );
 router.patch('/tutors/:id/approve', auth.verify(), tutorsController.approve);
 router.patch('/tutors/:id/reject', auth.verify(), tutorsController.reject);
+
+// abuse reports
+router.get('/reports', auth.verify(), abuseReportController.getReports);
+router.patch('/reports/:reportId', auth.verify(), abuseReportController.handleReport);
 
 export const adminRouter = router;

@@ -30,6 +30,7 @@ export const API_ROUTES = {
     MARK_READ: (id: string) => `/user/notifications/${id}/read`,
     MARK_ALL_READ: '/user/notifications/read-all',
     UNREAD_COUNT: '/user/notifications/unread-count',
+    REPORTS: '/user/reports',
   },
   TUTOR: {
     SIGNUP: '/tutor/signup',
@@ -58,6 +59,7 @@ export const API_ROUTES = {
     MARK_READ: (id: string) => `/tutor/notifications/${id}/read`,
     MARK_ALL_READ: '/tutor/notifications/read-all',
     UNREAD_COUNT: '/tutor/notifications/unread-count',
+    REPORTS: '/tutor/reports',
   },
   ADMIN: {
     SIGNIN: '/admin/signin',
@@ -65,5 +67,7 @@ export const API_ROUTES = {
     SIGNOUT: '/admin/signout',
     USERS: '/admin/users',
     TUTORS: '/admin/tutors',
+    REPORTS: '/admin/reports',
+    HANDLE_REPORT: (id: string) => `/admin/reports/${id}`,
   },
 };

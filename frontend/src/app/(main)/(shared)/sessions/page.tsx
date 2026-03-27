@@ -78,7 +78,7 @@ export default function SessionsPage() {
         }
       });
     }
-    router.push(`/video-call/${bookingId}?otherId=${otherId}&type=session&callId=${callId}`);
+    router.push(`/video-call/${bookingId}?otherId=${otherId}&type=session&callId=${callId}&otherName=${encodeURIComponent(otherName)}`);
   };
 
   const fetchBookings = useCallback(async () => {

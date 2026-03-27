@@ -37,5 +37,6 @@ export interface ICloudService {
   upload(filePath: string, options?: UploadOptions): Promise<UploadResult>;
   uploadBuffer(buffer: Buffer, options: UploadOptions): Promise<UploadResult>;
   update(fromKey: string, toKey: string): Promise<UpdateResult>;
+  copy(fromKey: string, toKey: string): Promise<UpdateResult>;
   delete(key: string): Promise<DeleteResult>;
 }

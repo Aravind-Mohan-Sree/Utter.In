@@ -1,0 +1,154 @@
+import { AbuseReport } from '~entities/AbuseReport';
+import { IAbuseReportRepository } from '~repository-interfaces/IAbuseReportRepository';
+import { AbuseReportModel, IAbuseReport } from '~models/AbuseReportModel';
+import { BaseRepository } from './BaseRepository';
+import { Document, Types } from 'mongoose';
+
+export class AbuseReportRepository
+  extends BaseRepository<AbuseReport, IAbuseReport>
+  implements IAbuseReportRepository {
+  constructor() {
+    super(AbuseReportModel);
+  }
+
+  async findAllReports(page: number, limit: number, search?: string, status?: string): Promise<{ reports: AbuseReport[]; total: number }> {
+    const pipeline: any[] = [];
+    const matchStage: any = {};
+
+    if (status && status !== 'All') {
+      matchStage.status = status;
+    }
+
+    pipeline.push({ $match: matchStage });
+
+    // Join with reporter (users)
+    pipeline.push({
+      $lookup: {
+        from: 'users',
+        localField: 'reporterId',
+        foreignField: '_id',
+        as: 'reporterData',
+      },
+    });
+
+    // Join with reported user (users)
+    pipeline.push({
+      $lookup: {
+        from: 'users',
+        localField: 'reportedId',
+        foreignField: '_id',
+        as: 'reportedUserData',
+      },
+    });
+
+    // Join with reported tutor (tutors)
+    pipeline.push({
+      $lookup: {
+        from: 'tutors',
+        localField: 'reportedId',
+        foreignField: '_id',
+        as: 'reportedTutorData',
+      },
+    });
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'reporterData.name': { $regex: search, $options: 'i' } },
+            { 'reporterData.email': { $regex: search, $options: 'i' } },
+            { 'reportedUserData.name': { $regex: search, $options: 'i' } },
+            { 'reportedUserData.email': { $regex: search, $options: 'i' } },
+            { 'reportedTutorData.name': { $regex: search, $options: 'i' } },
+            { 'reportedTutorData.email': { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } },
+            { type: { $regex: search, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: 'total' }],
+        data: [
+          { $sort: { createdAt: -1 } },
+          { $skip: (page - 1) * limit },
+          { $limit: limit },
+        ],
+      },
+    });
+
+    const result = await this.model.aggregate(pipeline);
+    const reports = result[0].data || [];
+    const total = result[0].metadata[0]?.total || 0;
+
+    return {
+      total,
+      reports: reports.map((doc: any) => this.toEntity(doc)!),
+    };
+  }
+
+  async findByReporter(userId: string, page: number, limit: number, status?: string): Promise<{ reports: AbuseReport[]; total: number }> {
+    const reporterId = new Types.ObjectId(userId);
+    const query: any = { reporterId };
+    if (status && status !== 'All') {
+      query.status = status;
+    }
+    const total = await this.model.countDocuments(query);
+    const docs = await this.model.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return {
+      total,
+      reports: docs.map(doc => this.toEntity(doc)!),
+    };
+  }
+
+  protected toSchema(entity: AbuseReport | Partial<AbuseReport>): IAbuseReport | Partial<IAbuseReport> {
+    return {
+      reporterId: entity.reporterId ? new Types.ObjectId(entity.reporterId) : undefined,
+      reportedId: entity.reportedId ? new Types.ObjectId(entity.reportedId) : undefined,
+      type: entity.type,
+      description: entity.description,
+      messages: entity.messages?.map(msg => ({
+        senderId: new Types.ObjectId(msg.senderId),
+        text: msg.text,
+        timestamp: msg.timestamp,
+        fileUrl: msg.fileUrl,
+        fileType: msg.fileType,
+        fileName: msg.fileName,
+      })),
+      channel: entity.channel,
+      status: entity.status,
+      rejectionReason: entity.rejectionReason,
+    } as Partial<IAbuseReport>;
+  }
+
+  protected toEntity(doc: (IAbuseReport & Document<unknown>) | any): AbuseReport | null {
+    if (!doc) return null;
+
+    return new AbuseReport(
+      String(doc.reporterId),
+      String(doc.reportedId),
+      doc.type,
+      doc.description,
+      doc.messages.map((msg: any) => ({
+        senderId: String(msg.senderId),
+        text: msg.text,
+        timestamp: msg.timestamp,
+        fileUrl: msg.fileUrl,
+        fileType: msg.fileType,
+        fileName: msg.fileName,
+      })),
+      doc.channel,
+      doc.status,
+      doc.rejectionReason,
+      String(doc._id || doc.id),
+      doc.createdAt,
+      doc.updatedAt,
+    );
+  }
+}

@@ -123,6 +123,32 @@ export class S3Service implements ICloudService {
     }
   }
 
+  async copy(fromKey: string, toKey: string): Promise<UpdateResult> {
+    try {
+      await this._s3.send(
+        new CopyObjectCommand({
+          Bucket: this._bucket,
+          CopySource: encodeURI(`${this._bucket}/${fromKey}`),
+          Key: toKey,
+        }),
+      );
+
+      return {
+        success: true,
+        from: fromKey,
+        to: toKey,
+      };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to copy object',
+      };
+    }
+  }
+
   async delete(key: string): Promise<DeleteResult> {
     try {
       await this._s3.send(

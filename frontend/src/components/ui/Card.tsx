@@ -357,49 +357,38 @@ const ReportCard = ({
     </div>
 
     {/* Reporter and Reported Sections */}
-    <div className="flex items-center gap-4 mb-4">
+    <div className="flex items-center gap-4 mb-3">
       <ReportSection
         user={reporter}
         role="Reporter (User)"
         variant="reporter"
         className="flex-1"
       />
-      <HiArrowRight className="text-gray-400 shrink-0" size={20} />
-      <ReportSection
-        user={reported}
-        role="Reported (Tutor)"
-        variant="reported"
-        className="flex-1"
-      />
     </div>
 
-    {/* Date & Time and Abuse Type */}
-    {(dateTime || abuseType) && (
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 text-sm">
-        {dateTime && (
-          <div>
-            <span className="text-gray-500">Date & Time: </span>
-            <span className="font-semibold text-gray-900">{dateTime}</span>
-          </div>
-        )}
-        {abuseType && (
-          <div>
-            <span className="text-gray-500">Abuse Type: </span>
-            <span className="font-semibold text-gray-900">{abuseType}</span>
-          </div>
-        )}
+    {/* Abuse Type Tag */}
+    {abuseType && (
+      <div className="mb-4">
+        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Abuse Type</span>
+        <span className="inline-flex items-center px-3 py-0.5 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-rose-100">
+          {abuseType}
+        </span>
       </div>
     )}
 
-    {/* View Details Button */}
-    {onViewDetails && (
-      <button
-        onClick={() => onViewDetails(id)}
-        className="w-full bg-gradient-to-r from-rose-400 to-rose-600 text-white py-2.5 px-4 rounded-lg font-medium hover:from-rose-500 hover:to-rose-700 transition-all"
-      >
-        View Details
-      </button>
-    )}
+    {/* Bottom Action Footer */}
+    <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
+      <DateAndTime date={dateTime!} label="Reported on" showTime={true} />
+      
+      {onViewDetails && (
+        <Button
+          variant="outline"
+          icon={<HiArrowRight size={22} />}
+          className="h-fit rounded-lg p-0.5! transition-all duration-200 text-rose-500 hover:bg-rose-50 border-rose-200/50"
+          onClick={() => onViewDetails(id)}
+        />
+      )}
+    </div>
   </div>
 );
 

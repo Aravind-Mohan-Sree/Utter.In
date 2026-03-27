@@ -3,24 +3,19 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { DataConnection, MediaConnection, Peer as PeerType } from 'peerjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-    FaCheck,
-    FaChevronUp,
-    FaComments,
-    FaMicrophone,
-    FaMicrophoneSlash,
-    FaPaperPlane,
-    FaPhoneSlash,
-    FaVideo,
-    FaVideoSlash,
-} from 'react-icons/fa';
+import { FaPaperPlane, FaPhoneSlash, FaVideo, FaVideoSlash, FaCheck, FaChevronUp, FaComments, FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
+import { MdReportProblem } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 
 import Loader from '~components/ui/Loader';
+import CreateAbuseReportModal from '~components/modals/CreateAbuseReportModal';
 import { useSocketContext } from '~contexts/SocketContext';
 import { RootState } from '~store/rootReducer';
 import axiosInstance from '~utils/axiosConfig';
 import { utterToast } from '~utils/utterToast';
+import { createAbuseReport, uploadAttachment } from '~services/user/chatService';
+import { errorHandler } from '~utils/errorHandler';
+import { API_ROUTES } from '~constants/routes';
 
 interface Message {
     senderId: string;
@@ -50,6 +45,8 @@ export default function VideoCallPage() {
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [isReporting, setIsReporting] = useState(false);
     
     useEffect(() => {
         if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
@@ -80,6 +77,9 @@ export default function VideoCallPage() {
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    const videoChunksRef = useRef<Blob[]>([]);
+    const recorderIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const activeRecorderRef = useRef<MediaRecorder | null>(null);
 
 
     useEffect(() => {
@@ -592,10 +592,143 @@ export default function VideoCallPage() {
                 peerInstance.destroy();
             }
             stopMediaTracks(false);
+            videoChunksRef.current = [];
+            activeRecorderRef.current = null;
 
             setTimeout(() => stopMediaTracks(false), 100);
         };
     }, [bookingId, userId, userName, userRole, myRole, stopMediaTracks, socket, searchParams, user]);
+
+    useEffect(() => {
+        const paramName = searchParams.get('otherName');
+        if (paramName && !otherPartyName) {
+            setOtherPartyName(paramName);
+        }
+    }, [searchParams, otherPartyName]);
+
+    useEffect(() => {
+        if (!isCallConnected) return;
+
+        let isRecordingActive = true;        
+        const startRecordingSegment = () => {
+            if (!remoteStreamRef.current || !isMediaConnectedRef.current || !isRecordingActive) return;
+            
+            try {
+                const recorder = new MediaRecorder(remoteStreamRef.current, { mimeType: 'video/webm;codecs=vp8,opus' });
+                const currentChunks: Blob[] = [];
+                
+                recorder.ondataavailable = (e) => {
+                    if (e.data.size > 0 && isRecordingActive) currentChunks.push(e.data);
+                };
+
+                recorder.onstop = () => {
+                    if (currentChunks.length > 0 && isRecordingActive) {
+                        const segmentBlob = new Blob(currentChunks, { type: 'video/webm' });
+                        videoChunksRef.current.push(segmentBlob);
+                        if (videoChunksRef.current.length > 3) {
+                            videoChunksRef.current.shift();
+                        }
+                    }
+                    activeRecorderRef.current = null;
+                };
+
+                activeRecorderRef.current = recorder;
+                recorder.start(1000); // 1s chunks
+                
+                const segmentTimeout = setTimeout(() => {
+                    if (recorder.state === 'recording' && isRecordingActive) recorder.stop();
+                }, 20000); // 20s segments
+
+                return segmentTimeout;
+            } catch (err) {
+                console.error('Evidence capture failed to start:', err);
+            }
+        };
+
+        const interval = setInterval(startRecordingSegment, 20000);
+        startRecordingSegment();
+
+        return () => {
+            isRecordingActive = false;
+            if (interval) clearInterval(interval);
+            if (activeRecorderRef.current && activeRecorderRef.current.state === 'recording') {
+                activeRecorderRef.current.stop();
+            }
+        };
+    }, [isCallConnected]);
+
+    const handleReportSubmit = async (type: string, description: string) => {
+        try {
+            setIsReporting(true);
+
+            if (activeRecorderRef.current && activeRecorderRef.current.state === 'recording') {
+                const stopPromise = new Promise(resolve => {
+                    if (activeRecorderRef.current) {
+                        const originalOnStop = activeRecorderRef.current.onstop;
+                        activeRecorderRef.current.onstop = (e) => {
+                            if (originalOnStop) originalOnStop.call(activeRecorderRef.current!, e);
+                            resolve(true);
+                        };
+                    } else {
+                        resolve(false);
+                    }
+                });
+                
+                activeRecorderRef.current.stop();
+                await stopPromise; 
+                await new Promise(resolve => setTimeout(resolve, 100)); 
+            }
+
+            const otherId = searchParams.get('otherId');
+            if (!otherId) return;
+
+            const contextMessages = messages.slice(-5).map(msg => ({
+                senderId: msg.senderId,
+                text: msg.text || '',
+                timestamp: msg.timestamp
+            }));
+
+            if (videoChunksRef.current.length > 0) {
+                const finalChunks = [...videoChunksRef.current];
+                utterToast.info('Processing video evidence');
+                
+                const uploadPromises = finalChunks.map(async (segmentBlob, index) => {
+                    const fileName = `video-evidence-part${index + 1}-${Date.now()}.webm`;
+                    const file = new File([segmentBlob], fileName, { type: 'video/webm' });
+                    const uploadRes = await uploadAttachment(file);
+                    
+                    return {
+                        senderId: otherId,
+                        text: `VIDEO_EVIDENCE_AUTO_PART_${index + 1}`,
+                        timestamp: new Date(Date.now() - (finalChunks.length - index) * 20000),
+                        fileUrl: uploadRes.url,
+                        fileType: uploadRes.fileType,
+                        fileName: uploadRes.fileName
+                    };
+                });
+
+                const uploadedSegments = await Promise.all(uploadPromises);
+                contextMessages.push(...(uploadedSegments as any[]));
+            }
+
+            const reportPath = myRole === 'user' ? API_ROUTES.USER.REPORTS : (API_ROUTES as any).TUTOR.REPORTS;
+            await axiosInstance.post(reportPath, {
+                reportedId: otherId,
+                type,
+                description,
+                messages: contextMessages,
+                channel: 'video'
+            });
+
+            utterToast.success('Abuse report submitted successfully');
+            videoChunksRef.current = [];
+            setIsReportModalOpen(false);
+        } catch (error) {
+            utterToast.error(errorHandler(error));
+        } finally {
+            setIsReporting(false);
+        }
+    };
 
     const sendMessage = () => {
         if (!newMessage.trim() || !connRef.current || !user) return;
@@ -800,19 +933,32 @@ export default function VideoCallPage() {
                     </div>
 
                     <button
-                        onClick={() => setIsChatOpen(!isChatOpen)}
-                        className={`cursor-pointer p-2.5 md:p-3 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center lg:hidden ${isChatOpen ? 'bg-rose-500 shadow-lg shadow-rose-500/30' : 'bg-gray-800 hover:bg-gray-700'
-                            }`}
-                    >
-                        <FaComments size={18} className="md:w-5 md:h-5" />
-                    </button>
-                    <button
                         onClick={() => handleDisconnect()}
                         className="cursor-pointer p-2.5 md:p-3 rounded-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/30 transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-12"
                         title="End Meeting"
                     >
                         {myRole === 'user' ? <FaPhoneSlash size={18} className="md:w-5 md:h-5" /> : <FaPhoneSlash size={18} className="md:w-5 md:h-5" />}
                     </button>
+
+                    <button
+                        onClick={() => setIsChatOpen(!isChatOpen)}
+                        className={`cursor-pointer p-2.5 md:p-3 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center ${isChatOpen ? 'bg-rose-500 shadow-lg shadow-rose-500/30' : 'bg-gray-800 hover:bg-gray-700'
+                            }`}
+                        title="Toggle Chat"
+                    >
+                        <FaComments size={18} className="md:w-5 md:h-5" />
+                    </button>
+
+                    {isCallConnected && (
+                        <button
+                            onClick={() => setIsReportModalOpen(true)}
+                            className="cursor-pointer p-2.5 md:p-3 rounded-full bg-gray-800 hover:bg-rose-500/20 text-gray-400 hover:text-rose-500 transition-all duration-300 transform hover:scale-110 active:scale-95"
+                            title="Report Abuse"
+                        >
+                            <MdReportProblem size={22} className="md:w-6 md:h-6" />
+                        </button>
+                    )}
+
                 </div>
             </div>
 
@@ -890,6 +1036,16 @@ export default function VideoCallPage() {
                     </div>
                 </div>
             </div>
+            {isReportModalOpen && (
+                <CreateAbuseReportModal
+                    isOpen={isReportModalOpen}
+                    onClose={() => setIsReportModalOpen(false)}
+                    onSubmit={handleReportSubmit}
+                    reportedName={otherPartyName || (myRole === 'user' ? 'Tutor' : 'Student')}
+                    isVideoCall={true}
+                    isLoading={isReporting}
+                />
+            )}
         </div>
     );
 }

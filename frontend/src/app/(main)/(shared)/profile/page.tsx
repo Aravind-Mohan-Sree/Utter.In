@@ -13,6 +13,7 @@ import { TextAreaInput } from '~components/form/TextAreaInput';
 import Notification from '~components/layout/Notification';
 import AbuseReportsModal from '~components/modals/AbuseReportsModal';
 import TransactionHistoryModal from '~components/modals/TransactionHistoryModal';
+import { getMyReports } from '~services/user/chatService';
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Avatar from '~components/ui/Avatar';
 import Button from '~components/ui/Button';
@@ -147,20 +148,7 @@ export default function ProfilePage() {
     }
   }, [isTransactionModalOpen, fetchWalletData]);
 
-  const abuseReports: AbuseReport[] = [
-    {
-      id: 1,
-      status: 'pending',
-      type: 'Harassment',
-      reportedUser: {
-        name: 'Karan Malhotra',
-        email: 'karan.malhotra@email.com',
-      },
-      date: '2025-01-26 13:10',
-      description: 'Verbal abuse and inappropriate comments during session',
-      channel: 'video',
-    },
-  ];
+
 
   useEffect(() => {
     if (!user) return;
@@ -595,7 +583,6 @@ export default function ProfilePage() {
       <AbuseReportsModal
         isOpen={isAbuseReportsModalOpen}
         onClose={() => setIsAbuseReportsModalOpen(false)}
-        reports={abuseReports}
       />
     </div>
   );

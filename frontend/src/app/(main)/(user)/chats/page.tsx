@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaArrowLeft, FaChevronDown, FaCircle, FaDownload, FaFile, FaFileAlt, FaFileArchive, FaFileImage, FaFilePdf, FaFileWord, FaPaperclip, FaPaperPlane, FaRegSmile, FaSearch, FaTimes, FaVideo } from 'react-icons/fa';
 import { FaFileCircleXmark } from 'react-icons/fa6';
-import { MdContentCopy, MdDelete, MdEdit } from 'react-icons/md';
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -12,11 +11,13 @@ import Avatar from '~components/ui/Avatar';
 import Loader from '~components/ui/Loader';
 import { useSocketContext } from '~contexts/SocketContext';
 import { setUnreadCount } from '~features/chatSlice';
-import { deleteMessage, editMessage, getConversations, getMessages, searchChat, sendMessage, uploadAttachment } from '~services/user/chatService';
-import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
+import { MdContentCopy, MdDelete, MdEdit, MdReportProblem } from 'react-icons/md';
+import CreateAbuseReportModal from '~components/modals/CreateAbuseReportModal';
+import { createAbuseReport, deleteMessage, editMessage, getConversations, getMessages, searchChat, sendMessage, uploadAttachment } from '~services/user/chatService';
+import { RootState } from '~store/rootReducer';
 
 interface User {
   id: string;
@@ -293,6 +294,8 @@ export default function ChatsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [fileError, setFileError] = useState<Record<string, boolean>>({});
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -782,10 +785,15 @@ export default function ChatsPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        utterToast.error('File too large (max 10MB)');
+      const isVideo = file.type.startsWith('video/');
+      const limitMB = isVideo ? 50 : 10;
+      const limitBytes = limitMB * 1024 * 1024;
+
+      if (file.size > limitBytes) {
+        utterToast.error(`File too large (max ${limitMB}MB for ${isVideo ? 'videos' : 'images/documents'})`);
         return;
       }
+
       setSelectedFile(file);
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -846,7 +854,37 @@ export default function ChatsPage() {
       }
     });
 
-    router.push(`/video-call/${selectedConversation.id}?role=user&type=chat&otherId=${selectedConversation.otherUser.id}&callId=${callId}`);
+    router.push(`/video-call/${selectedConversation.id}?role=user&type=chat&otherId=${selectedConversation.otherUser.id}&callId=${callId}&otherName=${encodeURIComponent(selectedConversation.otherUser.name)}`);
+  };
+
+  const handleReportSubmit = async (type: string, description: string) => {
+    if (!selectedConversation?.otherUser) return;
+    setIsReporting(true);
+    try {
+      const lastMessages = messages.slice(-5).map(m => ({
+        senderId: m.senderId,
+        text: m.text || '',
+        timestamp: new Date(m.createdAt),
+        fileUrl: m.fileUrl,
+        fileType: m.fileType,
+        fileName: m.fileName
+      }));
+
+      await createAbuseReport({
+        reportedId: selectedConversation.otherUser.id,
+        type,
+        description,
+        messages: lastMessages,
+        channel: 'chat'
+      });
+
+      utterToast.success('Abuse report submitted successfully');
+      setIsReportModalOpen(false);
+    } catch (err) {
+      utterToast.error(errorHandler(err));
+    } finally {
+      setIsReporting(false);
+    }
   };
 
   const isOnline = (userId: string) => onlineUsers.has(userId);
@@ -1013,13 +1051,24 @@ export default function ChatsPage() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={startVideoCall}
-                    className="cursor-pointer p-3 bg-rose-50 text-rose-500 hover:bg-rose-100 rounded-2xl transition-all shadow-sm active:scale-95"
-                    title="Start Video Call"
-                  >
-                    <FaVideo size={18} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={startVideoCall}
+                      className="cursor-pointer p-3 bg-rose-50 text-rose-500 hover:bg-rose-100 rounded-2xl transition-all shadow-sm active:scale-95"
+                      title="Start Video Call"
+                    >
+                      <FaVideo size={18} />
+                    </button>
+                    {user?.role === 'user' && messages.length > 0 && (
+                      <button
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="cursor-pointer p-3 bg-gray-50 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all shadow-sm active:scale-95"
+                        title="Report Abuse"
+                      >
+                        <MdReportProblem size={20} />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Messages */}
@@ -1267,6 +1316,8 @@ export default function ChatsPage() {
                     <MdDelete className="text-rose-400" /> Delete for Everyone
                   </button>
                 )}
+
+
               </>
             );
           })()}
@@ -1317,6 +1368,16 @@ export default function ChatsPage() {
             )}
           </div>
         </div>
+      )}
+
+      {selectedConversation && selectedConversation.otherUser && (
+        <CreateAbuseReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          onSubmit={handleReportSubmit}
+          reportedName={selectedConversation.otherUser.name}
+          isLoading={isReporting}
+        />
       )}
     </>
   );

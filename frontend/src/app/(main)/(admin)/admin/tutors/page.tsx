@@ -48,6 +48,7 @@ export default function TutorsPage() {
   const [totalTutorsCount, setTotalTutorsCount] = useState(0);
   const [filteredTutorsCount, setFilteredTutorsCount] = useState(0);
   const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useSelector((state: RootState) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTutorId, setSelectedTutorId] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export default function TutorsPage() {
     if (!user) return;
 
     (async () => {
+      setLoading(true);
       try {
         const res = await fetchTutors(
           currentPage,
@@ -90,6 +92,8 @@ export default function TutorsPage() {
         setTutors(tutors);
       } catch (error) {
         utterToast.error(errorHandler(error));
+      } finally {
+        setLoading(false);
       }
     })();
   }, [debouncedQuery, activeFilter, currentPage, itemsPerPage, user]);
@@ -238,9 +242,19 @@ export default function TutorsPage() {
         itemsPerPage={itemsPerPage}
         onItemsPerPageChange={setItemsPerPage}
         itemsOptions={itemsOptions}
+        label="tutors"
       />
 
-      {tutors.length === 0 ? (
+      {loading && tutors.length === 0 ? (
+        <div className="h-[40vh] w-full flex flex-col items-center justify-center">
+          <div className="relative w-20 h-20">
+            <div className="absolute inset-0 border-[5px] border-rose-500/10 rounded-full"></div>
+            <div className="absolute inset-0 border-[5px] border-transparent border-t-rose-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-5 bg-rose-500/5 rounded-full animate-pulse"></div>
+          </div>
+          <p className="mt-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">Retrieving Tutors</p>
+        </div>
+      ) : tutors.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="text-gray-400 mb-4">
             <MdPeople className="mx-auto w-24 h-24" />

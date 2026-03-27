@@ -90,6 +90,10 @@ import { CompleteQuizUseCase } from '~use-cases/user/quiz/CompleteQuizUseCase';
 import { GetQuizHistoryUseCase } from '~use-cases/user/quiz/GetQuizHistoryUseCase';
 import { GetQuizLeaderboardUseCase } from '~use-cases/user/quiz/GetQuizLeaderboardUseCase';
 import { QuizController } from '~controllers/user/QuizController';
+import { AbuseReportRepository } from '~concrete-repositories/AbuseReportRepository';
+import { CreateAbuseReportUseCase } from '~use-cases/user/report/CreateAbuseReportUseCase';
+import { GetUserAbuseReportsUseCase } from '~use-cases/user/report/GetUserAbuseReportsUseCase';
+import { UserAbuseReportController } from '~controllers/user/AbuseReportController';
 
 // repositories
 const userRepository = new UserRepository();
@@ -103,6 +107,7 @@ const conversationRepository = new ConversationRepository();
 const messageRepository = new MessageRepository();
 const quizRepository = new QuizRepository();
 const notificationRepository = new NotificationRepository();
+const abuseReportRepository = new AbuseReportRepository();
 
 // services
 const mailService = new MailService();
@@ -250,6 +255,13 @@ const completeQuizUseCase = new CompleteQuizUseCase(quizRepository, userReposito
 const getQuizHistoryUseCase = new GetQuizHistoryUseCase(quizRepository);
 const getQuizLeaderboardUseCase = new GetQuizLeaderboardUseCase(quizRepository);
 
+const createAbuseReportUseCase = new CreateAbuseReportUseCase(abuseReportRepository, s3Service);
+const getUserAbuseReportsUseCase = new GetUserAbuseReportsUseCase(
+  abuseReportRepository,
+  userRepository,
+  tutorRepository,
+);
+
 // controllers
 const authController = new AuthController(
   registerUserUseCase,
@@ -331,6 +343,12 @@ const quizController = new QuizController(
   completeQuizUseCase,
   getQuizHistoryUseCase,
   getQuizLeaderboardUseCase,
+);
+
+const abuseReportController = new UserAbuseReportController(
+  createAbuseReportUseCase,
+  getUserAbuseReportsUseCase,
+  dataValidatorService,
 );
 
 // wire auth middlewares
@@ -428,6 +446,10 @@ router.post('/quizzes/check-answer', auth.verify(), quizController.checkAnswer);
 router.post('/quizzes/complete', auth.verify(), quizController.completeQuiz);
 router.get('/quizzes/history', auth.verify(), quizController.getHistory);
 router.get('/quizzes/leaderboard', auth.verify(), quizController.getLeaderboard);
+
+// abuse reports
+router.post('/reports', auth.verify(), abuseReportController.createReport);
+router.get('/reports', auth.verify(), abuseReportController.getMyReports);
 
 // notifications
 router.use('/notifications', getNotificationRouter(auth));

@@ -8,6 +8,7 @@ import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import { Card } from '~components/ui/Card';
 import { Dropdown } from '~components/ui/Dropdown';
 import { Pagination } from '~components/ui/Pagination';
+import { ResultsSummary } from '~components/ui/ResultsSummary';
 import { fetchUsers, toggleStatus } from '~services/admin/usersService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
@@ -34,6 +35,7 @@ export default function UsersPage() {
   const [totalUsersCount, setTotalUsersCount] = useState(0);
   const [filteredUsersCount, setFilteredUsersCount] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useSelector((state: RootState) => state.auth);
   const totalPages = Math.ceil(filteredUsersCount / itemsPerPage);
   const from = filteredUsersCount === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
@@ -51,6 +53,7 @@ export default function UsersPage() {
     if (!user) return;
 
     (async () => {
+      setLoading(true);
       try {
         const res = await fetchUsers(
           currentPage,
@@ -66,6 +69,8 @@ export default function UsersPage() {
         setUsers(users);
       } catch (error) {
         utterToast.error(errorHandler(error));
+      } finally {
+        setLoading(false);
       }
     })();
   }, [debouncedQuery, activeFilter, currentPage, itemsPerPage, user]);
@@ -111,41 +116,27 @@ export default function UsersPage() {
         }}
       />
 
-      <div className="flex flex-col md:flex-row md:items-center gap-6 mb-4 text-black">
-        <div className="flex items-center gap-2">
-          <p className="text-sm">Items per page</p>
-          <Dropdown
-            options={itemsOptions}
-            selected={itemsPerPage.toString()}
-            onSelect={(val) => {
-              setItemsPerPage(+val);
-            }}
-          />
+      <ResultsSummary
+        from={from}
+        to={to}
+        filteredCount={filteredUsersCount}
+        totalCount={totalUsersCount}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={setItemsPerPage}
+        itemsOptions={itemsOptions}
+        label="users"
+      />
+
+      {loading && users.length === 0 ? (
+        <div className="h-[40vh] w-full flex flex-col items-center justify-center">
+          <div className="relative w-20 h-20">
+            <div className="absolute inset-0 border-[5px] border-rose-500/10 rounded-full"></div>
+            <div className="absolute inset-0 border-[5px] border-transparent border-t-rose-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-5 bg-rose-500/5 rounded-full animate-pulse"></div>
+          </div>
+          <p className="mt-8 text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] animate-pulse">Retrieving Users</p>
         </div>
-
-        <p className="text-sm text-black">
-          Showing{' '}
-          <span className="font-medium text-rose-400">
-            {from}-{to}
-          </span>{' '}
-          of{' '}
-          <span className="font-medium text-rose-400">
-            {filteredUsersCount}
-          </span>{' '}
-          results
-          {filteredUsersCount !== totalUsersCount && (
-            <span className="text-black ml-1">
-              (Total{' '}
-              <span className="text-rose-400 font-medium">
-                {totalUsersCount}
-              </span>{' '}
-              users)
-            </span>
-          )}
-        </p>
-      </div>
-
-      {users.length === 0 ? (
+      ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="text-gray-400 mb-4">
             <MdPeople className="mx-auto w-24 h-24" />

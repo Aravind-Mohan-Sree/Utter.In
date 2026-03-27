@@ -92,6 +92,19 @@ export class MailService implements IMailService {
     });
   }
 
+  async sendReportUpdate(name: string, email: string, status: 'Resolved' | 'Rejected', reason?: string): Promise<void> {
+    const subject = status === 'Resolved' ? 'Action Taken on Account' : 'Status Update on Reported Interaction';
+    const body = status === 'Resolved' 
+      ? `We have reviewed a report regarding your recent interaction and have decided to <b>Restrict Your Account</b> due to a violation of our community standards.`
+      : `We have reviewed the report regarding your recent interaction and have decided <b>Not to Take Any Action</b> at this time.${reason ? `<br><br><b>Administrative Note:</b> ${reason}` : ''}`;
+
+    await this.send({
+      to: email,
+      subject,
+      html: emailTemplate(name, body),
+    });
+  }
+
   generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }

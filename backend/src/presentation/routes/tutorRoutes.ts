@@ -66,6 +66,10 @@ import { SocketManager } from '~concrete-services/SocketManager';
 import { NotificationRepository } from '~concrete-repositories/NotificationRepository';
 import { CreateNotificationUseCase } from '~use-cases/shared/notification/CreateNotificationUseCase';
 import { getNotificationRouter } from './notificationRoutes';
+import { AbuseReportRepository } from '~concrete-repositories/AbuseReportRepository';
+import { CreateAbuseReportUseCase } from '~use-cases/user/report/CreateAbuseReportUseCase';
+import { GetUserAbuseReportsUseCase } from '~use-cases/user/report/GetUserAbuseReportsUseCase';
+import { UserAbuseReportController } from '~controllers/user/AbuseReportController';
 
 // repositories
 const userRepository = new UserRepository();
@@ -75,6 +79,7 @@ const sessionRepository = new SessionRepository();
 const bookingRepository = new BookingRepository();
 const walletRepository = new WalletRepository();
 const notificationRepository = new NotificationRepository();
+const abuseReportRepository = new AbuseReportRepository();
 
 // services
 const mailService = new MailService();
@@ -148,6 +153,18 @@ const updateProfileUseCase = new UpdateProfileUseCase(tutorRepository);
 const changePasswordUseCase = new ChangePasswordUseCase(
   tutorRepository,
   hashService,
+);
+const createAbuseReportUseCase = new CreateAbuseReportUseCase(
+  abuseReportRepository,
+  userRepository,
+  tutorRepository,
+);
+const getUserAbuseReportsUseCase = new GetUserAbuseReportsUseCase(
+  abuseReportRepository,
+);
+const abuseReportController = new UserAbuseReportController(
+  createAbuseReportUseCase,
+  getUserAbuseReportsUseCase,
 );
 const uploadAvatarUseCase = new UploadAvatarUseCase(
   s3Service,
@@ -322,6 +339,10 @@ router.post('/bookings/:id/ping', auth.verify(), bookingController.pingSession);
 
 // wallet
 router.get('/wallet', auth.verify(), walletController.getTransactions);
+
+// abuse reports
+router.post('/reports', auth.verify(), abuseReportController.createReport);
+router.get('/reports', auth.verify(), abuseReportController.getMyReports);
 
 // notifications
 router.use('/notifications', getNotificationRouter(auth));
