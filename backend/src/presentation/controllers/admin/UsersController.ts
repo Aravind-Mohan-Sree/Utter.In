@@ -31,7 +31,7 @@ export class UsersController {
       });
 
       res.status(httpStatusCode.OK).json({
-        message: successMessage.DATA_FETCHED,
+        message: successMessage.DATA_FETCH_SUCCESS,
         usersData,
       });
     } catch (error) {

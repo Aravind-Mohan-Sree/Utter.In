@@ -1,6 +1,6 @@
 import { IAbuseReportRepository } from '~repository-interfaces/IAbuseReportRepository';
-import { IGetUserAbuseReportsUseCase } from '../../../use-case-interfaces/user/IAbuseReportUseCase';
-import { AbuseReport } from '~entities/AbuseReport';
+import { IGetUserAbuseReportsUseCase } from '../../../use-case-interfaces/shared/IAbuseReportUseCase';
+
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 
@@ -46,7 +46,7 @@ export class GetUserAbuseReportsUseCase implements IGetUserAbuseReportsUseCase {
           channel: report.channel,
           rejectionReason: report.rejectionReason,
         };
-      })
+      }),
     );
 
     return {

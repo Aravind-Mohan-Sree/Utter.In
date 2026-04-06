@@ -1,7 +1,7 @@
 import { DashboardDataResponseDTO } from '~dtos/DashboardDTO';
 
 export class DashboardMapper {
-  static toResponse(data: any): DashboardDataResponseDTO {
+  static toResponse(data: DashboardDataResponseDTO): DashboardDataResponseDTO {
     return {
       stats: {
         totalUsers: data.stats.totalUsers,
@@ -13,12 +13,12 @@ export class DashboardMapper {
         totalEarnings: data.stats.totalEarnings,
         earningsGrowth: data.stats.earningsGrowth,
       },
-      recentActivity: data.recentActivity.map((activity: any) => ({
+      recentActivity: data.recentActivity.map((activity) => ({
         type: activity.type,
         message: activity.message,
         timestamp: activity.timestamp,
       })),
-      popularLanguages: data.popularLanguages.map((lang: any) => ({
+      popularLanguages: data.popularLanguages.map((lang) => ({
         language: lang.language,
         sessionCount: lang.sessionCount,
       })),

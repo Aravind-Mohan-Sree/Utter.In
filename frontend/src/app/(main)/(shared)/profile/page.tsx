@@ -13,7 +13,6 @@ import { TextAreaInput } from '~components/form/TextAreaInput';
 import Notification from '~components/layout/Notification';
 import AbuseReportsModal from '~components/modals/AbuseReportsModal';
 import TransactionHistoryModal from '~components/modals/TransactionHistoryModal';
-import { getMyReports } from '~services/user/chatService';
 import AbstractShapesBackground from '~components/ui/AbstractShapesBackground';
 import Avatar from '~components/ui/Avatar';
 import Button from '~components/ui/Button';
@@ -69,19 +68,6 @@ interface Transaction {
   date: string;
   amount: number;
   balanceAfter: number;
-}
-
-interface AbuseReport {
-  id: number;
-  status: 'pending' | 'resolved' | 'rejected';
-  type: string;
-  reportedUser: {
-    name: string;
-    email: string;
-  };
-  date: string;
-  description: string;
-  channel: 'video' | 'chat';
 }
 
 export default function ProfilePage() {

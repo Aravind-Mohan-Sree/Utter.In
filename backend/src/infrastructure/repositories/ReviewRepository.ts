@@ -10,6 +10,7 @@ interface PopulatedReview extends Omit<IReview, 'userId'> {
   userId: {
     _id: mongoose.Types.ObjectId;
     name: string;
+    avatarUrl: string;
   };
 }
 
@@ -48,13 +49,14 @@ export class ReviewRepository
       doc.createdAt,
       doc.updatedAt,
       populatedDoc.userId?.name,
+      populatedDoc.userId?.avatarUrl,
     );
   }
 
   async findOneById(id: string): Promise<Review | null> {
     const doc = await ReviewModel.findById(id).populate(
       'userId',
-      'name',
+      'name avatarUrl',
     );
     return this.toEntity(doc);
   }
@@ -62,7 +64,7 @@ export class ReviewRepository
   async findOneByField(filter: FilterQuery<IReview>): Promise<Review | null> {
     const doc = await ReviewModel.findOne(filter).populate(
       'userId',
-      'name',
+      'name avatarUrl',
     );
     return this.toEntity(doc);
   }
@@ -72,7 +74,7 @@ export class ReviewRepository
     options?: { skip?: number; limit?: number },
   ): Promise<Review[]> {
     let query = ReviewModel.find(filter)
-      .populate('userId', 'name')
+      .populate('userId', 'name avatarUrl')
       .sort({ createdAt: -1 });
 
     if (options?.skip !== undefined) query = query.skip(options.skip);

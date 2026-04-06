@@ -143,7 +143,7 @@ export class ChatController {
       const message = await this._deleteMessageUseCase.execute(
         messageId,
         userId,
-        forEveryone === 'true'
+        forEveryone === 'true',
       );
       return res.status(200).json({
         success: true,
@@ -184,7 +184,7 @@ export class ChatController {
       });
     } catch (error) {
       if (attachment?.path) {
-        await unlink(attachment.path).catch(() => {});
+        await unlink(attachment.path).catch(() => void 0);
       }
       logger.error(error);
       next(error);

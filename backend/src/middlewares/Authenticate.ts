@@ -90,7 +90,7 @@ export class Authenticate<Entity> implements IAuthenticate {
 
       req.user = {
         id: user.id,
-        role: payload.role,
+        role: payload.role as string,
       };
 
       return next();

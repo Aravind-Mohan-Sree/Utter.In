@@ -18,7 +18,7 @@ export class RedisService implements IRedisService {
 
     this._client.connect().catch((err: Error) => logger.error('Redis Connect Error', err));
 
-    this._redlock = new Redlock([this._client as any], {
+    this._redlock = new Redlock([this._client as unknown], {
       driftFactor: 0.01,
       retryCount: 10,
       retryDelay: 200,

@@ -1,23 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useCallback, useEffect, useState } from 'react';
+import { FaFileAlt, FaTimes } from 'react-icons/fa';
+import { GoX } from 'react-icons/go';
+import { MdReportProblem } from 'react-icons/md';
+
+import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import { Card } from '~components/ui/Card';
-import Loader from '~components/ui/Loader';
 import { DateAndTime } from '~components/ui/DateAndTime';
 import { Pagination } from '~components/ui/Pagination';
-import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import { ResultsSummary } from '~components/ui/ResultsSummary';
 import { getAbuseReports, handleAbuseReport } from '~services/admin/reportsService';
 import { errorHandler } from '~utils/errorHandler';
-import { utterToast } from '~utils/utterToast';
 import { utterAlert } from '~utils/utterAlert';
 import { utterRadioAlert } from '~utils/utterRadioAlert';
-import { GoX } from 'react-icons/go';
-import { FaFileAlt, FaTimes } from 'react-icons/fa';
-import { MdReportProblem } from 'react-icons/md';
+import { utterToast } from '~utils/utterToast';
+
+interface IReportMessage {
+  senderId: string;
+  text?: string;
+  timestamp: string | Date;
+  fileUrl?: string;
+  fileType?: string;
+  fileName?: string;
+}
+
+interface IReport {
+  id: string;
+  status: 'Pending' | 'Resolved' | 'Rejected';
+  reporter: { id: string; name: string; email: string; role: string };
+  reported: { id: string; name: string; email: string; role: string };
+  type: string;
+  description: string;
+  channel: 'chat' | 'video';
+  createdAt: string | Date;
+  messages?: IReportMessage[];
+}
 
 export default function AdminReportsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<IReport[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +47,7 @@ export default function AdminReportsPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [selectedReport, setSelectedReport] = useState<any | null>(null);
+  const [selectedReport, setSelectedReport] = useState<IReport | null>(null);
   const [activePreview, setActivePreview] = useState<{ url: string; type: string } | null>(null);
 
   useEffect(() => {
@@ -35,7 +57,7 @@ export default function AdminReportsPage() {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getAbuseReports({ 
@@ -44,18 +66,18 @@ export default function AdminReportsPage() {
         search: debouncedQuery,
         status: activeFilter
       });
-      setReports(res.reports);
+      setReports(res.reports as IReport[]);
       setTotal(res.total);
     } catch (err) {
       utterToast.error(errorHandler(err));
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage, debouncedQuery, activeFilter]);
 
   useEffect(() => {
     fetchReports();
-  }, [currentPage, itemsPerPage, activeFilter, debouncedQuery]);
+  }, [fetchReports]);
 
   const handleAction = async (reportId: string, status: 'Resolved' | 'Rejected') => {
     if (status === 'Rejected') {
@@ -241,15 +263,15 @@ export default function AdminReportsPage() {
                   </p>
                   <div className="space-y-6 bg-gray-50 p-6 rounded-[32px] border border-gray-200/50 shadow-inner">
                     {/* Modular Evidence Grid */}
-                    {selectedReport.messages.some((m: any) => typeof m.text === 'string' && m.text.startsWith('VIDEO_EVIDENCE_AUTO')) && (
+                    {selectedReport.messages.some((m: IReportMessage) => typeof m.text === 'string' && m.text.startsWith('VIDEO_EVIDENCE_AUTO')) && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 border-b border-gray-200/50">
                         {selectedReport.messages
-                          .filter((m: any) => typeof m.text === 'string' && (m.text.startsWith('VIDEO_EVIDENCE_AUTO') || m.text === 'VIDEO EVIDENCE (Last 60s Clip)'))
-                          .map((msg: any, idx: number) => (
+                          .filter((m: IReportMessage) => typeof m.text === 'string' && (m.text.startsWith('VIDEO_EVIDENCE_AUTO') || m.text === 'VIDEO EVIDENCE (Last 60s Clip)'))
+                          .map((msg: IReportMessage, idx: number) => (
                             <div key={`auto-${idx}`} className="space-y-2">
                               <div 
                                 className="relative group cursor-pointer border border-gray-200/50 shadow-md overflow-hidden rounded-3xl w-full aspect-video bg-black" 
-                                onClick={() => setActivePreview({ url: msg.fileUrl, type: msg.fileType! })}
+                                onClick={() => setActivePreview({ url: msg.fileUrl!, type: msg.fileType! })}
                               >
                                 <video 
                                   src={msg.fileUrl} 
@@ -271,8 +293,8 @@ export default function AdminReportsPage() {
 
                     {/* Chat Messages and other evidence */}
                     {selectedReport.messages
-                      .filter((m: any) => !(typeof m.text === 'string' && (m.text.startsWith('VIDEO_EVIDENCE_AUTO') || m.text === 'VIDEO EVIDENCE (Last 60s Clip)')))
-                      .map((msg: any, idx: number) => (
+                      .filter((m: IReportMessage) => !(typeof m.text === 'string' && (m.text.startsWith('VIDEO_EVIDENCE_AUTO') || m.text === 'VIDEO EVIDENCE (Last 60s Clip)')))
+                      .map((msg: IReportMessage, idx: number) => (
                         <div key={`chat-${idx}`} className={`flex flex-col ${msg.senderId === selectedReport.reporter.id ? 'items-start' : 'items-end'}`}>
                           <div className={`max-w-[90%] p-4 rounded-3xl text-[13px] shadow-sm leading-relaxed ${
                             msg.senderId === selectedReport.reporter.id 
@@ -282,16 +304,18 @@ export default function AdminReportsPage() {
                             {msg.fileUrl ? (
                               <div className="mb-3 space-y-2">
                                 {msg.fileType?.startsWith('image/') ? (
-                                  <img 
+                                  <Image 
                                     src={msg.fileUrl} 
                                     alt="Evidence" 
-                                    className="max-h-60 rounded-2xl border border-gray-100/20 shadow-sm cursor-pointer hover:opacity-90 transition-opacity" 
-                                    onClick={() => setActivePreview({ url: msg.fileUrl, type: msg.fileType! })}
+                                    width={400}
+                                    height={300}
+                                    className="max-h-60 w-auto rounded-2xl border border-gray-100/20 shadow-sm cursor-pointer hover:opacity-90 transition-opacity" 
+                                    onClick={() => setActivePreview({ url: msg.fileUrl!, type: msg.fileType! })}
                                   />
                                 ) : msg.fileType?.startsWith('video/') ? (
                                   <div 
                                     className="relative group cursor-pointer border border-gray-100/20 shadow-sm overflow-hidden rounded-2xl w-64 h-40" 
-                                    onClick={() => setActivePreview({ url: msg.fileUrl, type: msg.fileType! })}
+                                    onClick={() => setActivePreview({ url: msg.fileUrl!, type: msg.fileType! })}
                                   >
                                     <video 
                                       src={msg.fileUrl} 
@@ -381,10 +405,11 @@ export default function AdminReportsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {activePreview.type.startsWith('image/') ? (
-              <img
+              <Image
                 src={activePreview.url}
-                className="w-full h-full object-contain"
                 alt="Evidence preview"
+                fill
+                className="object-contain"
               />
             ) : (
               <video

@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback,useEffect, useRef, useState } from 'react';
 import { GoX } from 'react-icons/go';
-import { getMyReports } from '~services/user/chatService';
+import { useSelector } from 'react-redux';
+
 import { DateAndTime } from '~components/ui/DateAndTime';
-import Loader from '~components/ui/Loader';
+import { getMyReports } from '~services/user/chatService';
+import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
-import { useSelector } from 'react-redux';
-import { RootState } from '~store/rootReducer';
 
 interface AbuseReport {
   id: string;
@@ -56,7 +56,7 @@ export default function AbuseReportsModal({
     }));
 
     try {
-      const res = await getMyReports({ page: pageNum, limit: 10, status: tab }, user?.role as any);
+      const res = await getMyReports({ page: pageNum, limit: 10, status: tab }, user?.role as 'user' | 'tutor');
       
       setTabStates(prev => {
         const currentTab = prev[tab];
@@ -78,7 +78,7 @@ export default function AbuseReportsModal({
         [tab]: { ...prev[tab], loading: false }
       }));
     }
-  }, []);
+  }, [user?.role]);
 
   useEffect(() => {
     if (isOpen) {
@@ -87,7 +87,8 @@ export default function AbuseReportsModal({
         fetchReports(activeTab, 1);
       }
     }
-  }, [isOpen, activeTab, fetchReports, tabStates]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, activeTab, fetchReports]);
 
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
@@ -178,7 +179,7 @@ export default function AbuseReportsModal({
                   
                   <div className="relative">
                     <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-xl border border-gray-100 italic shadow-inner">
-                      "{report.description}"
+                      &quot;{report.description}&quot;
                     </p>
                   </div>
                   

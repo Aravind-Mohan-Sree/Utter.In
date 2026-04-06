@@ -52,7 +52,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
     );
   }
   async fetchBookings(params: IFetchBookingsParams): Promise<IFetchBookingsResponse> {
-    const { userId, tutorId, page = 1, limit = 5, search, status, date, language, sort = 'Newest' } = params;
+    const { userId, tutorId, page = 1, limit = 5, search, status, language, sort = 'Newest' } = params;
     const skip = (page - 1) * limit;
 
     const matchStage: Record<string, unknown> = {};
@@ -60,16 +60,16 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
       matchStage.userId = { 
         $in: [
           userId, 
-          new mongoose.Types.ObjectId(userId)
-        ] 
+          new mongoose.Types.ObjectId(userId),
+        ], 
       };
     }
     if (tutorId) {
       matchStage.tutorId = { 
         $in: [
           tutorId, 
-          new mongoose.Types.ObjectId(tutorId)
-        ] 
+          new mongoose.Types.ObjectId(tutorId),
+        ], 
       };
     }
 
@@ -208,11 +208,11 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
                   $or: [
                     { $eq: ['$_id', '$$sId'] },
                     { $eq: ['$_id', { $toObjectId: { $toString: '$$sId' } }] },
-                    { $eq: [{ $toString: '$_id' }, { $toString: '$$sId' }] }
-                  ] 
-                } 
-              } 
-            }
+                    { $eq: [{ $toString: '$_id' }, { $toString: '$$sId' }] },
+                  ], 
+                }, 
+              }, 
+            },
           ],
           as: 'session',
         },
@@ -227,9 +227,9 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
                   $sum: { 
                     $ifNull: [
                       { $arrayElemAt: ['$session.price', 0] }, 
-                      '$price' 
-                    ] 
-                  } 
+                      '$price', 
+                    ], 
+                  }, 
                 },
                 completedSessions: { $sum: 1 },
               },

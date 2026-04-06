@@ -10,14 +10,14 @@ declare module 'redlock' {
   }
 
   export class Lock {
-    release(): Promise<any>;
+    release(): Promise<unknown>;
     extend(duration: number): Promise<Lock>;
   }
 
   export default class Redlock extends EventEmitter {
-    constructor(clients: Iterable<any>, settings?: Partial<Settings>);
+    constructor(clients: Iterable<unknown>, settings?: Partial<Settings>);
     acquire(resources: string[], duration: number, settings?: Partial<Settings>): Promise<Lock>;
-    release(lock: Lock, settings?: Partial<Settings>): Promise<any>;
+    release(lock: Lock, settings?: Partial<Settings>): Promise<unknown>;
     extend(existing: Lock, duration: number, settings?: Partial<Settings>): Promise<Lock>;
   }
 }

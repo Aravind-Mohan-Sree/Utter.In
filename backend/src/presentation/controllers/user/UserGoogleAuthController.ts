@@ -28,7 +28,7 @@ export class UserGoogleAuthController {
 
   handleSuccess = async (req: Request, res: Response, _next: NextFunction) => {
     try {
-      const { name, email, avatarUrl, googleId } = req.user as IAuthUser;
+      const { name, email, avatarUrl, googleId } = req.user as unknown as IAuthUser;
       const user = await this._getDataUC.execute(email);
 
       if (!user) {

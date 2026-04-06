@@ -51,15 +51,8 @@ export class BookingController {
         amount,
         currency,
       } = req.body;
-      interface AuthenticatedRequest extends Request {
-        user?: {
-          id?: string;
-          _id?: string;
-        }
-      }
-
-      const user = (req as AuthenticatedRequest).user;
-      const userId = user?.id || user?._id;
+      const user = (req as unknown as IAuthenticatedRequest).user;
+      const userId = user.id;
 
       const booking = await this._verifyPaymentAndBookUC.execute({
         orderId,

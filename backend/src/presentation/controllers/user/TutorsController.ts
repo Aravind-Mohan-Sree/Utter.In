@@ -36,7 +36,7 @@ export class TutorsController {
       });
 
       res.status(httpStatusCode.OK).json({
-        message: successMessage.DATA_FETCHED,
+        message: successMessage.DATA_FETCH_SUCCESS,
         tutorsData,
       });
     } catch (error) {
@@ -57,7 +57,7 @@ export class TutorsController {
       const tutorDTO = TutorMapper.toResponse(tutor);
 
       res.status(httpStatusCode.OK).json({
-        message: successMessage.DATA_FETCHED,
+        message: successMessage.DATA_FETCH_SUCCESS,
         tutor: tutorDTO,
       });
     } catch (error) {
@@ -79,7 +79,7 @@ export class TutorsController {
       const sessions = await this._getTutorSessionsUC.execute(tutorId, startDate);
 
       res.status(httpStatusCode.OK).json({
-        message: successMessage.DATA_FETCHED,
+        message: successMessage.DATA_FETCH_SUCCESS,
         sessions,
       });
     } catch (error) {

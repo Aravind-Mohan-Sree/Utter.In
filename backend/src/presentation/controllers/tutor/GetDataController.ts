@@ -22,7 +22,7 @@ export class GetDataController {
 
       res
         .status(httpStatusCode.OK)
-        .json({ message: successMessage.DATA_FETCHED, tutor });
+        .json({ message: successMessage.DATA_FETCH_SUCCESS, tutor });
     } catch (error) {
       logger.error(error);
       next(error);

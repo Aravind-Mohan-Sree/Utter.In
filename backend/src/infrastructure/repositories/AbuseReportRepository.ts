@@ -2,7 +2,8 @@ import { AbuseReport } from '~entities/AbuseReport';
 import { IAbuseReportRepository } from '~repository-interfaces/IAbuseReportRepository';
 import { AbuseReportModel, IAbuseReport } from '~models/AbuseReportModel';
 import { BaseRepository } from './BaseRepository';
-import { Document, Types } from 'mongoose';
+import { Document, Types, PipelineStage } from 'mongoose';
+import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 
 export class AbuseReportRepository
   extends BaseRepository<AbuseReport, IAbuseReport>
@@ -12,8 +13,8 @@ export class AbuseReportRepository
   }
 
   async findAllReports(page: number, limit: number, search?: string, status?: string): Promise<{ reports: AbuseReport[]; total: number }> {
-    const pipeline: any[] = [];
-    const matchStage: any = {};
+    const pipeline: PipelineStage[] = [];
+    const matchStage: Record<string, unknown> = {};
 
     if (status && status !== 'All') {
       matchStage.status = status;
@@ -85,13 +86,13 @@ export class AbuseReportRepository
 
     return {
       total,
-      reports: reports.map((doc: any) => this.toEntity(doc)!),
+      reports: reports.map((doc: IAbuseReport & { _id: Types.ObjectId }) => this.toEntity(doc)!),
     };
   }
 
   async findByReporter(userId: string, page: number, limit: number, status?: string): Promise<{ reports: AbuseReport[]; total: number }> {
     const reporterId = new Types.ObjectId(userId);
-    const query: any = { reporterId };
+    const query: FilterQuery<IAbuseReport> = { reporterId };
     if (status && status !== 'All') {
       query.status = status;
     }
@@ -127,7 +128,7 @@ export class AbuseReportRepository
     } as Partial<IAbuseReport>;
   }
 
-  protected toEntity(doc: (IAbuseReport & Document<unknown>) | any): AbuseReport | null {
+  protected toEntity(doc: (IAbuseReport & { _id?: Types.ObjectId; id?: string }) | null): AbuseReport | null {
     if (!doc) return null;
 
     return new AbuseReport(
@@ -135,7 +136,14 @@ export class AbuseReportRepository
       String(doc.reportedId),
       doc.type,
       doc.description,
-      doc.messages.map((msg: any) => ({
+      (doc.messages || []).map((msg: {
+        senderId: Types.ObjectId;
+        text?: string;
+        timestamp: Date;
+        fileUrl?: string;
+        fileType?: string;
+        fileName?: string;
+      }) => ({
         senderId: String(msg.senderId),
         text: msg.text,
         timestamp: msg.timestamp,

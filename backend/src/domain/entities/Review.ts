@@ -8,5 +8,6 @@ export class Review {
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly userName?: string,
+    public readonly userAvatar?: string,
   ) {}
 }

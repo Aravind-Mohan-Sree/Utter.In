@@ -1,5 +1,3 @@
-import { AbuseReport } from '~entities/AbuseReport';
-
 export interface IUserAbuseReportResponseDTO {
   id: string;
   status: 'Pending' | 'Resolved' | 'Rejected';
@@ -31,7 +29,16 @@ export interface IAdminAbuseReportResponseDTO {
 }
 
 export class AbuseReportMapper {
-  static toUserResponse(data: any): IUserAbuseReportResponseDTO {
+  static toUserResponse(data: {
+    id: string;
+    status: 'Pending' | 'Resolved' | 'Rejected';
+    type: string;
+    reportedUser: { id: string; name: string; email: string };
+    date: string;
+    description: string;
+    channel: 'video' | 'chat';
+    rejectionReason?: string;
+  }): IUserAbuseReportResponseDTO {
     return {
       id: data.id,
       status: data.status,
@@ -47,7 +54,24 @@ export class AbuseReportMapper {
     };
   }
 
-  static toAdminResponse(data: any): IAdminAbuseReportResponseDTO {
+  static toAdminResponse(data: {
+    id: string;
+    reporter: { id: string; name: string; email: string; role: string };
+    reported: { id: string; name: string; email: string; role: string };
+    type: string;
+    description: string;
+    messages: {
+      senderId: string;
+      text?: string;
+      timestamp: Date;
+      fileUrl?: string;
+      fileType?: string;
+      fileName?: string;
+    }[];
+    channel: 'chat' | 'video';
+    status: 'Pending' | 'Resolved' | 'Rejected';
+    createdAt: Date;
+  }): IAdminAbuseReportResponseDTO {
     return {
       id: data.id,
       reporter: data.reporter,

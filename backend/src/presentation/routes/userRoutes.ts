@@ -91,9 +91,9 @@ import { GetQuizHistoryUseCase } from '~use-cases/user/quiz/GetQuizHistoryUseCas
 import { GetQuizLeaderboardUseCase } from '~use-cases/user/quiz/GetQuizLeaderboardUseCase';
 import { QuizController } from '~controllers/user/QuizController';
 import { AbuseReportRepository } from '~concrete-repositories/AbuseReportRepository';
-import { CreateAbuseReportUseCase } from '~use-cases/user/report/CreateAbuseReportUseCase';
-import { GetUserAbuseReportsUseCase } from '~use-cases/user/report/GetUserAbuseReportsUseCase';
-import { UserAbuseReportController } from '~controllers/user/AbuseReportController';
+import { CreateAbuseReportUseCase } from '~use-cases/shared/report/CreateAbuseReportUseCase';
+import { GetUserAbuseReportsUseCase } from '~use-cases/shared/report/GetUserAbuseReportsUseCase';
+import { AbuseReportController } from '~controllers/shared/AbuseReportController';
 
 // repositories
 const userRepository = new UserRepository();
@@ -346,7 +346,7 @@ const quizController = new QuizController(
   getQuizLeaderboardUseCase,
 );
 
-const abuseReportController = new UserAbuseReportController(
+const abuseReportController = new AbuseReportController(
   createAbuseReportUseCase,
   getUserAbuseReportsUseCase,
   dataValidatorService,

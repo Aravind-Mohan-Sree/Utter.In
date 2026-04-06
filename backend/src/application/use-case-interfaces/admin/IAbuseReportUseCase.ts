@@ -1,14 +1,19 @@
-import { AbuseReport } from '~entities/AbuseReport';
-
 export interface IGetAbuseReportsUseCase {
   execute(page: number, limit: number, search?: string, status?: string): Promise<{
     reports: {
       id: string;
-      reporter: { id: string; name: string; email: string };
-      reported: { id: string; name: string; email: string };
+      reporter: { id: string; name: string; email: string; role: string };
+      reported: { id: string; name: string; email: string; role: string };
       type: string;
       description: string;
-      messages: any[];
+      messages: {
+        senderId: string;
+        text?: string;
+        timestamp: Date;
+        fileUrl?: string;
+        fileType?: string;
+        fileName?: string;
+      }[];
       channel: 'chat' | 'video';
       status: 'Pending' | 'Resolved' | 'Rejected';
       createdAt: Date;
@@ -18,5 +23,22 @@ export interface IGetAbuseReportsUseCase {
 }
 
 export interface IHandleAbuseReportUseCase {
-  execute(reportId: string, status: 'Resolved' | 'Rejected', rejectionReason?: string): Promise<AbuseReport>;
+  execute(reportId: string, status: 'Resolved' | 'Rejected', rejectionReason?: string): Promise<{
+    id: string;
+    reporter: { id: string; name: string; email: string; role: string };
+    reported: { id: string; name: string; email: string; role: string };
+    type: string;
+    description: string;
+    messages: {
+      senderId: string;
+      text?: string;
+      timestamp: Date;
+      fileUrl?: string;
+      fileType?: string;
+      fileName?: string;
+    }[];
+    channel: 'chat' | 'video';
+    status: 'Pending' | 'Resolved' | 'Rejected';
+    createdAt: Date;
+  }>;
 }

@@ -1,6 +1,6 @@
 import { IAbuseReportRepository } from '~repository-interfaces/IAbuseReportRepository';
 import { IGetAbuseReportsUseCase } from '../../../use-case-interfaces/admin/IAbuseReportUseCase';
-import { AbuseReport } from '~entities/AbuseReport';
+
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 
@@ -14,11 +14,18 @@ export class GetAbuseReportsUseCase implements IGetAbuseReportsUseCase {
   async execute(page: number, limit: number, search?: string, status?: string): Promise<{
     reports: {
       id: string;
-      reporter: { id: string; name: string; email: string };
-      reported: { id: string; name: string; email: string };
+      reporter: { id: string; name: string; email: string; role: string };
+      reported: { id: string; name: string; email: string; role: string };
       type: string;
       description: string;
-      messages: any[];
+      messages: {
+        senderId: string;
+        text?: string;
+        timestamp: Date;
+        fileUrl?: string;
+        fileType?: string;
+        fileName?: string;
+      }[];
       channel: 'chat' | 'video';
       status: 'Pending' | 'Resolved' | 'Rejected';
       createdAt: Date;
@@ -56,7 +63,7 @@ export class GetAbuseReportsUseCase implements IGetAbuseReportsUseCase {
           status: report.status,
           createdAt: report.createdAt!,
         };
-      })
+      }),
     );
 
     return {

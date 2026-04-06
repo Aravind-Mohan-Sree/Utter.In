@@ -357,11 +357,18 @@ const ReportCard = ({
     </div>
 
     {/* Reporter and Reported Sections */}
-    <div className="flex items-center gap-4 mb-3">
+    <div className="flex flex-col gap-4 mb-3">
       <ReportSection
         user={reporter}
         role="Reporter (User)"
         variant="reporter"
+        className="flex-1"
+      />
+      <div className="h-px bg-gray-50 mx-2" />
+      <ReportSection
+        user={reported}
+        role="Reported (Member)"
+        variant="reported"
         className="flex-1"
       />
     </div>

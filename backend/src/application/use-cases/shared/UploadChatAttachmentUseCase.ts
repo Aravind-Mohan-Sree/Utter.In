@@ -25,7 +25,7 @@ export class UploadChatAttachmentUseCase implements IUploadChatAttachmentUseCase
       throw new InternalServerError(uploadResult.error || 'Failed to upload chat attachment');
     }
 
-    await unlink(filepath).catch(() => { });
+    await unlink(filepath).catch(() => void 0);
 
     return uploadResult.data.key;
   }

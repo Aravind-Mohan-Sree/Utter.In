@@ -28,7 +28,7 @@ export class TutorGoogleAuthController {
 
   handleSuccess = async (req: Request, res: Response, _next: NextFunction) => {
     try {
-      const { name, email, avatarUrl, googleId } = req.user as IAuthTutor;
+      const { name, email, avatarUrl, googleId } = req.user as unknown as IAuthTutor;
       const tutor = await this._getDataUC.execute(email);
 
       if (!tutor) {

@@ -1,23 +1,24 @@
 'use client';
 
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaArrowLeft, FaChevronDown, FaCircle, FaDownload, FaFile, FaFileAlt, FaFileArchive, FaFileImage, FaFilePdf, FaFileWord, FaPaperclip, FaPaperPlane, FaRegSmile, FaSearch, FaTimes, FaVideo } from 'react-icons/fa';
 import { FaFileCircleXmark } from 'react-icons/fa6';
-import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
+import { MdContentCopy, MdDelete, MdEdit, MdReportProblem } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 
+import CreateAbuseReportModal from '~components/modals/CreateAbuseReportModal';
 import Avatar from '~components/ui/Avatar';
 import Loader from '~components/ui/Loader';
 import { useSocketContext } from '~contexts/SocketContext';
 import { setUnreadCount } from '~features/chatSlice';
+import { createAbuseReport, deleteMessage, editMessage, getConversations, getMessages, searchChat, sendMessage, uploadAttachment } from '~services/user/chatService';
+import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
-import { MdContentCopy, MdDelete, MdEdit, MdReportProblem } from 'react-icons/md';
-import CreateAbuseReportModal from '~components/modals/CreateAbuseReportModal';
-import { createAbuseReport, deleteMessage, editMessage, getConversations, getMessages, searchChat, sendMessage, uploadAttachment } from '~services/user/chatService';
-import { RootState } from '~store/rootReducer';
 
 interface User {
   id: string;
@@ -50,14 +51,13 @@ interface Conversation {
 
 interface MessageBubbleProps {
   msg: Message;
-  user: any;
   isMe: boolean;
   isHighlighted: boolean;
   editingMessageId: string | null;
   editValue: string;
   setEditValue: (val: string | ((prev: string) => string)) => void;
   setEditingMessageId: (id: string | null) => void;
-  handleContextMenu: (e: any, id: string) => void;
+  handleContextMenu: (e: React.MouseEvent | React.TouchEvent, id: string) => void;
   handleSaveEdit: () => void;
   fileError: Record<string, boolean>;
   setMediaError: (id: string) => void;
@@ -73,7 +73,6 @@ interface MessageBubbleProps {
 
 function MessageBubble({
   msg,
-  user,
   isMe,
   isHighlighted,
   editingMessageId,
@@ -200,9 +199,11 @@ function MessageBubble({
                     <p className={`text-[10px] font-medium ${isMe ? 'text-white/90' : 'text-gray-800/90'}`}>Attachment Unavailable</p>
                   </div>
                 ) : msg.fileType?.startsWith('image/') ? (
-                  <img
+                  <Image
                     src={getFullFileUrl(msg.fileUrl)}
-                    alt={msg.fileName}
+                    alt={msg.fileName || 'Attachment'}
+                    width={250}
+                    height={200}
                     className="max-w-[250px] w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity outline-none"
                     onClick={() => !fileError[msg.id] && setActivePreview({ url: getFullFileUrl(msg.fileUrl), type: msg.fileType! })}
                     onError={() => setMediaError(msg.id)}
@@ -305,14 +306,13 @@ export default function ChatsPage() {
   const attachmentRef = useRef<HTMLDivElement>(null);
   const isJumpingRef = useRef(false);
   const lastProcessedQueryIdRef = useRef<string | null>(null);
-  const isSelfSelectRef = useRef(false);
 
   const fetchConversations = useCallback(async () => {
     try {
       const res = await getConversations();
       const userId = user?.id;
       const mapped: Conversation[] = res.conversations.map((c: { _id?: string; id?: string; participants: string[]; participantsData?: { _id: string; name: string }[]; lastMessageText?: string; lastMessageTime?: string; unreadCount?: Record<string, number> }) => {
-        const otherParticipant = c.participantsData?.find((p: { _id: string; name: string }) => String(p._id) !== String(userId));
+        const otherParticipant = c.participantsData?.find((p) => String(p._id) !== String(userId));
         const isSelected = selectedConversation && (String(selectedConversation.id) === String(c._id) || String(selectedConversation.id) === String(c.id));
 
         return {
@@ -629,7 +629,7 @@ export default function ChatsPage() {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(blobUrl);
-      } catch (err) {
+      } catch {
         window.open(getFullFileUrl(msg.fileUrl), '_blank');
       }
     }
@@ -656,7 +656,6 @@ export default function ChatsPage() {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg) return;
 
-    const isSender = msg.senderId === user?.id;
     const confirmTitle = forEveryone ? 'Delete for Everyone?' : 'Delete for Me?';
     const confirmText = forEveryone
       ? 'This will delete the message for both you and the recipient.'
@@ -830,12 +829,6 @@ export default function ChatsPage() {
 
   const setMediaError = (id: string) => {
     setFileError(prev => ({ ...prev, [id]: true }));
-  };
-
-  const isOnlyEmojis = (text: string) => {
-    if (!text) return false;
-    const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/g;
-    return emojiRegex.test(text.trim());
   };
 
   const startVideoCall = () => {
@@ -1093,7 +1086,6 @@ export default function ChatsPage() {
                       <MessageBubble
                         key={msg.id || idx}
                         msg={msg}
-                        user={user}
                         isMe={user?.id === msg.senderId}
                         isHighlighted={highlightedMessageId === msg.id}
                         editingMessageId={editingMessageId}
@@ -1135,7 +1127,7 @@ export default function ChatsPage() {
                     <div className="mb-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-3 animate-in slide-in-from-bottom-2 duration-300">
                           {filePreview ? (
                             <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-100 relative group">
-                              <img src={filePreview} alt="preview" className="w-full h-full object-cover" />
+                              <Image src={filePreview} alt="preview" fill className="object-cover" />
                             </div>
                           ) : (
                             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-100">
@@ -1353,10 +1345,13 @@ export default function ChatsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {activePreview.type.startsWith('image/') ? (
-              <img
+              <Image
                 src={activePreview.url}
-                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-300"
                 alt="Large preview"
+                width={800}
+                height={600}
+                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-300"
+                unoptimized
               />
             ) : (
               <video

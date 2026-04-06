@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
-import { ICreateAbuseReportUseCase, IGetUserAbuseReportsUseCase } from '~use-case-interfaces/user/IAbuseReportUseCase';
+import { ICreateAbuseReportUseCase, IGetUserAbuseReportsUseCase } from '~use-case-interfaces/shared/IAbuseReportUseCase';
 import { logger } from '~logger/logger';
 import { IValidateDataService } from '~service-interfaces/IValidateDataService';
 import { CreateAbuseReportDTO } from '~dtos/AbuseReportDTO';
 import { AbuseReportMapper } from '~mappers/AbuseReportMapper';
 
-export class UserAbuseReportController {
+export class AbuseReportController {
   constructor(
     private _createAbuseReportUseCase: ICreateAbuseReportUseCase,
     private _getUserAbuseReportsUseCase: IGetUserAbuseReportsUseCase,

@@ -3,19 +3,19 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { DataConnection, MediaConnection, Peer as PeerType } from 'peerjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FaPaperPlane, FaPhoneSlash, FaVideo, FaVideoSlash, FaCheck, FaChevronUp, FaComments, FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
+import { FaCheck, FaChevronUp, FaComments, FaMicrophone, FaMicrophoneSlash,FaPaperPlane, FaPhoneSlash, FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { MdReportProblem } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 
-import Loader from '~components/ui/Loader';
 import CreateAbuseReportModal from '~components/modals/CreateAbuseReportModal';
+import Loader from '~components/ui/Loader';
+import { API_ROUTES } from '~constants/routes';
 import { useSocketContext } from '~contexts/SocketContext';
+import { IAbuseReportMessage, uploadAttachment } from '~services/user/chatService';
 import { RootState } from '~store/rootReducer';
 import axiosInstance from '~utils/axiosConfig';
-import { utterToast } from '~utils/utterToast';
-import { createAbuseReport, uploadAttachment } from '~services/user/chatService';
 import { errorHandler } from '~utils/errorHandler';
-import { API_ROUTES } from '~constants/routes';
+import { utterToast } from '~utils/utterToast';
 
 interface Message {
     senderId: string;
@@ -78,7 +78,6 @@ export default function VideoCallPage() {
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const chatEndRef = useRef<HTMLDivElement>(null);
     const videoChunksRef = useRef<Blob[]>([]);
-    const recorderIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const activeRecorderRef = useRef<MediaRecorder | null>(null);
 
 
@@ -188,8 +187,7 @@ export default function VideoCallPage() {
         stopMediaTracks(false);
         
         setTimeout(() => {
-            const isChatCall = searchParams.get('type') === 'chat';
-            router.push(isChatCall ? '/chats' : '/sessions');
+            router.push(searchParams.get('type') === 'chat' ? '/chats' : '/sessions');
         }, 100);
     }, [router, stopMediaTracks, socket, searchParams, bookingId]);
 
@@ -412,7 +410,6 @@ export default function VideoCallPage() {
                 const PeerJS = (await import('peerjs')).default;
                 if (!isActive) return;
 
-                const isChatCall = searchParams.get('type') === 'chat';
                 const otherId = searchParams.get('otherId');
                 const callId = searchParams.get('callId');
 
@@ -682,7 +679,7 @@ export default function VideoCallPage() {
             const otherId = searchParams.get('otherId');
             if (!otherId) return;
 
-            const contextMessages = messages.slice(-5).map(msg => ({
+            const contextMessages: IAbuseReportMessage[] = messages.slice(-5).map(msg => ({
                 senderId: msg.senderId,
                 text: msg.text || '',
                 timestamp: msg.timestamp
@@ -708,10 +705,10 @@ export default function VideoCallPage() {
                 });
 
                 const uploadedSegments = await Promise.all(uploadPromises);
-                contextMessages.push(...(uploadedSegments as any[]));
+                contextMessages.push(...uploadedSegments);
             }
 
-            const reportPath = myRole === 'user' ? API_ROUTES.USER.REPORTS : (API_ROUTES as any).TUTOR.REPORTS;
+            const reportPath = myRole === 'user' ? API_ROUTES.USER.REPORTS : API_ROUTES.TUTOR.REPORTS;
             await axiosInstance.post(reportPath, {
                 reportedId: otherId,
                 type,

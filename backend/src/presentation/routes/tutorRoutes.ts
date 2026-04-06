@@ -67,9 +67,9 @@ import { NotificationRepository } from '~concrete-repositories/NotificationRepos
 import { CreateNotificationUseCase } from '~use-cases/shared/notification/CreateNotificationUseCase';
 import { getNotificationRouter } from './notificationRoutes';
 import { AbuseReportRepository } from '~concrete-repositories/AbuseReportRepository';
-import { CreateAbuseReportUseCase } from '~use-cases/user/report/CreateAbuseReportUseCase';
-import { GetUserAbuseReportsUseCase } from '~use-cases/user/report/GetUserAbuseReportsUseCase';
-import { UserAbuseReportController } from '~controllers/user/AbuseReportController';
+import { CreateAbuseReportUseCase } from '~use-cases/shared/report/CreateAbuseReportUseCase';
+import { GetUserAbuseReportsUseCase } from '~use-cases/shared/report/GetUserAbuseReportsUseCase';
+import { AbuseReportController } from '~controllers/shared/AbuseReportController';
 
 // repositories
 const userRepository = new UserRepository();
@@ -163,7 +163,7 @@ const getUserAbuseReportsUseCase = new GetUserAbuseReportsUseCase(
   userRepository,
   tutorRepository,
 );
-const abuseReportController = new UserAbuseReportController(
+const abuseReportController = new AbuseReportController(
   createAbuseReportUseCase,
   getUserAbuseReportsUseCase,
   dataValidatorService,

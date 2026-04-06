@@ -1,6 +1,6 @@
 import { AbuseReport } from '~entities/AbuseReport';
 import { IAbuseReportRepository } from '~repository-interfaces/IAbuseReportRepository';
-import { ICreateAbuseReportUseCase } from '../../../use-case-interfaces/user/IAbuseReportUseCase';
+import { ICreateAbuseReportUseCase } from '../../../use-case-interfaces/shared/IAbuseReportUseCase';
 import { ICloudService } from '~service-interfaces/ICloudService';
 import { env } from '~config/env';
 
@@ -55,7 +55,7 @@ export class CreateAbuseReportUseCase implements ICreateAbuseReportUseCase {
           fileUrl: reportFileUrl,
           text: msg.text || '',
         };
-      })
+      }),
     );
 
     const report = new AbuseReport(

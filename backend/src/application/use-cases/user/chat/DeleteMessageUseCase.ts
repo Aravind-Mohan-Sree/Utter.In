@@ -24,7 +24,7 @@ export class DeleteMessageUseCase implements IDeleteMessageUseCase {
 
     if (forEveryone && isSender && isWithinTwoDays) {
       if (message.fileUrl) {
-        await this._cloudService.delete(message.fileUrl).catch(() => {});
+        await this._cloudService.delete(message.fileUrl).catch(() => void 0);
       }
 
       const updatedMessage = await this._messageRepository.updateOneById(

@@ -6,7 +6,6 @@ import { useSelector } from 'react-redux';
 
 import { SearchAndFilter } from '~components/form/SearchAndFilter';
 import { Card } from '~components/ui/Card';
-import { Dropdown } from '~components/ui/Dropdown';
 import { Pagination } from '~components/ui/Pagination';
 import { ResultsSummary } from '~components/ui/ResultsSummary';
 import { fetchUsers, toggleStatus } from '~services/admin/usersService';

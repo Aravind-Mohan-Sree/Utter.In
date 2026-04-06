@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FaUsers, FaUserCheck, FaLaptopCode, FaWallet, FaExclamationCircle } from 'react-icons/fa';
-import { getDashboardData, DashboardData } from '~services/admin/dashboardService';
+import { FaExclamationCircle,FaLaptopCode, FaUserCheck, FaUsers, FaWallet } from 'react-icons/fa';
+
+import { DashboardData,getDashboardData } from '~services/admin/dashboardService';
 
 const DashboardStats = ({ data }: { data: DashboardData }) => {
   const stats = [

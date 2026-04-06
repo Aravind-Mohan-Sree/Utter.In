@@ -62,12 +62,21 @@ export const uploadAttachment = async (file: File) => {
   return response.data;
 };
 
+export interface IAbuseReportMessage {
+  senderId: string;
+  text: string;
+  timestamp: Date | string;
+  fileUrl?: string;
+  fileType?: string;
+  fileName?: string;
+}
+
 export const createAbuseReport = async (
   data: {
     reportedId: string;
     type: string;
     description: string;
-    messages: any[];
+    messages: IAbuseReportMessage[];
     channel: 'chat' | 'video';
   },
   userType: 'user' | 'tutor' = 'user',
