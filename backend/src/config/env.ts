@@ -1,39 +1,77 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import { SSMClient, GetParametersByPathCommand, Parameter } from '@aws-sdk/client-ssm';
+
+const fetchSSMParameters = async (path: string): Promise<Record<string, string>> => {
+  const ssmClient = new SSMClient({ region: process.env.AWS_REGION || 'us-east-1' });
+  const parameters: Record<string, string> = {};
+  try {
+    let nextToken: string | undefined;
+    do {
+      const command: GetParametersByPathCommand = new GetParametersByPathCommand({
+        Path: path,
+        WithDecryption: true,
+        Recursive: true,
+        NextToken: nextToken,
+      });
+
+      const response = await ssmClient.send(command);
+      response.Parameters?.forEach((p: Parameter) => {
+        if (p.Name && p.Value) {
+          const key = p.Name.replace(path, '');
+          parameters[key] = p.Value;
+        }
+      });
+      nextToken = response.NextToken;
+    } while (nextToken);
+  } catch (error) {
+    console.error('Error fetching SSM parameters:', error);
+  }
+  return parameters;
+};
+
+export const initializeAWSConfig = async () => {
+  let ssmPrefix = process.env.SSM_PREFIX || '/utter/prod/';
+  if (!ssmPrefix.endsWith('/')) ssmPrefix += '/';
+  
+  const ssmParams = (process.env.NODE_ENV === 'production' || process.env.USE_SSM === 'true')
+    ? await fetchSSMParameters(ssmPrefix)
+    : {};
+
+  Object.assign(process.env, ssmParams);
+};
 
 export const env = {
-  NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: process.env.PORT || 5000,
-  MONGO_CONNECTION_URI:
-    process.env.MONGO_CONNECTION_URI ||
-    'mongodb://localhost:27017/utter_web_app',
-  NODEMAILER_USER: process.env.NODEMAILER_USER || '',
-  NODEMAILER_PASS: process.env.NODEMAILER_PASS || '',
-  NODEMAILER_HOST: process.env.NODEMAILER_HOST || '',
-  NODEMAILER_PORT: process.env.NODEMAILER_PORT || '',
-  JWT_ALGORITHM: process.env.JWT_ALGORITHM || '',
-  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || '',
-  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || '',
-  RESET_TOKEN_SECRET: process.env.RESET_TOKEN_SECRET || '',
-  ACCESS_TOKEN_AGE: process.env.ACCESS_TOKEN_AGE || '',
-  REFRESH_TOKEN_AGE: process.env.REFRESH_TOKEN_AGE || '',
-  RESET_TOKEN_AGE: process.env.RESET_TOKEN_AGE || '',
-  OTP_AGE: process.env.OTP_AGE || '',
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
-  GOOGLE_USER_CALLBACK_URL: process.env.GOOGLE_USER_CALLBACK_URL || '',
-  GOOGLE_TUTOR_CALLBACK_URL: process.env.GOOGLE_TUTOR_CALLBACK_URL || '',
-  SESSION_SECRET: process.env.SESSION_SECRET || '',
-  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || '',
-  FRONTEND_URL: process.env.FRONTEND_URL || '',
-  AWS_REGION: process.env.AWS_REGION || '',
-  AWS_BUCKET: process.env.AWS_BUCKET || '',
-  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',
-  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
-  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
-  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || '',
-  REDIS_URL: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
-  CALL_JOIN_THRESHOLD_MINUTES: process.env.CALL_JOIN_THRESHOLD_MINUTES || '5',
-  SESSION_COMPLETION_THRESHOLD_MINUTES: process.env.SESSION_COMPLETION_THRESHOLD_MINUTES || '50',
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  get NODE_ENV() { return process.env.NODE_ENV || 'development'; },
+  get PORT() { return process.env.PORT || 5000; },
+  get MONGO_CONNECTION_URI() {
+    return process.env.MONGO_CONNECTION_URI || 'mongodb://localhost:27017/utter_web_app';
+  },
+  get NODEMAILER_USER() { return process.env.NODEMAILER_USER || ''; },
+  get NODEMAILER_PASS() { return process.env.NODEMAILER_PASS || ''; },
+  get NODEMAILER_HOST() { return process.env.NODEMAILER_HOST || ''; },
+  get NODEMAILER_PORT() { return process.env.NODEMAILER_PORT || ''; },
+  get JWT_ALGORITHM() { return process.env.JWT_ALGORITHM || ''; },
+  get ACCESS_TOKEN_SECRET() { return process.env.ACCESS_TOKEN_SECRET || ''; },
+  get REFRESH_TOKEN_SECRET() { return process.env.REFRESH_TOKEN_SECRET || ''; },
+  get RESET_TOKEN_SECRET() { return process.env.RESET_TOKEN_SECRET || ''; },
+  get ACCESS_TOKEN_AGE() { return process.env.ACCESS_TOKEN_AGE || ''; },
+  get REFRESH_TOKEN_AGE() { return process.env.REFRESH_TOKEN_AGE || ''; },
+  get RESET_TOKEN_AGE() { return process.env.RESET_TOKEN_AGE || ''; },
+  get OTP_AGE() { return process.env.OTP_AGE || ''; },
+  get GOOGLE_CLIENT_ID() { return process.env.GOOGLE_CLIENT_ID || ''; },
+  get GOOGLE_CLIENT_SECRET() { return process.env.GOOGLE_CLIENT_SECRET || ''; },
+  get GOOGLE_USER_CALLBACK_URL() { return process.env.GOOGLE_USER_CALLBACK_URL || ''; },
+  get GOOGLE_TUTOR_CALLBACK_URL() { return process.env.GOOGLE_TUTOR_CALLBACK_URL || ''; },
+  get SESSION_SECRET() { return process.env.SESSION_SECRET || ''; },
+  get COOKIE_DOMAIN() { return process.env.COOKIE_DOMAIN || ''; },
+  get FRONTEND_URL() { return process.env.FRONTEND_URL || ''; },
+  get AWS_REGION() { return process.env.AWS_REGION || ''; },
+  get AWS_BUCKET() { return process.env.AWS_BUCKET || ''; },
+  get AWS_ACCESS_KEY_ID() { return process.env.AWS_ACCESS_KEY_ID || ''; },
+  get AWS_SECRET_ACCESS_KEY() { return process.env.AWS_SECRET_ACCESS_KEY || ''; },
+  get RAZORPAY_KEY_ID() { return process.env.RAZORPAY_KEY_ID || ''; },
+  get RAZORPAY_KEY_SECRET() { return process.env.RAZORPAY_KEY_SECRET || ''; },
+  get REDIS_URL() { return process.env.REDIS_URL || 'redis://127.0.0.1:6379'; },
+  get CALL_JOIN_THRESHOLD_MINUTES() { return process.env.CALL_JOIN_THRESHOLD_MINUTES || '5'; },
+  get SESSION_COMPLETION_THRESHOLD_MINUTES() { return process.env.SESSION_COMPLETION_THRESHOLD_MINUTES || '50'; },
+  get GEMINI_API_KEY() { return process.env.GEMINI_API_KEY || ''; },
 };

@@ -1,10 +1,8 @@
-import dotenv from 'dotenv';
-dotenv.config();
  
 import express from 'express';
 import { connectDB } from '~connect-db/connection';
 import { errorHandler } from '~middlewares/errorHandler';
-import { env } from '~config/env';
+import { env, initializeAWSConfig } from '~config/env';
 import { requestLogger } from '~middlewares/requestLogger';
 import { logger } from '~logger/logger';
 import morgan from 'morgan';
@@ -20,6 +18,7 @@ import { createServer } from 'http';
 import { SocketManager } from '~concrete-services/SocketManager';
 
 async function startServer() {
+  await initializeAWSConfig();
   const app = express();
 
   try {
