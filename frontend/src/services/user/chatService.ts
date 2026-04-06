@@ -62,18 +62,30 @@ export const uploadAttachment = async (file: File) => {
   return response.data;
 };
 
-export const createAbuseReport = async (data: {
-  reportedId: string;
-  type: string;
-  description: string;
-  messages: any[];
-  channel: 'chat' | 'video';
-}) => {
-  const response = await axios.post(API_ROUTES.USER.REPORTS, data);
+export const createAbuseReport = async (
+  data: {
+    reportedId: string;
+    type: string;
+    description: string;
+    messages: any[];
+    channel: 'chat' | 'video';
+  },
+  userType: 'user' | 'tutor' = 'user',
+) => {
+  const response = await axios.post(
+    userType === 'user' ? API_ROUTES.USER.REPORTS : API_ROUTES.TUTOR.REPORTS,
+    data,
+  );
   return response.data;
 };
 
-export const getMyReports = async (params?: { page?: number; limit?: number; status?: string }) => {
-  const response = await axios.get(API_ROUTES.USER.REPORTS, { params });
+export const getMyReports = async (
+  params?: { page?: number; limit?: number; status?: string },
+  userType: 'user' | 'tutor' = 'user',
+) => {
+  const response = await axios.get(
+    userType === 'user' ? API_ROUTES.USER.REPORTS : API_ROUTES.TUTOR.REPORTS,
+    { params },
+  );
   return response.data;
 };

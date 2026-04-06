@@ -13,6 +13,7 @@ import { Wallet } from '~entities/Wallet';
 import { IWallet } from '~models/WalletModel';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 import { ICreateNotificationUseCase } from '~use-case-interfaces/shared/INotificationUseCase';
+import { IRedisService } from '~service-interfaces/IRedisService';
 
 export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase {
   constructor(
@@ -24,6 +25,7 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
     private _mailService: IMailService,
     private _walletRepository: IWalletRepository,
     private _createNotificationUseCase: ICreateNotificationUseCase,
+    private _redisService: IRedisService,
   ) { }
 
   async execute(data: {
@@ -42,86 +44,103 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
       throw new BadRequestError('Invalid payment signature');
     }
 
-    const session = await this._sessionRepository.findOneById(data.sessionId);
-    if (!session) {
-      throw new BadRequestError('Session not found');
-    }
+    const lock = await this._redisService.acquireLock(`booking:lock:${data.sessionId}`, 5000);
 
-    const expiresAt = new Date(session.scheduledAt);
-    expiresAt.setHours(expiresAt.getHours() + 1);
-
-    const updatedSession = await this._sessionRepository.updateOneByField(
-      { _id: data.sessionId, status: 'Available' } as Parameters<ISessionRepository['updateOneByField']>[0],
-      { status: 'Booked', expiresAt },
-    );
-
-    if (!updatedSession) {
-      let wallet = await this._walletRepository.findOneByField({ userId: data.userId } as unknown as FilterQuery<IWallet>);
-
-      if (!wallet) {
-        wallet = new Wallet(data.userId, 0, 'INR', []);
-        wallet = await this._walletRepository.create(wallet);
+    try {
+      const session = await this._sessionRepository.findOneById(data.sessionId);
+      if (!session) {
+        throw new BadRequestError('Session not found');
       }
 
-      const refundAmount = session.price;
+      if (session.status !== 'Available') {
+        throw new BadRequestError('This session is no longer available.');
+      }
 
-      wallet.balance += refundAmount;
-      wallet.transactions.push({
-        amount: refundAmount,
-        type: 'credit',
-        description: `Refund for failed booking (Session already taken): ${session.topic}`,
-        date: new Date(),
-      });
+      const expiresAt = new Date(session.scheduledAt);
+      expiresAt.setDate(expiresAt.getDate() + 30);
 
-      await this._walletRepository.updateOneById(wallet.id!, wallet);
+      const updatedSession = await this._sessionRepository.updateOneByField(
+        { _id: data.sessionId, status: 'Available' } as Parameters<ISessionRepository['updateOneByField']>[0],
+        { status: 'Booked', expiresAt },
+      );
 
-      throw new BadRequestError('This session was just booked by someone else. The amount has been refunded to your wallet.');
-    }
+      if (!updatedSession) {
+        let wallet = await this._walletRepository.findOneByField({ userId: data.userId } as unknown as FilterQuery<IWallet>);
 
-    const booking = new Booking(
-      data.sessionId,
-      data.userId,
-      data.tutorId,
-      {
-        provider: 'razorpay',
-        transactionId: data.paymentId,
-        status: 'success',
-        currency: data.currency,
-      },
-      'confirmed',
-      'none',
-      null,
-    );
+        if (!wallet) {
+          wallet = new Wallet(data.userId, 0, 'INR', []);
+          wallet = await this._walletRepository.create(wallet);
+        }
 
-    await this._bookingRepository.create(booking);
+        const refundAmount = session.price;
 
-    const [user, tutor] = await Promise.all([
-      this._userRepository.findOneById(data.userId),
-      this._tutorRepository.findOneById(data.tutorId),
-    ]);
+        wallet.balance += refundAmount;
+        wallet.transactions.push({
+          amount: refundAmount,
+          type: 'credit',
+          description: `Refund for failed booking (Session already taken): ${session.topic}`,
+          date: new Date(),
+        });
 
-    if (user && tutor) {
-      const formattedDate = new Date(session.scheduledAt).toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+        await this._walletRepository.updateOneById(wallet.id!, wallet);
 
+        throw new BadRequestError('This session was just booked by someone else. The amount has been refunded to your wallet.');
+      }
+
+      const booking = new Booking(
+        data.sessionId,
+        data.userId,
+        data.tutorId,
+        {
+          provider: 'razorpay',
+          transactionId: data.paymentId,
+          status: 'success',
+          currency: data.currency,
+        },
+        'confirmed',
+        'none',
+        null,
+        0,
+        session.topic,
+        session.language,
+        session.price,
+      );
+
+      await this._bookingRepository.create(booking);
+
+      const [user, tutor] = await Promise.all([
+        this._userRepository.findOneById(data.userId),
+        this._tutorRepository.findOneById(data.tutorId),
+      ]);
+
+      if (user && tutor) {
+        const formattedDate = new Date(session.scheduledAt).toLocaleString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        await Promise.all([
+          this._mailService.sendBookingConfirmation(tutor.name, tutor.email, session.topic, session.language, formattedDate, true),
+          this._mailService.sendBookingConfirmation(user.name, user.email, session.topic, session.language, formattedDate, false),
+          this._createNotificationUseCase.execute({
+            recipientId: tutor.id!,
+            recipientRole: 'tutor',
+            message: `${user.name} booked your session on ${session.topic}`,
+            type: 'booking',
+          }),
+        ]);
+      }
+
+      return null;
+    } finally {
       await Promise.all([
-        this._mailService.sendBookingConfirmation(tutor.name, tutor.email, session.topic, session.language, formattedDate, true),
-        this._mailService.sendBookingConfirmation(user.name, user.email, session.topic, session.language, formattedDate, false),
-        this._createNotificationUseCase.execute({
-          recipientId: tutor.id!,
-          recipientRole: 'tutor',
-          message: `${user.name} booked your session on ${session.topic}`,
-          type: 'booking',
-        }),
+        this._redisService.releaseLock(lock),
+        this._redisService.delete(`booking:pending:${data.sessionId}`),
       ]);
     }
-
-    return null;
   }
 }

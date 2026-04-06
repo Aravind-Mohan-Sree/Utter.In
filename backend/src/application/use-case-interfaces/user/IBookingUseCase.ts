@@ -1,5 +1,5 @@
 export interface ICreateBookingOrderUseCase {
-    execute(amount: number, currency: string, sessionId: string): Promise<{
+    execute(amount: number, currency: string, sessionId: string, userId: string): Promise<{
         id: string;
         currency: string;
         amount: number;

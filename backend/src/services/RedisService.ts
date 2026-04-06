@@ -1,20 +1,37 @@
 import { createClient } from 'redis';
-import { IRedisService } from '~service-interfaces/IRedisService';
+import Redlock, { Lock } from 'redlock';
+import { IRedisService, ILock } from '~service-interfaces/IRedisService';
 import { logger } from '~logger/logger';
 import { env } from '~config/env';
 
 export class RedisService implements IRedisService {
   private _client;
+  private _redlock: Redlock;
 
   constructor() {
     this._client = createClient({
       url: env.REDIS_URL,
     });
 
-    this._client.on('error', (err) => logger.error('Redis Client Error', err));
+    this._client.on('error', (err: Error) => logger.error('Redis Client Error', err));
     this._client.on('connect', () => logger.info('Redis Client Connected'));
 
-    this._client.connect().catch((err) => logger.error('Redis Connect Error', err));
+    this._client.connect().catch((err: Error) => logger.error('Redis Connect Error', err));
+
+    this._redlock = new Redlock([this._client as any], {
+      driftFactor: 0.01,
+      retryCount: 10,
+      retryDelay: 200,
+      retryJitter: 200,
+      automaticExtensionThreshold: 500,
+    });
+
+    this._redlock.on('error', (err: unknown) => {
+      if (err instanceof Error && err.name === 'ExecutionError') {
+        return;
+      }
+      logger.error('Redlock Error', err);
+    });
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
@@ -27,6 +44,11 @@ export class RedisService implements IRedisService {
 
   async get(key: string): Promise<string | null> {
     return await this._client.get(key);
+  }
+
+  async setNx(key: string, value: string, ttlSeconds: number): Promise<boolean> {
+    const result = await this._client.set(key, value, { NX: true, EX: ttlSeconds });
+    return result === 'OK';
   }
 
   async delete(key: string): Promise<void> {
@@ -47,5 +69,14 @@ export class RedisService implements IRedisService {
 
   async getOtpTtl(email: string): Promise<number> {
     return await this._client.ttl(email);
+  }
+
+  async acquireLock(resource: string, ttl: number): Promise<ILock> {
+    const lock = await this._redlock.acquire([resource], ttl);
+    return lock as unknown as ILock;
+  }
+
+  async releaseLock(lock: ILock): Promise<void> {
+    await (lock as unknown as Lock).release();
   }
 }

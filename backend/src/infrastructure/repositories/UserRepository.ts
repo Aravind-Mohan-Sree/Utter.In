@@ -137,4 +137,11 @@ export class UserRepository
       doc.updatedAt,
     );
   }
+
+  getRecentUsers = async (limit: number): Promise<User[]> => {
+    const docs = await this.model.find({ role: 'user' })
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    return docs.map((doc) => this.toEntity(doc as IUser & Document<unknown>)!);
+  };
 }

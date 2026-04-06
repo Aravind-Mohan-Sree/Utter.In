@@ -16,4 +16,5 @@ export interface ITutorRepository extends IBaseRepository<Tutor, ITutor> {
     filteredTutorsCount: number;
     tutors: Tutor[];
   }>;
+  getRecentVerifications(limit: number): Promise<Tutor[]>;
 }

@@ -27,7 +27,8 @@ export class BookingController {
   createOrder = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { amount, currency, sessionId } = req.body;
-      const order = await this._createBookingOrderUC.execute(amount, currency, sessionId);
+      const user = (req as unknown as IAuthenticatedRequest).user;
+      const order = await this._createBookingOrderUC.execute(amount, currency, sessionId, user.id);
       res.status(httpStatusCode.OK).json({
         success: true,
         message: successMessage.ORDER_CREATED,

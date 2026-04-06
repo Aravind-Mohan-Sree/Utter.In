@@ -18,9 +18,9 @@ export const LanguageTags = ({
 
   return (
     <div className={`flex flex-wrap gap-2 ${className}`}>
-      {knownLanguages.map((lang: string) => (
+      {knownLanguages.map((lang: string, idx: number) => (
         <span
-          key={lang}
+          key={`${lang}-${idx}`}
           className={`px-2 py-1 ${variantClasses} text-[10px] font-medium rounded-md`}
         >
           {lang}

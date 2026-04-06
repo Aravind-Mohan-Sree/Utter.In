@@ -151,4 +151,11 @@ export class AbuseReportRepository
       doc.updatedAt,
     );
   }
+
+  getRecentReports = async (limit: number): Promise<AbuseReport[]> => {
+    const docs = await this.model.find()
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    return docs.map((doc) => this.toEntity(doc as IAbuseReport & Document<unknown>)!);
+  };
 }

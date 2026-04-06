@@ -135,4 +135,11 @@ export class TutorRepository
       doc.updatedAt,
     );
   }
+
+  getRecentVerifications = async (limit: number): Promise<Tutor[]> => {
+    const docs = await this.model.find({ isVerified: true })
+      .sort({ updatedAt: -1 }) // Use updatedAt because verification happens after registration
+      .limit(limit);
+    return docs.map((doc) => this.toEntity(doc as ITutor & Document<unknown>)!);
+  };
 }

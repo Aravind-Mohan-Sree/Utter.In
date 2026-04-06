@@ -5,6 +5,8 @@ import { DateAndTime } from '~components/ui/DateAndTime';
 import Loader from '~components/ui/Loader';
 import { errorHandler } from '~utils/errorHandler';
 import { utterToast } from '~utils/utterToast';
+import { useSelector } from 'react-redux';
+import { RootState } from '~store/rootReducer';
 
 interface AbuseReport {
   id: string;
@@ -36,6 +38,7 @@ export default function AbuseReportsModal({
   isOpen,
   onClose,
 }: AbuseReportsModalProps) {
+  const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<'Pending' | 'Resolved' | 'Rejected'>('Pending');
   const [tabStates, setTabStates] = useState<Record<string, TabState>>({
     Pending: { reports: [], page: 1, hasMore: true, loading: false },
@@ -53,7 +56,7 @@ export default function AbuseReportsModal({
     }));
 
     try {
-      const res = await getMyReports({ page: pageNum, limit: 10, status: tab });
+      const res = await getMyReports({ page: pageNum, limit: 10, status: tab }, user?.role as any);
       
       setTabStates(prev => {
         const currentTab = prev[tab];

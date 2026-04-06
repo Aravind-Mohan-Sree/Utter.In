@@ -2,6 +2,7 @@ import express from 'express';
 import { AdminRepository } from '~concrete-repositories/AdminRepository';
 import { TutorRepository } from '~concrete-repositories/TutorRepository';
 import { UserRepository } from '~concrete-repositories/UserRepository';
+import { BookingRepository } from '~concrete-repositories/BookingRepository';
 import { DataValidatorService } from '~concrete-services/DataValidatorService';
 import { HashService } from '~concrete-services/HashService';
 import { JwtService } from '~concrete-services/JwtService';
@@ -31,12 +32,15 @@ import { AbuseReportRepository } from '~concrete-repositories/AbuseReportReposit
 import { GetAbuseReportsUseCase } from '~use-cases/admin/report/GetAbuseReportsUseCase';
 import { HandleAbuseReportUseCase } from '~use-cases/admin/report/HandleAbuseReportUseCase';
 import { AdminAbuseReportController } from '~controllers/admin/AbuseReportController';
+import { GetDashboardDataUseCase } from '~use-cases/admin/dashboard/GetDashboardDataUseCase';
+import { AdminDashboardController } from '~controllers/admin/DashboardController';
 
 // repositories
 const adminRepository = new AdminRepository();
 const userRepository = new UserRepository();
 const tutorRepository = new TutorRepository();
 const abuseReportRepository = new AbuseReportRepository();
+const bookingRepository = new BookingRepository();
 
 // services
 const mailService = new MailService();
@@ -67,6 +71,7 @@ const deleteFileUseCase = new DeleteFileUseCase(s3Service);
 
 const getAbuseReportsUseCase = new GetAbuseReportsUseCase(abuseReportRepository, userRepository, tutorRepository);
 const handleAbuseReportUseCase = new HandleAbuseReportUseCase(abuseReportRepository, userRepository, tutorRepository, mailService);
+const getDashboardDataUseCase = new GetDashboardDataUseCase(userRepository, tutorRepository, bookingRepository, abuseReportRepository);
 
 // shared use cases
 const getAdminDataUseCase = new GetEntityDataUseCase<Admin, IAdmin>(
@@ -89,6 +94,7 @@ const tutorsController = new TutorsController(
   deleteFileUseCase,
 );
 const abuseReportController = new AdminAbuseReportController(getAbuseReportsUseCase, handleAbuseReportUseCase);
+const dashboardController = new AdminDashboardController(getDashboardDataUseCase);
 
 // wire auth middlewares
 const authenticate = new Authenticate<Admin>(jwtService, getAdminDataUseCase);
@@ -99,6 +105,9 @@ const router = express.Router();
 
 // auth
 router.post('/signin', authController.signin);
+
+// dashboard
+router.get('/dashboard', auth.verify(), dashboardController.getDashboardData);
 
 // admin management
 router.post('/signout', auth.verify(), signoutController.signout);

@@ -156,15 +156,17 @@ const changePasswordUseCase = new ChangePasswordUseCase(
 );
 const createAbuseReportUseCase = new CreateAbuseReportUseCase(
   abuseReportRepository,
-  userRepository,
-  tutorRepository,
+  s3Service,
 );
 const getUserAbuseReportsUseCase = new GetUserAbuseReportsUseCase(
   abuseReportRepository,
+  userRepository,
+  tutorRepository,
 );
 const abuseReportController = new UserAbuseReportController(
   createAbuseReportUseCase,
   getUserAbuseReportsUseCase,
+  dataValidatorService,
 );
 const uploadAvatarUseCase = new UploadAvatarUseCase(
   s3Service,
@@ -233,7 +235,7 @@ const sessionController = new SessionController(
 const getWalletTransactionsUseCase = new GetWalletTransactionsUseCase(walletRepository);
 const walletController = new WalletController(getWalletTransactionsUseCase);
 
-const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService, sessionRepository);
+const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService, sessionRepository, redisService);
 const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
   bookingRepository,
   sessionRepository,
@@ -243,6 +245,7 @@ const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
   mailService,
   walletRepository,
   createNotificationUseCase,
+  redisService,
 );
 const getBookingsUseCase = new GetBookingsUseCase(bookingRepository);
 const cancelBookingUseCase = new CancelBookingUseCase(

@@ -69,5 +69,6 @@ export const API_ROUTES = {
     TUTORS: '/admin/tutors',
     REPORTS: '/admin/reports',
     HANDLE_REPORT: (id: string) => `/admin/reports/${id}`,
+    DASHBOARD: '/admin/dashboard',
   },
 };

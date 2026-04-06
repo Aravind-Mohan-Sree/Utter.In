@@ -17,4 +17,5 @@ export interface IUserRepository extends IBaseRepository<User, IUser> {
     filteredUsersCount: number;
     users: User[];
   }>;
+  getRecentUsers(limit: number): Promise<User[]>;
 }

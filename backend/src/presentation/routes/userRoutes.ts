@@ -203,7 +203,7 @@ const getTutorDataUseCase = new GetEntityDataUseCase<Tutor, ITutor>(
 );
 const getTutorSessionsUseCase = new GetTutorSessionsUseCase(sessionRepository);
 
-const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService, sessionRepository);
+const createBookingOrderUseCase = new CreateBookingOrderUseCase(razorpayService, sessionRepository, redisService);
 const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
   bookingRepository,
   sessionRepository,
@@ -213,6 +213,7 @@ const verifyPaymentAndBookUseCase = new VerifyPaymentAndBookUseCase(
   mailService,
   walletRepository,
   createNotificationUseCase,
+  redisService,
 );
 const getBookingsUseCase = new GetBookingsUseCase(bookingRepository);
 const cancelBookingUseCase = new CancelBookingUseCase(

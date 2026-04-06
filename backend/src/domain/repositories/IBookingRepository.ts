@@ -43,4 +43,6 @@ export interface IFetchBookingsResponse {
 
 export interface IBookingRepository extends IBaseRepository<Booking, IBooking> {
     fetchBookings(params: IFetchBookingsParams): Promise<IFetchBookingsResponse>;
+    getDashboardStats(): Promise<{ totalEarnings: number; completedSessions: number; languageStats: { language: string; sessionCount: number }[] }>;
+    getRecentSessions(limit: number): Promise<IBookingDetail[]>;
 }
