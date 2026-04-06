@@ -1,25 +1,28 @@
- 
 import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import passport from 'passport';
+import { createServer } from 'http';
+
 import { connectDB } from '~connect-db/connection';
 import { errorHandler } from '~middlewares/errorHandler';
 import { env, initializeAWSConfig } from '~config/env';
 import { requestLogger } from '~middlewares/requestLogger';
 import { logger } from '~logger/logger';
-import morgan from 'morgan';
-import cors from 'cors';
 import { userRouter } from '~routes/userRoutes';
-import cookieParser from 'cookie-parser';
-import passport from 'passport';
-import '~strategies/googleUserStrategy';
-import '~strategies/googleTutorStrategy';
 import { tutorRouter } from '~routes/tutorRoutes';
 import { adminRouter } from '~routes/adminRoutes';
-import { createServer } from 'http';
 import { SocketManager } from '~concrete-services/SocketManager';
+
+import '~strategies/googleUserStrategy';
+import '~strategies/googleTutorStrategy';
 
 async function startServer() {
   await initializeAWSConfig();
+  
   const app = express();
+  const port = env.PORT;
 
   try {
     await connectDB();
@@ -29,16 +32,21 @@ async function startServer() {
     process.exit(1);
   }
 
-  app.use(cookieParser());
+  app.use(morgan('dev'));
+
   app.use(
     cors({
       origin: env.FRONTEND_URL,
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     }),
   );
-  app.use(express.json());
-  app.use(passport.initialize());
 
+  app.use(cookieParser());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(passport.initialize());
   app.use(requestLogger);
 
   app.use('/api/user', userRouter);
@@ -46,9 +54,7 @@ async function startServer() {
   app.use('/api/admin', adminRouter);
 
   app.use(errorHandler);
-  app.use(morgan('dev'));
 
-  const port = env.PORT;
   const server = createServer(app);
 
   SocketManager.getInstance().init(server, env.FRONTEND_URL);
