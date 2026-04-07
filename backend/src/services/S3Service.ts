@@ -1,5 +1,4 @@
 import {
-  S3Client,
   PutObjectCommand,
   CopyObjectCommand,
   DeleteObjectCommand,
@@ -9,25 +8,19 @@ import {
   UploadResult,
   DeleteResult,
   UpdateResult,
-  S3Config,
   ICloudService,
 } from '~service-interfaces/ICloudService';
 import fs from 'fs';
+import { getS3Client } from '~config/s3';
+import { env } from '~config/env';
 
 export class S3Service implements ICloudService {
-  private _s3: S3Client;
-  private _bucket: string;
+  private get _s3() {
+    return getS3Client();
+  }
 
-  constructor(config: S3Config) {
-    this._bucket = config.bucket;
-
-    this._s3 = new S3Client({
-      region: config.region,
-      credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
-      },
-    });
+  private get _bucket() {
+    return env.AWS_BUCKET;
   }
 
   async upload(

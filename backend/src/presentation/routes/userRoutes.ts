@@ -114,12 +114,7 @@ const mailService = new MailService();
 const dataValidatorService = new DataValidatorService();
 const hashService = new HashService();
 const jwtService = new JwtService();
-const s3Service = new S3Service({
-  region: env.AWS_REGION,
-  bucket: env.AWS_BUCKET,
-  accessKeyId: env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-});
+const s3Service = new S3Service();
 const axiosImageGatewayService = new AxiosImageGatewayService();
 const razorpayService = new RazorpayService();
 const redisService = new RedisService();
