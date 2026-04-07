@@ -6,21 +6,22 @@ import passport from 'passport';
 import { createServer } from 'http';
 
 import { connectDB } from '~connect-db/connection';
-import { errorHandler } from '~middlewares/errorHandler';
 import { env, initializeAWSConfig } from '~config/env';
-import { requestLogger } from '~middlewares/requestLogger';
 import { logger } from '~logger/logger';
-import { userRouter } from '~routes/userRoutes';
-import { tutorRouter } from '~routes/tutorRoutes';
-import { adminRouter } from '~routes/adminRoutes';
-import { SocketManager } from '~concrete-services/SocketManager';
-
-import '~strategies/googleUserStrategy';
-import '~strategies/googleTutorStrategy';
 
 async function startServer() {
   await initializeAWSConfig();
-  
+
+  const { userRouter } = await import('~routes/userRoutes.js');
+  const { tutorRouter } = await import('~routes/tutorRoutes.js');
+  const { adminRouter } = await import('~routes/adminRoutes.js');
+  const { requestLogger } = await import('~middlewares/requestLogger.js');
+  const { errorHandler } = await import('~middlewares/errorHandler.js');
+  const { SocketManager } = await import('~concrete-services/SocketManager.js');
+
+  await import('~strategies/googleUserStrategy.js');
+  await import('~strategies/googleTutorStrategy.js');
+
   const app = express();
   const port = env.PORT;
 
@@ -33,7 +34,6 @@ async function startServer() {
   }
 
   app.use(morgan('dev'));
-
   app.use(
     cors({
       origin: env.FRONTEND_URL,
@@ -56,7 +56,6 @@ async function startServer() {
   app.use(errorHandler);
 
   const server = createServer(app);
-
   SocketManager.getInstance().init(server, env.FRONTEND_URL);
 
   server.listen(port, () => {
