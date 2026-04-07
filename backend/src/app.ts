@@ -5,22 +5,26 @@ import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { createServer } from 'http';
 
-import { connectDB } from '~connect-db/connection';
-import { errorHandler } from '~middlewares/errorHandler';
-import { env, initializeAWSConfig } from '~config/env';
-import { requestLogger } from '~middlewares/requestLogger';
-import { logger } from '~logger/logger';
-import { userRouter } from '~routes/userRoutes';
-import { tutorRouter } from '~routes/tutorRoutes';
-import { adminRouter } from '~routes/adminRoutes';
-import { SocketManager } from '~concrete-services/SocketManager';
-
-import '~strategies/googleUserStrategy';
-import '~strategies/googleTutorStrategy';
+import { initializeAWSConfig } from '~config/env';
 
 async function startServer() {
   await initializeAWSConfig();
-  
+
+  const _import = async <T>(path: string): Promise<T> => import(path) as Promise<T>;
+
+  const { connectDB } = await _import<typeof import('~connect-db/connection')>('~connect-db/connection');
+  const { errorHandler } = await _import<typeof import('~middlewares/errorHandler')>('~middlewares/errorHandler');
+  const { env } = await _import<typeof import('~config/env')>('~config/env');
+  const { requestLogger } = await _import<typeof import('~middlewares/requestLogger')>('~middlewares/requestLogger');
+  const { logger } = await _import<typeof import('~logger/logger')>('~logger/logger');
+  const { userRouter } = await _import<typeof import('~routes/userRoutes')>('~routes/userRoutes');
+  const { tutorRouter } = await _import<typeof import('~routes/tutorRoutes')>('~routes/tutorRoutes');
+  const { adminRouter } = await _import<typeof import('~routes/adminRoutes')>('~routes/adminRoutes');
+  const { SocketManager } = await _import<typeof import('~concrete-services/SocketManager')>('~concrete-services/SocketManager');
+
+  await _import('~strategies/googleUserStrategy');
+  await _import('~strategies/googleTutorStrategy');
+
   const app = express();
   const port = env.PORT;
 
