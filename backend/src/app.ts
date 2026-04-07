@@ -5,23 +5,21 @@ import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { createServer } from 'http';
 
-import { initializeAWSConfig, env } from '~config/env';
+import { connectDB } from '~connect-db/connection';
+import { errorHandler } from '~middlewares/errorHandler';
+import { env, initializeAWSConfig } from '~config/env';
+import { requestLogger } from '~middlewares/requestLogger';
+import { logger } from '~logger/logger';
+import { userRouter } from '~routes/userRoutes';
+import { tutorRouter } from '~routes/tutorRoutes';
+import { adminRouter } from '~routes/adminRoutes';
+import { SocketManager } from '~concrete-services/SocketManager';
+
+import '~strategies/googleUserStrategy';
+import '~strategies/googleTutorStrategy';
 
 async function startServer() {
   await initializeAWSConfig();
-
-  const { connectDB } = require('./infrastructure/databases/mongo/connection');
-  const { errorHandler } = require('./middlewares/errorHandler');
-  const { requestLogger } = require('./middlewares/requestLogger');
-  const { logger } = require('./infrastructure/logger/logger');
-
-  const { userRouter } = require('./presentation/routes/userRoutes');
-  const { tutorRouter } = require('./presentation/routes/tutorRoutes');
-  const { adminRouter } = require('./presentation/routes/adminRoutes');
-  const { SocketManager } = require('./services/SocketManager');
-
-  require('./infrastructure/strategies/googleUserStrategy');
-  require('./infrastructure/strategies/googleTutorStrategy');
   
   const app = express();
   const port = env.PORT;
@@ -29,7 +27,7 @@ async function startServer() {
   try {
     await connectDB();
     logger.info('Database connection successful');
-  } catch (error: any) {
+  } catch (error) {
     logger.error(error);
     process.exit(1);
   }
@@ -66,4 +64,4 @@ async function startServer() {
   });
 }
 
-export { startServer };
+void startServer();

@@ -1,5 +1,5 @@
 import { IPaymentService } from '~service-interfaces/IPaymentService';
-import { getRazorpayInstance } from '~config/razorpay';
+import { razorpayInstance } from '~config/razorpay';
 import crypto from 'crypto';
 import { env } from '~config/env';
 
@@ -10,7 +10,7 @@ export class RazorpayService implements IPaymentService {
       currency,
       receipt,
     };
-    const order = await getRazorpayInstance().orders.create(options);
+    const order = await razorpayInstance.orders.create(options);
     return {
       id: order.id,
       currency: order.currency,

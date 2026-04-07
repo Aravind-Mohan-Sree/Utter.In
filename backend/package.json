@@ -2,15 +2,15 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "run-s build:tsc build:alias",
     "build:tsc": "tsc -p tsconfig.build.json",
     "build:alias": "tsc-alias -p tsconfig.build.json",
-    "start": "node dist/index.js",
+    "start": "node dist/app.js",
     "dev": "run-s lint dev:server --continue-on-error",
-    "dev:server": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
+    "dev:server": "cross-env NODE_ENV=development ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/app.ts",
     "check": "tsc --noEmit --project tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
