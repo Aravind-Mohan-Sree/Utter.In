@@ -5,14 +5,15 @@ import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { createServer } from 'http';
 
-import { connectDB } from '~connect-db/connection';
-import { errorHandler } from '~middlewares/errorHandler';
-import { env, initializeAWSConfig } from '~config/env';
-import { requestLogger } from '~middlewares/requestLogger';
-import { logger } from '~logger/logger';
+import { initializeAWSConfig, env } from '~config/env';
 
 async function startServer() {
   await initializeAWSConfig();
+
+  const { connectDB } = require('./infrastructure/databases/mongo/connection');
+  const { errorHandler } = require('./middlewares/errorHandler');
+  const { requestLogger } = require('./middlewares/requestLogger');
+  const { logger } = require('./infrastructure/logger/logger');
 
   const { userRouter } = require('./presentation/routes/userRoutes');
   const { tutorRouter } = require('./presentation/routes/tutorRoutes');
@@ -28,7 +29,7 @@ async function startServer() {
   try {
     await connectDB();
     logger.info('Database connection successful');
-  } catch (error) {
+  } catch (error: any) {
     logger.error(error);
     process.exit(1);
   }
