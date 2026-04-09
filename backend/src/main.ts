@@ -1,4 +1,4 @@
-import { initializeAWSConfig, env } from './config/env.js';
+import { initializeAWSConfig } from './config/env.js';
 
 async function bootstrap() {
   try {
