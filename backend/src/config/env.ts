@@ -29,7 +29,7 @@ const fetchSSMParameters = async (path: string): Promise<Record<string, string>>
 };
 
 export const initializeAWSConfig = async () => {
-  const ssmPrefix = process.env.SSM_PREFIX || '/utter/prod/';
+  const ssmPrefix = '/utter/prod/';
   
   console.log(`Attempting to fetch from: ${ssmPrefix}`);
   
@@ -39,7 +39,6 @@ export const initializeAWSConfig = async () => {
     console.warn("WARNING: No parameters were fetched from SSM!");
   } else {
     console.log(`Successfully fetched ${Object.keys(ssmParams).length} parameters.`);
-    console.log("Keys found:", Object.keys(ssmParams)); 
   }
 
   Object.assign(process.env, ssmParams);

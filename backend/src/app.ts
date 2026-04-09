@@ -21,7 +21,7 @@ import '~strategies/googleTutorStrategy';
 export async function startServer() {
   const app = express();
   const port = env.PORT;
-console.log(env.MONGO_CONNECTION_URI);
+
   try {
     await connectDB();
     logger.info('Database connection successful');
@@ -47,9 +47,9 @@ console.log(env.MONGO_CONNECTION_URI);
   app.use(passport.initialize());
   app.use(requestLogger);
 
-  app.use('/api/user', userRouter);
-  app.use('/api/tutor', tutorRouter);
-  app.use('/api/admin', adminRouter);
+  app.use('/user', userRouter);
+  app.use('/tutor', tutorRouter);
+  app.use('/admin', adminRouter);
 
   app.use(errorHandler);
 
