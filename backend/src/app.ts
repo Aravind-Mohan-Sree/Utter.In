@@ -7,7 +7,6 @@ import { createServer } from 'http';
 
 import { connectDB } from '~connect-db/connection';
 import { errorHandler } from '~middlewares/errorHandler';
-import { env } from '~config/env';
 import { requestLogger } from '~middlewares/requestLogger';
 import { logger } from '~logger/logger';
 import { userRouter } from '~routes/userRoutes';
@@ -17,8 +16,11 @@ import { SocketManager } from '~concrete-services/SocketManager';
 
 import '~strategies/googleUserStrategy';
 import '~strategies/googleTutorStrategy';
+import { initializeAWSConfig, env } from '~config/env';
 
 export async function startServer() {
+  await initializeAWSConfig();
+
   const app = express();
   const port = env.PORT;
 
