@@ -13,14 +13,12 @@ import { userRouter } from '~routes/userRoutes';
 import { tutorRouter } from '~routes/tutorRoutes';
 import { adminRouter } from '~routes/adminRoutes';
 import { SocketManager } from '~concrete-services/SocketManager';
+import { env } from '~config/env';
 
 import '~strategies/googleUserStrategy';
 import '~strategies/googleTutorStrategy';
-import { initializeAWSConfig, env } from '~config/env';
 
 export async function startServer() {
-  await initializeAWSConfig();
-
   const app = express();
   const port = env.PORT;
 
