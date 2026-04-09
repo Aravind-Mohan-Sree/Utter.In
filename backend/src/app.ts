@@ -21,7 +21,7 @@ import '~strategies/googleTutorStrategy';
 export async function startServer() {
   const app = express();
   const port = env.PORT;
-
+console.log(env.MONGO_CONNECTION_URI);
   try {
     await connectDB();
     logger.info('Database connection successful');
