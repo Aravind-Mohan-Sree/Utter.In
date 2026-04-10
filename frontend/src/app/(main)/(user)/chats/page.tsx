@@ -3,7 +3,7 @@
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FaArrowLeft, FaChevronDown, FaCircle, FaDownload, FaFile, FaFileAlt, FaFileArchive, FaFileImage, FaFilePdf, FaFileWord, FaPaperclip, FaPaperPlane, FaRegSmile, FaSearch, FaTimes, FaVideo } from 'react-icons/fa';
 import { FaFileCircleXmark } from 'react-icons/fa6';
 import { MdContentCopy, MdDelete, MdEdit, MdReportProblem } from 'react-icons/md';
@@ -711,6 +711,28 @@ export default function ChatsPage() {
     const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
     return Date.now() - new Date(createdAt).getTime() < TWO_DAYS;
   };
+  
+  const formatDividerDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    
+    const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffTime = dNow.getTime() - dDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) {
+      return date.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+  };
 
   const searchParams = useSearchParams();
   const userIdFromQuery = searchParams.get('userId');
@@ -1035,13 +1057,19 @@ export default function ChatsPage() {
                     />
                     <div>
                       <h3 className="text-base font-bold text-gray-800 leading-tight">{selectedConversation.otherUser?.name}</h3>
-                      <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-gray-400">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-gray-400">
                         {selectedConversation.otherUser && onlineUsers.has(String(selectedConversation.otherUser.id)) ? (
-                          <><FaCircle className="text-green-500 translate-y-[.5px]" size={8} /> Online</>
+                          <div className="flex items-center gap-1.5">
+                            <FaCircle className="text-green-500" size={8} />
+                            <span>Online</span>
+                          </div>
                         ) : (
-                          <><FaCircle className="text-red-500 translate-y-[.5px]" size={8} /> Offline</>
+                          <div className="flex items-center gap-1.5">
+                            <FaCircle className="text-red-500" size={8} />
+                            <span>Offline</span>
+                          </div>
                         )}
-                      </p>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1082,30 +1110,47 @@ export default function ChatsPage() {
                       <p className="text-sm font-medium">Say hello to {selectedConversation.otherUser?.name}!</p>
                     </div>
                   ) : (
-                    messages.filter(msg => !msg.hiddenBy?.includes(user?.id || '')).map((msg, idx) => (
-                      <MessageBubble
-                        key={msg.id || idx}
-                        msg={msg}
-                        isMe={user?.id === msg.senderId}
-                        isHighlighted={highlightedMessageId === msg.id}
-                        editingMessageId={editingMessageId}
-                        editValue={editValue}
-                        setEditValue={setEditValue}
-                        setEditingMessageId={setEditingMessageId}
-                        handleContextMenu={handleContextMenu}
-                        handleSaveEdit={handleSaveEdit}
-                        fileError={fileError}
-                        setMediaError={setMediaError}
-                        setActivePreview={setActivePreview}
-                        getFullFileUrl={getFullFileUrl}
-                        getFileIcon={getFileIcon}
-                        showEditEmojiPicker={showEditEmojiPicker}
-                        setShowEditEmojiPicker={setShowEditEmojiPicker}
-                        onEditEmojiClick={onEditEmojiClick}
-                        scrollToBottom={scrollToBottom}
-                        showScrollBottom={showScrollBottom}
-                      />
-                    ))
+                    (() => {
+                      let lastDateString = '';
+                      return messages.filter(msg => !msg.hiddenBy?.includes(user?.id || '')).map((msg, idx) => {
+                        const currentDateString = new Date(msg.createdAt).toDateString();
+                        const showDivider = currentDateString !== lastDateString;
+                        lastDateString = currentDateString;
+
+                        return (
+                          <React.Fragment key={msg.id || idx}>
+                            {showDivider && (
+                              <div className="flex justify-center my-6">
+                                <span className="px-4 py-1.5 bg-gray-100 text-gray-500 text-[10px] font-black rounded-full uppercase tracking-widest leading-none select-none">
+                                  {formatDividerDate(msg.createdAt)}
+                                </span>
+                              </div>
+                            )}
+                            <MessageBubble
+                              msg={msg}
+                              isMe={user?.id === msg.senderId}
+                              isHighlighted={highlightedMessageId === msg.id}
+                              editingMessageId={editingMessageId}
+                              editValue={editValue}
+                              setEditValue={setEditValue}
+                              setEditingMessageId={setEditingMessageId}
+                              handleContextMenu={handleContextMenu}
+                              handleSaveEdit={handleSaveEdit}
+                              fileError={fileError}
+                              setMediaError={setMediaError}
+                              setActivePreview={setActivePreview}
+                              getFullFileUrl={getFullFileUrl}
+                              getFileIcon={getFileIcon}
+                              showEditEmojiPicker={showEditEmojiPicker}
+                              setShowEditEmojiPicker={setShowEditEmojiPicker}
+                              onEditEmojiClick={onEditEmojiClick}
+                              scrollToBottom={scrollToBottom}
+                              showScrollBottom={showScrollBottom}
+                            />
+                          </React.Fragment>
+                        );
+                      });
+                    })()
                   )}
                   <div ref={messagesEndRef} />
                 </div>

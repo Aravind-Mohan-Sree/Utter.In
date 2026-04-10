@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { GoX } from 'react-icons/go';
 
 import Button from '~components/ui/Button';
+import { utterToast } from '~utils/utterToast';
 
 interface CreateAbuseReportModalProps {
   isOpen: boolean;
@@ -37,13 +38,29 @@ export default function CreateAbuseReportModal({
   if (!isOpen) return null;
 
   const handleSubmit = () => {
-    if (!type || description.trim().length < 10) return;
+    let hasError = false;
+    if (!type) {
+      utterToast.error('Please select an abuse type');
+      hasError = true;
+    }
+    if (description.trim().length < 10) {
+      utterToast.error('Description must be at least 10 characters long');
+      hasError = true;
+    }
+
+    if (hasError) return;
     onSubmit(type, description);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[150] p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0">
           <h3 className="text-xl font-bold text-gray-800">Report Abuse</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
@@ -97,7 +114,6 @@ export default function CreateAbuseReportModal({
               text='Submit'
               className="w-full bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-2xl border-none shadow-lg shadow-rose-200"
               onClick={handleSubmit}
-              disabled={!type || description.trim().length < 10}
               isLoading={isLoading}
             />
           </div>

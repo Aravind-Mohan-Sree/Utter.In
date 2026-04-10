@@ -225,7 +225,7 @@ const cancelBookingUseCase = new CancelBookingUseCase(
   mailService,
   createNotificationUseCase,
 );
-const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService);
+const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService, walletRepository);
 
 const addReviewUseCase = new AddReviewUseCase(reviewRepository);
 const getReviewsUseCase = new GetReviewsUseCase(reviewRepository);

@@ -41,8 +41,14 @@ export interface IFetchBookingsResponse {
     callJoinThresholdMinutes: number;
 }
 
+export interface IPeriodStats {
+    totalEarnings: number;
+    completedSessions: number;
+}
+
 export interface IBookingRepository extends IBaseRepository<Booking, IBooking> {
     fetchBookings(params: IFetchBookingsParams): Promise<IFetchBookingsResponse>;
     getDashboardStats(): Promise<{ totalEarnings: number; completedSessions: number; languageStats: { language: string; sessionCount: number }[] }>;
+    getStatsForPeriod(startDate: Date, endDate: Date): Promise<IPeriodStats>;
     getRecentSessions(limit: number): Promise<IBookingDetail[]>;
 }

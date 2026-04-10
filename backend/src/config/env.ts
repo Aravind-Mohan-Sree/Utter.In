@@ -1,4 +1,5 @@
 import { SSMClient, GetParametersByPathCommand, Parameter } from '@aws-sdk/client-ssm';
+import { logger } from '~logger/logger';
 
 const fetchSSMParameters = async (path: string): Promise<Record<string, string>> => {
   const ssmClient = new SSMClient({ region: 'ap-south-1' });
@@ -23,7 +24,7 @@ const fetchSSMParameters = async (path: string): Promise<Record<string, string>>
       nextToken = response.NextToken;
     } while (nextToken);
   } catch (error) {
-    console.error('Error fetching SSM parameters:', error);
+    logger.error('Error fetching SSM parameters:', { error });
   }
   return parameters;
 };
@@ -31,14 +32,14 @@ const fetchSSMParameters = async (path: string): Promise<Record<string, string>>
 export const initializeAWSConfig = async () => {
   const ssmPrefix = '/utter/prod/';
   
-  console.log(`Attempting to fetch from: ${ssmPrefix}`);
+  logger.log('info', `Attempting to fetch from: ${ssmPrefix}`);
   
   const ssmParams = await fetchSSMParameters(ssmPrefix);
 
   if (Object.keys(ssmParams).length === 0) {
-    console.warn("WARNING: No parameters were fetched from SSM!");
+    logger.warn('WARNING: No parameters were fetched from SSM!');
   } else {
-    console.log(`Successfully fetched ${Object.keys(ssmParams).length} parameters.`);
+    logger.info(`Successfully fetched ${Object.keys(ssmParams).length} parameters.`);
   }
 
   Object.assign(process.env, ssmParams);

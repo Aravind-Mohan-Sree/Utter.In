@@ -415,7 +415,13 @@ export function Navbar() {
       </nav>
 
       {showNotifications && (
-        <Notification onClose={() => setShowNotifications(false)} />
+        <>
+          <div 
+            className="fixed inset-0 z-50 overflow-hidden" 
+            onClick={() => setShowNotifications(false)} 
+          />
+          <Notification onClose={() => setShowNotifications(false)} />
+        </>
       )}
     </>
   );

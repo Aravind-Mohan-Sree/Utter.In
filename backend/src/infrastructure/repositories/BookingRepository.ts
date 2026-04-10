@@ -259,6 +259,53 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
     };
   }
 
+  async getStatsForPeriod(startDate: Date, endDate: Date): Promise<{ totalEarnings: number; completedSessions: number }> {
+    const results = await this.model.aggregate([
+      { 
+        $match: { 
+          status: { $regex: /^completed$/i },
+          createdAt: { $gte: startDate, $lt: endDate },
+        }, 
+      },
+      {
+        $lookup: {
+          from: 'sessions',
+          let: { sId: '$sessionId' },
+          pipeline: [
+            { 
+              $match: { 
+                $expr: { 
+                  $or: [
+                    { $eq: ['$_id', '$$sId'] },
+                    { $eq: ['$_id', { $toObjectId: { $toString: '$$sId' } }] },
+                    { $eq: [{ $toString: '$_id' }, { $toString: '$$sId' }] },
+                  ], 
+                }, 
+              }, 
+            },
+          ],
+          as: 'session',
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalEarnings: { 
+            $sum: { 
+              $ifNull: [
+                { $arrayElemAt: ['$session.price', 0] }, 
+                '$price', 
+              ], 
+            }, 
+          },
+          completedSessions: { $sum: 1 },
+        },
+      },
+    ]);
+
+    return results[0] || { totalEarnings: 0, completedSessions: 0 };
+  }
+
   async getRecentSessions(limit: number): Promise<IBookingDetail[]> {
     const results = await this.model.aggregate([
       { $sort: { createdAt: -1 } },
@@ -293,11 +340,11 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
         $project: {
           id: { $toString: '$_id' },
           sessionId: 1,
-          topic: { $ifNull: [{ $arrayElemAt: ['$session.topic', 0] }, 'Unknown Topic'] },
-          language: { $ifNull: [{ $arrayElemAt: ['$session.language', 0] }, 'N/A'] },
+          topic: { $ifNull: ['$topic', { $arrayElemAt: ['$session.topic', 0] }, 'Unknown Topic'] },
+          language: { $ifNull: ['$language', { $arrayElemAt: ['$session.language', 0] }, 'N/A'] },
           status: 1,
           date: { $ifNull: [{ $arrayElemAt: ['$session.scheduledAt', 0] }, '$createdAt'] },
-          price: { $ifNull: [{ $arrayElemAt: ['$session.price', 0] }, 0] },
+          price: { $ifNull: ['$price', { $arrayElemAt: ['$session.price', 0] }, 0] },
           otherPartyName: { $ifNull: ['$user.name', 'Anonymous'] },
           otherPartyAvatar: null,
           otherPartyId: { $cond: { if: { $ne: ['$user._id', null] }, then: { $toString: '$user._id' }, else: null } },

@@ -43,7 +43,7 @@ const QuizStatsHeader: React.FC<QuizStatsHeaderProps> = ({
           <div className="flex items-center gap-2 text-indigo-500 mb-1 h-9">
             <BiCalendar className="text-xl sm:text-2xl" />
             <span className="text-sm sm:text-lg font-bold uppercase whitespace-nowrap">
-              {lastParticipation ? new Date(lastParticipation).toLocaleDateString() : 'N/A'}
+              {lastParticipation ? new Date(lastParticipation).toLocaleDateString('en-GB') : 'N/A'}
             </span>
           </div>
           <p className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-widest font-black">Last Attempt</p>

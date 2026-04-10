@@ -257,7 +257,7 @@ const cancelBookingUseCase = new CancelBookingUseCase(
   mailService,
   createNotificationUseCase,
 );
-const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService);
+const pingBookingUseCase = new PingBookingUseCase(bookingRepository, sessionRepository, redisService, walletRepository);
 
 const bookingController = new BookingController(
   createBookingOrderUseCase,

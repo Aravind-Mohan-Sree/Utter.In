@@ -5,7 +5,6 @@ import { IBookingRepository } from '~repository-interfaces/IBookingRepository';
 import { IAbuseReportRepository } from '~repository-interfaces/IAbuseReportRepository';
 import { DashboardDataResponseDTO, ActivityDTO } from '~dtos/DashboardDTO';
 import mongoose from 'mongoose';
-import { logger } from '~logger/logger';
 
 export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
   constructor(
@@ -18,34 +17,59 @@ export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
   async execute(): Promise<DashboardDataResponseDTO> {
     const startTime = Date.now();
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
+    
+    // Start of current month
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Start of last month
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    
     const [
       totalUsers,
       thisMonthUsers,
+      lastMonthUsers,
       activeTutors,
       thisMonthTutors,
-      bookingStats,
+      lastMonthTutors,
+      currentStats,
+      lastMonthStats,
       recentUsers,
       recentTutors,
       recentSessions,
       recentReports,
     ] = await Promise.all([
       this._userRepo.countRecords({ role: 'user' }),
-      this._userRepo.countRecords({ role: 'user', createdAt: { $gte: startOfMonth } }),
+      this._userRepo.countRecords({ role: 'user', createdAt: { $gte: startOfThisMonth } }),
+      this._userRepo.countRecords({ 
+        role: 'user', 
+        createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth }, 
+      }),
       this._tutorRepo.countRecords({ isVerified: true }),
-      this._tutorRepo.countRecords({ isVerified: true, updatedAt: { $gte: startOfMonth } }),
+      this._tutorRepo.countRecords({ 
+        isVerified: true, 
+        updatedAt: { $gte: startOfThisMonth }, 
+      }),
+      this._tutorRepo.countRecords({ 
+        isVerified: true, 
+        updatedAt: { $gte: startOfLastMonth, $lt: startOfThisMonth }, 
+      }),
       this._bookingRepo.getDashboardStats(),
+      this._bookingRepo.getStatsForPeriod(startOfLastMonth, startOfThisMonth),
       this._userRepo.getRecentUsers(2),
       this._tutorRepo.getRecentVerifications(2),
       this._bookingRepo.getRecentSessions(3),
       this._reportRepo.getRecentReports(2),
     ]);
 
-    logger.info(`Dashboard Stats: bookings: ${JSON.stringify(bookingStats)}`);
+    const calculateGrowth = (current: number, previous: number): number => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
+    };
 
-    const userGrowth = totalUsers > 0 ? (thisMonthUsers / totalUsers) * 100 : 0;
-    const tutorGrowth = activeTutors > 0 ? (thisMonthTutors / activeTutors) * 100 : 0;
+    const userGrowth = calculateGrowth(thisMonthUsers, lastMonthUsers);
+    const tutorGrowth = calculateGrowth(thisMonthTutors, lastMonthTutors);
+    const sessionGrowth = calculateGrowth(currentStats.completedSessions, lastMonthStats.completedSessions);
+    const earningsGrowth = calculateGrowth(currentStats.totalEarnings, lastMonthStats.totalEarnings);
 
     const activities: ActivityDTO[] = [
       ...recentUsers.map(u => ({
@@ -76,20 +100,20 @@ export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
     return {
       stats: {
         totalUsers,
-        userGrowth: Math.round(userGrowth) || 12,
+        userGrowth,
         activeTutors,
-        tutorGrowth: Math.round(tutorGrowth) || 5,
-        sessionsCompleted: bookingStats.completedSessions,
-        sessionGrowth: 18,
-        totalEarnings: bookingStats.totalEarnings,
-        earningsGrowth: 23,
+        tutorGrowth,
+        sessionsCompleted: currentStats.completedSessions,
+        sessionGrowth,
+        totalEarnings: currentStats.totalEarnings,
+        earningsGrowth,
       },
       recentActivity: activities,
-      popularLanguages: bookingStats.languageStats,
+      popularLanguages: currentStats.languageStats,
       systemStatus: {
         server: 'online',
         database: dbStatus as 'healthy' | 'unhealthy',
-        storageUsed: 78, // Realistic placeholder while S3 metrics are integrated
+        storageUsed: 78,
         apiResponseTime: apiResponseTime,
       },
     };

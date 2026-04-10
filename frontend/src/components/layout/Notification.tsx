@@ -102,7 +102,7 @@ export default function Notification({ onClose }: NotificationProps) {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer"
           >
             ✕
           </button>
@@ -110,7 +110,7 @@ export default function Notification({ onClose }: NotificationProps) {
         <div className="flex gap-2">
           <button
             onClick={() => setFilter('all')}
-            className={`text-xs px-3 py-1.5 rounded-full transition-all ${
+            className={`text-xs px-3 py-1.5 rounded-full transition-all cursor-pointer ${
               filter === 'all'
                 ? 'bg-rose-500 text-white font-medium shadow-sm'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -120,7 +120,7 @@ export default function Notification({ onClose }: NotificationProps) {
           </button>
           <button
             onClick={() => setFilter('unread')}
-            className={`text-xs px-3 py-1.5 rounded-full transition-all ${
+            className={`text-xs px-3 py-1.5 rounded-full transition-all cursor-pointer ${
               filter === 'unread'
                 ? 'bg-rose-500 text-white font-medium shadow-sm'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
@@ -185,7 +185,7 @@ export default function Notification({ onClose }: NotificationProps) {
         <div className="p-3 border-t border-gray-100 bg-white">
           <button 
             onClick={handleMarkAllRead}
-            className="w-full py-2 text-center text-xs text-rose-500 font-bold hover:bg-rose-50 rounded-lg transition-colors border border-rose-100"
+            className="w-full py-2 text-center text-xs text-rose-500 font-bold hover:bg-rose-50 rounded-lg transition-colors border border-rose-100 cursor-pointer"
           >
             Mark all as read
           </button>

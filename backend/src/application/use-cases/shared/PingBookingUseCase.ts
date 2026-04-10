@@ -4,12 +4,17 @@ import { IRedisService } from '~service-interfaces/IRedisService';
 import { env } from '~config/env';
 import { IPingBookingUseCase } from '~use-case-interfaces/shared/IPingBookingUseCase';
 import { SocketManager } from '~concrete-services/SocketManager';
+import { IWalletRepository } from '~repository-interfaces/IWalletRepository';
+import { Wallet } from '~entities/Wallet';
+import { IWallet } from '~models/WalletModel';
+import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 
 export class PingBookingUseCase implements IPingBookingUseCase {
   constructor(
-        private _bookingRepository: IBookingRepository,
-        private _sessionRepository: ISessionRepository,
-        private _redisService: IRedisService,
+    private _bookingRepository: IBookingRepository,
+    private _sessionRepository: ISessionRepository,
+    private _redisService: IRedisService,
+    private _walletRepository: IWalletRepository,
   ) { }
 
   async execute(bookingId: string, role: string) {
@@ -51,8 +56,29 @@ export class PingBookingUseCase implements IPingBookingUseCase {
           completed = true;
         }
       }
-
       if (completed) {
+        try {
+          let wallet = await this._walletRepository.findOneByField({ userId: booking.tutorId } as unknown as FilterQuery<IWallet>);
+
+          if (!wallet) {
+            wallet = new Wallet(booking.tutorId, 0, 'INR', []);
+            wallet = await this._walletRepository.create(wallet);
+          }
+
+          const creditAmount = booking.price;
+          wallet.balance += creditAmount;
+          wallet.transactions.push({
+            amount: creditAmount,
+            type: 'credit',
+            description: `Payment for completed session: ${booking.topic}`,
+            date: new Date(),
+          });
+
+          await this._walletRepository.updateOneById(wallet.id!, wallet);
+        } catch (walletError) {
+          console.error('Failed to credit tutor wallet upon session completion', walletError);
+        }
+
         try {
           const sm = SocketManager.getInstance();
           const io = sm.getIO();
