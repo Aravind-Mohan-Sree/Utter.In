@@ -280,11 +280,21 @@ export class DataValidatorService implements IValidateDataService {
         ctx.addIssue({ code: 'custom', message: 'Attachment is required' });
         return;
       }
-      if (file.size > 10_000_000) {
-        ctx.addIssue({ code: 'custom', message: 'Attachment too large (max 10MB)' });
+
+      const isVideo = file.mimetype?.startsWith('video/');
+      const limitMB = isVideo ? 50 : 10;
+      const limitBytes = limitMB * 1024 * 1024;
+
+      if (file.size > limitBytes) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Attachment too large (max ${limitMB}MB for ${isVideo ? 'videos' : 'files'})`,
+        });
       }
     });
 
-    return toValidatedData(z.object({ file: attachmentSchema }).safeParse({ file }));
+    return toValidatedData(
+      z.object({ file: attachmentSchema }).safeParse({ file }),
+    );
   }
 }

@@ -77,6 +77,13 @@ export class RedisService implements IRedisService {
   }
 
   async releaseLock(lock: ILock): Promise<void> {
-    await (lock as unknown as Lock).release();
+    try {
+      await (lock as unknown as Lock).release();
+    } catch (error) {
+      if (error instanceof Error && error.name === 'ExecutionError') {
+        return;
+      }
+      logger.error('Error releasing lock:', error);
+    }
   }
 }

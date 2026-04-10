@@ -14,6 +14,7 @@ import { IWallet } from '~models/WalletModel';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 import { ICreateNotificationUseCase } from '~use-case-interfaces/shared/INotificationUseCase';
 import { IRedisService } from '~service-interfaces/IRedisService';
+import { logger } from '~logger/logger';
 
 export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase {
   constructor(
@@ -38,19 +39,21 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
     amount: number;
     currency: string;
   }): Promise<null> {
-    const isValid = this._paymentService.verifySignature(data.orderId, data.paymentId, data.signature);
+    const isValid = this._paymentService.verifySignature(
+      data.orderId,
+      data.paymentId,
+      data.signature,
+    );
+    if (!isValid) throw new BadRequestError('Invalid payment signature');
 
-    if (!isValid) {
-      throw new BadRequestError('Invalid payment signature');
-    }
-
-    const lock = await this._redisService.acquireLock(`booking:lock:${data.sessionId}`, 5000);
+    const lock = await this._redisService.acquireLock(
+      `booking:lock:${data.sessionId}`,
+      5000,
+    );
 
     try {
       const session = await this._sessionRepository.findOneById(data.sessionId);
-      if (!session) {
-        throw new BadRequestError('Session not found');
-      }
+      if (!session) throw new BadRequestError('Session not found');
 
       if (session.status !== 'Available') {
         throw new BadRequestError('This session is no longer available.');
@@ -60,12 +63,16 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
       expiresAt.setDate(expiresAt.getDate() + 30);
 
       const updatedSession = await this._sessionRepository.updateOneByField(
-        { _id: data.sessionId, status: 'Available' } as Parameters<ISessionRepository['updateOneByField']>[0],
+        { _id: data.sessionId, status: 'Available' } as Parameters<
+          ISessionRepository['updateOneByField']
+        >[0],
         { status: 'Booked', expiresAt },
       );
 
       if (!updatedSession) {
-        let wallet = await this._walletRepository.findOneByField({ userId: data.userId } as unknown as FilterQuery<IWallet>);
+        let wallet = await this._walletRepository.findOneByField({
+          userId: data.userId,
+        } as unknown as FilterQuery<IWallet>);
 
         if (!wallet) {
           wallet = new Wallet(data.userId, 0, 'INR', []);
@@ -73,7 +80,6 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
         }
 
         const refundAmount = session.price;
-
         wallet.balance += refundAmount;
         wallet.transactions.push({
           amount: refundAmount,
@@ -84,7 +90,9 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
 
         await this._walletRepository.updateOneById(wallet.id!, wallet);
 
-        throw new BadRequestError('This session was just booked by someone else. The amount has been refunded to your wallet.');
+        throw new BadRequestError(
+          'This session was just booked by someone else. The amount has been refunded to your wallet.',
+        );
       }
 
       const booking = new Booking(
@@ -108,39 +116,64 @@ export class VerifyPaymentAndBookUseCase implements IVerifyPaymentAndBookUseCase
 
       await this._bookingRepository.create(booking);
 
+      await Promise.all([
+        this._redisService.releaseLock(lock),
+        this._redisService.delete(`booking:pending:${data.sessionId}`),
+      ]);
+
       const [user, tutor] = await Promise.all([
         this._userRepository.findOneById(data.userId),
         this._tutorRepository.findOneById(data.tutorId),
       ]);
 
       if (user && tutor) {
-        const formattedDate = new Date(session.scheduledAt).toLocaleString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
+        const formattedDate = new Date(session.scheduledAt).toLocaleString(
+          'en-US',
+          {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          },
+        );
 
-        await Promise.all([
-          this._mailService.sendBookingConfirmation(tutor.name, tutor.email, session.topic, session.language, formattedDate, true),
-          this._mailService.sendBookingConfirmation(user.name, user.email, session.topic, session.language, formattedDate, false),
+        Promise.all([
+          this._mailService.sendBookingConfirmation(
+            tutor.name,
+            tutor.email,
+            session.topic,
+            session.language,
+            formattedDate,
+            true,
+          ),
+          this._mailService.sendBookingConfirmation(
+            user.name,
+            user.email,
+            session.topic,
+            session.language,
+            formattedDate,
+            false,
+          ),
           this._createNotificationUseCase.execute({
             recipientId: tutor.id!,
             recipientRole: 'tutor',
             message: `${user.name} booked your session on ${session.topic}`,
             type: 'booking',
           }),
-        ]);
+        ]).catch((err) => logger.error('Post-booking tasks failed:', err));
       }
 
       return null;
-    } finally {
-      await Promise.all([
-        this._redisService.releaseLock(lock),
-        this._redisService.delete(`booking:pending:${data.sessionId}`),
-      ]);
+    } catch (error) {
+      if (lock) {
+        await Promise.all([
+          this._redisService.releaseLock(lock),
+          this._redisService.delete(`booking:pending:${data.sessionId}`),
+        ]);
+      }
+      throw error;
     }
   }
 }
