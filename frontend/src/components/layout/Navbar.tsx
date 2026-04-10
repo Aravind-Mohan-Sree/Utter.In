@@ -23,7 +23,6 @@ import { errorHandler } from '~utils/errorHandler';
 import { utterAlert } from '~utils/utterAlert';
 import { utterToast } from '~utils/utterToast';
 
-import { LanguageSwitcher } from './LanguageSwitcher';
 import Notification from './Notification';
 
 export function Navbar() {
@@ -357,13 +356,6 @@ export function Navbar() {
               )}
 
               <div className="flex items-center gap-3 lg:gap-5 lg:pl-4 lg:border-l lg:border-gray-300">
-                {!isAdminPath && userRole !== 'admin' && (
-                  <div className="flex items-center gap-1.5 text-gray-600">
-                    <div className="flex items-center">
-                      <LanguageSwitcher />
-                    </div>
-                  </div>
-                )}
 
                 {userRole && userRole !== 'admin' && (
                   <button
