@@ -1,24 +1,22 @@
-import { createClient } from 'redis';
+import Redis from 'ioredis';
 import Redlock, { Lock } from 'redlock';
 import { IRedisService, ILock } from '~service-interfaces/IRedisService';
 import { logger } from '~logger/logger';
 import { env } from '~config/env';
 
 export class RedisService implements IRedisService {
-  private _client;
+  private _client: Redis;
   private _redlock: Redlock;
 
   constructor() {
-    this._client = createClient({
-      url: env.REDIS_URL,
+    this._client = new Redis(env.REDIS_URL, {
+      maxRetriesPerRequest: null,
     });
 
     this._client.on('error', (err: Error) => logger.error('Redis Client Error', err));
     this._client.on('connect', () => logger.info('Redis Client Connected'));
 
-    this._client.connect().catch((err: Error) => logger.error('Redis Connect Error', err));
-
-    this._redlock = new Redlock([this._client as unknown], {
+    this._redlock = new Redlock([this._client], {
       driftFactor: 0.01,
       retryCount: 10,
       retryDelay: 200,
@@ -36,7 +34,7 @@ export class RedisService implements IRedisService {
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
     if (ttlSeconds) {
-      await this._client.set(key, value, { EX: ttlSeconds });
+      await this._client.set(key, value, 'EX', ttlSeconds);
     } else {
       await this._client.set(key, value);
     }
@@ -47,7 +45,7 @@ export class RedisService implements IRedisService {
   }
 
   async setNx(key: string, value: string, ttlSeconds: number): Promise<boolean> {
-    const result = await this._client.set(key, value, { NX: true, EX: ttlSeconds });
+    const result = await this._client.set(key, value, 'EX', ttlSeconds, 'NX');
     return result === 'OK';
   }
 
@@ -77,13 +75,6 @@ export class RedisService implements IRedisService {
   }
 
   async releaseLock(lock: ILock): Promise<void> {
-    try {
-      await (lock as unknown as Lock).release();
-    } catch (error) {
-      if (error instanceof Error && error.name === 'ExecutionError') {
-        return;
-      }
-      logger.error('Error releasing lock:', error);
-    }
+    await (lock as unknown as Lock).release();
   }
 }
