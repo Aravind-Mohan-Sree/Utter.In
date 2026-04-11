@@ -94,9 +94,9 @@ export default function ProfilePage() {
     user?.role === 'user' ? userProfileUpdateSchema : tutorProfileUpdateSchema;
 
   const fetchWalletData = useCallback(async () => {
-    if (user?.role !== 'user') return;
+    if (!user) return;
     try {
-      const wallet = await getWalletTransactions();
+      const wallet = await getWalletTransactions(user.role);
       let currentBalance = wallet.balance;
       const mappedTransactions = [...wallet.transactions]
         .reverse()
@@ -120,10 +120,10 @@ export default function ProfilePage() {
     } catch (err: unknown) {
       utterToast.error(errorHandler(err));
     }
-  }, [user?.role]);
+  }, [user]);
 
   useEffect(() => {
-    if (user?.role === 'user') {
+    if (user?.role === 'user' || user?.role === 'tutor') {
       fetchWalletData();
     }
   }, [user, fetchWalletData]);
@@ -370,7 +370,7 @@ export default function ProfilePage() {
                 user={{
                   id: user?.id,
                   name: user?.name as string,
-                  role: user?.role as 'user',
+                  role: user?.role as 'user' | 'tutor',
                 }}
                 handleAvatarUpload={handleAvatarUpload}
                 handleAvatarDeletion={handleAvatarDeletion}

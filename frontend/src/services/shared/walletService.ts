@@ -13,9 +13,9 @@ export interface Wallet {
     transactions: Transaction[];
 }
 
-export const getWalletTransactions = async (): Promise<Wallet> => {
+export const getWalletTransactions = async (role: string = 'user'): Promise<Wallet> => {
     try {
-        const response = await axios.get('/user/wallet');
+        const response = await axios.get(`/${role}/wallet`);
         return response.data.wallet;
     } catch (error) {
         throw error;
