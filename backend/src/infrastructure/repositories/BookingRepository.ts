@@ -341,7 +341,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
         $lookup: {
           from: 'tutors',
           let: { tId: '$tutorId' },
-          pipeline: [{ $match: { $expr: { $or: [{ $eq: ['$_id', '$$tId'] }, { $eq: ['$_id', { $toObjectId: { $toString: '$$tId' } }] }, { $eq: [{ $toString: '$_id' }, { $toString: '$$sId' }] }] } } }],
+          pipeline: [{ $match: { $expr: { $or: [{ $eq: ['$_id', '$$tId'] }, { $eq: ['$_id', { $toObjectId: { $toString: '$$tId' } }] }, { $eq: [{ $toString: '$_id' }, { $toString: '$$tId' }] }] } } }],
           as: 'tutor',
         },
       },

@@ -87,12 +87,12 @@ export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
       ...recentUsers.map(u => ({
         type: 'user_registration' as const,
         message: `New user ${u.name} registered`,
-        timestamp: u.createdAt!,
+        timestamp: u.createdAt || new Date(),
       })),
       ...recentTutors.map(t => ({
         type: 'tutor_verification' as const,
         message: `Tutor ${t.name} verified`,
-        timestamp: t.updatedAt!,
+        timestamp: t.updatedAt || t.createdAt || new Date(),
       })),
       ...recentSessions.filter(s => s.status === 'Completed').map(s => ({
         type: 'session_completed' as const,
@@ -102,9 +102,9 @@ export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
       ...recentReports.map(r => ({
         type: 'abuse_report' as const,
         message: `New abuse report submitted`,
-        timestamp: r.createdAt!,
+        timestamp: r.createdAt || new Date(),
       })),
-    ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 5);
+    ].sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0)).slice(0, 5);
 
     // Measure system health and performance
     const apiResponseTime = Date.now() - startTime;
