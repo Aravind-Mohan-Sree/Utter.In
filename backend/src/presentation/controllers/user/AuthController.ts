@@ -16,6 +16,10 @@ import { FinishRegisterUserDTO } from '~dtos/FinishRegisterUserDTO';
 import { IUpdateFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
 import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
+/**
+ * Controller for user authentication and registration flows.
+ * Handles initial registration, finalization after OTP, and sign-in.
+ */
 export class AuthController {
   constructor(
     private _registerUser: IRegisterUserUseCase,
@@ -26,6 +30,9 @@ export class AuthController {
     private _updateFile: IUpdateFileUseCase,
   ) {}
 
+  /**
+   * Initiates user registration and sends OTP to the user's email.
+   */
   register = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = new RegisterUserDTO(req.body, this._validator);
@@ -53,6 +60,10 @@ export class AuthController {
     }
   };
 
+  /**
+   * Finalizes user registration after OTP verification.
+   * Promotes the pending user to a permanent account and sets session cookies.
+   */
   finishRegister = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = new FinishRegisterUserDTO({ ...req.body }, this._validator);
@@ -67,6 +78,7 @@ export class AuthController {
 
       const userData = await this._finishRegisterUser.execute(data);
 
+      // Transition the temporary avatar to the permanent path
       await this._updateFile.execute(
         filePrefixes.TEMP_USER_AVATAR,
         filePrefixes.USER_AVATAR,
@@ -75,6 +87,7 @@ export class AuthController {
         contentTypes.IMAGE_JPEG,
       );
 
+      // Set auth cookies
       res.cookie('accessToken', userData.accessToken, {
         ...cookieOptions,
         maxAge: parseInt(env.ACCESS_TOKEN_AGE),
@@ -92,6 +105,10 @@ export class AuthController {
     }
   };
 
+  /**
+   * Standard user sign-in.
+   * Validates credentials and sets JWT cookies.
+   */
   signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = new SigninDTO(req.body, this._validator);

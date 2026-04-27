@@ -1,3 +1,4 @@
+import { logger } from '~logger/logger.js';
 import { initializeAWSConfig } from './config/env.js';
 
 async function bootstrap() {
@@ -5,12 +6,12 @@ async function bootstrap() {
     await initializeAWSConfig();
     await import('./app.js');
   } catch (error) {
-    console.error('Failed to bootstrap application:', error);
+    logger.error('Failed to bootstrap application:', error);
     process.exit(1);
   }
 }
 
 bootstrap().catch((error) => {
-  console.error('Unhandled bootstrap error:', error);
+  logger.error('Unhandled bootstrap error:', error);
   process.exit(1);
 });

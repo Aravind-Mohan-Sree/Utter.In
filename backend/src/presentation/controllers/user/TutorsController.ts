@@ -9,6 +9,10 @@ import { IGetEntityDataUseCase } from '~use-case-interfaces/shared/IGetEntityDat
 import { Tutor } from '~entities/Tutor';
 import { TutorMapper } from '~mappers/TutorMapper';
 
+/**
+ * Controller for users to browse and interact with tutors.
+ * Provides endpoints for listing tutors, viewing details, and checking session availability.
+ */
 export class TutorsController {
   constructor(
         private _fetchTutorsUC: IFetchTutorsUseCase,
@@ -16,6 +20,9 @@ export class TutorsController {
         private _getTutorSessionsUC: IGetTutorSessionsUseCase,
   ) { }
 
+  /**
+   * Fetches a paginated list of approved tutors with search and sorting.
+   */
   fetchTutors = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const queryData = new FetchDataDTO({
@@ -45,11 +52,15 @@ export class TutorsController {
     }
   };
 
+  /**
+   * Retrieves public profile details for a specific tutor.
+   */
   getTutorDetails = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tutorId = req.params.id;
       const tutor = await this._getTutorDataUC.getOneById(tutorId);
 
+      // Security check: Don't show details for non-existent or blocked tutors
       if (!tutor || tutor.isBlocked) {
         throw new Error('Tutor not found');
       }
@@ -66,6 +77,9 @@ export class TutorsController {
     }
   };
 
+  /**
+   * Fetches available sessions for a specific tutor, optionally filtered by date.
+   */
   getTutorSessions = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tutorId = req.params.id;

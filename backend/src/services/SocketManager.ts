@@ -3,9 +3,14 @@ import { Server as HttpServer } from 'http';
 import { logger } from '~logger/logger';
 import { ISocketManager } from '~service-interfaces/ISocketManager';
 
+/**
+ * Singleton manager for Socket.io connections.
+ * Handles real-time communication for chat, video calls, and user status tracking.
+ */
 export class SocketManager implements ISocketManager {
   private static _instance: SocketManager;
   private _io: Server | null = null;
+  // Maps to track online users and their respective socket IDs
   private _userSocketMap = new Map<string, string>();
   private _socketUserMap = new Map<string, string>();
 
@@ -13,6 +18,9 @@ export class SocketManager implements ISocketManager {
     // Private constructor for singleton
   }
 
+  /**
+   * Accessor for the singleton instance.
+   */
   public static getInstance(): SocketManager {
     if (!SocketManager._instance) {
       SocketManager._instance = new SocketManager();
@@ -20,6 +28,9 @@ export class SocketManager implements ISocketManager {
     return SocketManager._instance;
   }
 
+  /**
+   * Initializes the Socket.io server with CORS and connection listeners.
+   */
   public init(server: HttpServer, frontendUrl: string): Server {
     this._io = new Server(server, {
       cors: {
@@ -30,6 +41,7 @@ export class SocketManager implements ISocketManager {
     });
 
     this._io.on('connection', (socket: Socket) => {
+      // Extract userId from connection handshake query
       const userId = socket.handshake.query.userId as string;
 
       if (userId) {
@@ -37,11 +49,14 @@ export class SocketManager implements ISocketManager {
         this._socketUserMap.set(socket.id, userId);
         logger.info(`User connected: ${userId} (${socket.id})`);
 
+        // Notify others about status change
         socket.broadcast.emit('user_status_change', { userId, status: 'online' });
 
+        // Send list of current online users to the new connector
         socket.emit('online_users', Array.from(this._userSocketMap.keys()));
       }
 
+      // Handle disconnection
       socket.on('disconnect', () => {
         const userId = this._socketUserMap.get(socket.id);
         if (userId) {
@@ -55,6 +70,7 @@ export class SocketManager implements ISocketManager {
         }
       });
       
+      // Real-time Chat: Sending new messages
       socket.on('send_message', (data: { receiverId: string; message: Record<string, unknown> }) => {
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
@@ -62,6 +78,7 @@ export class SocketManager implements ISocketManager {
         }
       });
 
+      // Real-time Chat: Message edits
       socket.on('edit_message', (data: { receiverId: string; message: Record<string, unknown> }) => {
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
@@ -69,6 +86,7 @@ export class SocketManager implements ISocketManager {
         }
       });
 
+      // Real-time Chat: Message deletions
       socket.on('delete_message', (data: { receiverId: string; message: Record<string, unknown> }) => {
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
         if (receiverSocketId) {
@@ -76,6 +94,7 @@ export class SocketManager implements ISocketManager {
         }
       });
 
+      // WebRTC Signaling: Initiating a call
       socket.on('initiate_call', (data: { receiverId: string; callerId: string; callerName: string; signalData: Record<string, unknown> }) => {
         logger.info(`Initiating call from ${data.callerId} to ${data.receiverId}`);
         const receiverSocketId = this._userSocketMap.get(data.receiverId);
@@ -88,6 +107,7 @@ export class SocketManager implements ISocketManager {
         }
       });
 
+      // WebRTC Signaling: Answering a call
       socket.on('answer_call', (data: { callerId: string; signalData: Record<string, unknown> }) => {
         const callerSocketId = this._userSocketMap.get(data.callerId);
         if (callerSocketId) {
@@ -97,6 +117,7 @@ export class SocketManager implements ISocketManager {
         }
       });
       
+      // WebRTC Signaling: Ending a call
       socket.on('end_call', (data: { otherPartyId: string }) => {
         logger.info(`Ending call: targeting ${data.otherPartyId}`);
         const otherSocketId = this._userSocketMap.get(data.otherPartyId);
@@ -108,6 +129,7 @@ export class SocketManager implements ISocketManager {
         }
       });
 
+      // Session Management: Syncing session completion status
       socket.on('session_completed', (data: { otherPartyId: string }) => {
         const otherSocketId = this._userSocketMap.get(data.otherPartyId);
         if (otherSocketId) {
@@ -119,6 +141,9 @@ export class SocketManager implements ISocketManager {
     return this._io;
   }
 
+  /**
+   * Retrieves the raw Socket.io server instance.
+   */
   public getIO(): Server {
     if (!this._io) {
       throw new Error('Socket.io not initialized');
@@ -126,10 +151,16 @@ export class SocketManager implements ISocketManager {
     return this._io;
   }
 
+  /**
+   * Maps a userId to their current active socketId.
+   */
   public getSocketId(userId: string): string | undefined {
     return this._userSocketMap.get(userId);
   }
 
+  /**
+   * Checks if a user has an active socket connection.
+   */
   public isUserOnline(userId: string): boolean {
     return this._userSocketMap.has(userId);
   }

@@ -22,7 +22,7 @@ export class UploadFileUseCase implements IUploadFileUseCase {
     });
 
     if (!uploadResult.success) {
-      throw new InternalServerError(uploadResult.error);
+      throw new InternalServerError(uploadResult.error || 'Upload failed');
     }
 
     await unlink(filepath);

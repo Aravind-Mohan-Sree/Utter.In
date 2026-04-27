@@ -5,6 +5,10 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 import { Document, PipelineStage, Types } from 'mongoose';
 
+/**
+ * Concrete repository for User entities using Mongoose.
+ * Handles data persistence and complex aggregation queries for user listings.
+ */
 export class UserRepository
   extends BaseRepository<User, IUser>
   implements IUserRepository {
@@ -12,6 +16,19 @@ export class UserRepository
     super(UserModel);
   }
 
+  /**
+   * Fetches users with pagination, search, and filtering logic.
+   * Supports both admin and public-facing listing requirements.
+   * 
+   * @param page Current page number.
+   * @param limit Records per page.
+   * @param query Search string (names, emails, languages).
+   * @param filter Block status filter (for admins).
+   * @param sort Sorting criteria (newest, oldest, a-z, z-a).
+   * @param language Specific language filter.
+   * @param excludeId Optional ID to exclude from results (e.g., current user).
+   * @param isAdmin Flag to bypass "blocked" filter and show admin-only data.
+   */
   async fetchUsers(
     page: number,
     limit: number,
@@ -28,34 +45,41 @@ export class UserRepository
   }> {
     const pipeline: PipelineStage[] = [];
     
+    // Default base query: only include 'user' role
     const queryObj: Record<string, unknown> = { role: 'user' };
 
+    // Public view only shows non-blocked users
     if (!isAdmin) {
       queryObj.isBlocked = false;
     }
 
+    // Exclude specific user if provided
     if (excludeId && Types.ObjectId.isValid(excludeId)) {
       queryObj._id = { $ne: new Types.ObjectId(excludeId) };
     } else if (excludeId) {
       queryObj._id = { $ne: excludeId };
     }
     
+    // Count total users matching the base role filter
     const totalUsersCount = await this.model.countDocuments(queryObj as FilterQuery<IUser>);
     
     pipeline.push({ $match: queryObj });
 
+    // Apply admin-specific status filter
     if (isAdmin && filter !== 'All') {
       pipeline.push({
         $match: { isBlocked: filter === 'Blocked' },
       });
     }
 
+    // Filter by specific language if requested
     if (language !== 'All') {
       pipeline.push({
         $match: { knownLanguages: language },
       });
     }
     
+    // Apply text search across multiple fields
     if (query) {
       const orConditions: Record<string, unknown>[] = [
         { name: { $regex: query, $options: 'i' } },
@@ -74,11 +98,13 @@ export class UserRepository
       });
     }
 
+    // Configure sorting
     let sortStage: Record<string, 1 | -1> = { createdAt: -1 };
     if (sort === 'oldest') sortStage = { createdAt: 1 };
     else if (sort === 'a-z') sortStage = { name: 1 };
     else if (sort === 'z-a') sortStage = { name: -1 };
     
+    // Use $facet to get both data and the count of filtered records in one query
     pipeline.push({
       $facet: {
         metadata: [{ $count: 'total' }],
@@ -101,6 +127,9 @@ export class UserRepository
     };
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   */
   protected toSchema(entity: User | Partial<User>): IUser | Partial<IUser> {
     return {
       name: entity.name,
@@ -118,6 +147,9 @@ export class UserRepository
     };
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(doc: (IUser & Document<unknown>) | null): User | null {
     if (!doc) return null;
 
@@ -138,6 +170,9 @@ export class UserRepository
     );
   }
 
+  /**
+   * Helper to get most recently registered users.
+   */
   getRecentUsers = async (limit: number): Promise<User[]> => {
     const docs = await this.model.find({ role: 'user' })
       .sort({ createdAt: -1 })

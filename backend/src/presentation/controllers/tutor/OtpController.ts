@@ -10,6 +10,7 @@ import { successMessage } from '~constants/successMessage';
 import { logger } from '~logger/logger';
 import { IUpdateFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
 import { contentTypes, filePrefixes } from '~constants/fileConstants';
+import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 
 export class OtpController {
   constructor(
@@ -17,6 +18,7 @@ export class OtpController {
     private _sendOtp: ISendOtpUseCase,
     private _registerTutorFromPending: IRegisterTutorFromPendingUseCase,
     private _updateFile: IUpdateFileUseCase,
+    private _tutorRepo: ITutorRepository,
   ) {}
 
   verify = async (req: Request, res: Response, next: NextFunction) => {
@@ -37,10 +39,16 @@ export class OtpController {
       await this._updateFile.execute(
         filePrefixes.TEMP_TUTOR_CERTIFICATE,
         filePrefixes.TUTOR_CERTIFICATE,
-        data.pendingTutorId,
-        data.newTutorId,
+        `${data.pendingTutorId}_1`,
+        `${data.newTutorId}_1`,
         contentTypes.APPLICATION_PDF,
       );
+
+      // Update tutor with certificates array
+      const certUrl = `https://${env.AWS_BUCKET}.s3.amazonaws.com/${filePrefixes.TUTOR_CERTIFICATE}${data.newTutorId}_1.pdf`;
+      await this._tutorRepo.updateOneById(data.newTutorId, {
+        certificates: [certUrl],
+      });
 
       res
         .status(httpStatusCode.OK)

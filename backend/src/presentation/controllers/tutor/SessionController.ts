@@ -8,6 +8,10 @@ import {
 } from '~use-case-interfaces/tutor/ISessionUseCase';
 import { logger } from '~logger/logger';
 
+/**
+ * Controller for tutors to manage their teaching sessions.
+ * Handles creation, retrieval by date, and cancellation of sessions.
+ */
 export class SessionController {
   constructor(
         private _createSessionUseCase: ICreateSessionUseCase,
@@ -15,6 +19,9 @@ export class SessionController {
         private _cancelSessionUseCase: ICancelSessionUseCase,
   ) { }
 
+  /**
+   * Creates a new available session for the tutor.
+   */
   createSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.user as { id: string };
@@ -29,6 +36,9 @@ export class SessionController {
     }
   };
 
+  /**
+   * Retrieves all sessions created by the tutor for a specific date.
+   */
   getSessions = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.user as { id: string };
@@ -47,6 +57,9 @@ export class SessionController {
     }
   };
 
+  /**
+   * Cancels an existing session.
+   */
   cancelSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.user as { id: string };

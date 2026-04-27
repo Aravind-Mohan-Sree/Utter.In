@@ -4,7 +4,14 @@ import { logger } from '~logger/logger';
 import { errorMessage } from '~constants/errorMessage';
 import { unlink } from 'fs/promises';
 
+/**
+ * Service to extract metadata from video files using ffmpeg/ffprobe.
+ */
 export class VideoMetadataService {
+  /**
+   * Probes a video file to determine its duration in seconds.
+   * If probing fails, the file is deleted from the local system.
+   */
   async getDuration(filePath: string): Promise<number> {
     try {
       const duration = await new Promise<number>((resolve, reject) => {
@@ -20,6 +27,7 @@ export class VideoMetadataService {
 
       return duration;
     } catch (error) {
+      // Clean up local file on error to prevent storage leaks
       await unlink(filePath);
       logger.error(error);
       throw new Error(errorMessage.SOMETHING_WRONG);

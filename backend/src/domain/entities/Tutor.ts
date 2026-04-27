@@ -10,8 +10,16 @@ export class Tutor {
     public role: string,
     public isBlocked: boolean,
     public isVerified: boolean,
-    public certificationType: string | null,
+    public certificationType: string[],
     public rejectionReason: string | null,
+    public pendingLanguages: string[] = [],
+    public pendingCertification: string | null = null,
+    public languageVerificationStatus:
+      | 'pending'
+      | 'approved'
+      | 'rejected'
+      | null = null,
+    public certificates: string[] = [],
     public id?: string,
     public expiresAt?: Date | null,
     public createdAt?: Date,

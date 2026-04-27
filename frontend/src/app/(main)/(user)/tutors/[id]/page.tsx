@@ -248,7 +248,7 @@ export default function TutorDetailsPage() {
                   bio={tutor.bio}
                   languages={tutor.knownLanguages}
                   experience={tutor.yearsOfExperience}
-                  certificationType={tutor.certificationType}
+                  certificationTypes={tutor.certificationType}
                 />
               </div>
             </div>

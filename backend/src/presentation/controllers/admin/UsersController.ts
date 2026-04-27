@@ -12,12 +12,19 @@ interface UserQuery {
   filter: string;
 }
 
+/**
+ * Controller for managing regular users from the admin panel.
+ * Handles fetching paginated user lists and toggling account statuses.
+ */
 export class UsersController {
   constructor(
     private _fetchUsersUC: IFetchUsersUseCase,
     private _toggleStatusUC: IToggleStatusUseCase,
   ) {}
 
+  /**
+   * Fetches a paginated list of users with search and filter capabilities.
+   */
   fetchUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { page, limit, query, filter } = new FetchAdminUsersDTO(
@@ -40,6 +47,9 @@ export class UsersController {
     }
   };
 
+  /**
+   * Toggles the blocked status of a specific user.
+   */
   toggleStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;

@@ -4,6 +4,10 @@ import { MessageModel, IMessage } from '~models/MessageModel';
 import { BaseRepository } from './BaseRepository';
 import mongoose from 'mongoose';
 
+/**
+ * Concrete repository for Message entities using Mongoose.
+ * Handles storage, retrieval, and search of individual chat messages.
+ */
 export class MessageRepository
   extends BaseRepository<Message, IMessage>
   implements IMessageRepository
@@ -12,6 +16,10 @@ export class MessageRepository
     super(MessageModel);
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   * Handles optional fields like files and hidden status.
+   */
   protected toSchema(
     entity: Message | Partial<Message>,
   ): IMessage | Partial<IMessage> {
@@ -36,6 +44,9 @@ export class MessageRepository
     } as Partial<IMessage>;
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(doc: IMessage | null): Message | null {
     if (!doc) return null;
     return new Message(
@@ -56,6 +67,9 @@ export class MessageRepository
     );
   }
 
+  /**
+   * Retrieves messages for a specific conversation with optional pagination.
+   */
   async findByConversationId(
     conversationId: string,
     options?: { limit?: number; skip?: number },
@@ -73,9 +87,13 @@ export class MessageRepository
     const docs = await query;
     const entities = docs.map((doc) => this.toEntity(doc)!);
     
+    // Return chronological order for UI
     return options ? entities.reverse() : entities;
   }
 
+  /**
+   * Bulk updates messages as read for a specific recipient in a conversation.
+   */
   async markAsRead(conversationId: string, receiverId: string): Promise<void> {
     await MessageModel.updateMany(
       { conversationId, receiverId, isRead: false },
@@ -83,6 +101,10 @@ export class MessageRepository
     );
   }
 
+  /**
+   * Searches for specific text within a user's messages.
+   * Excludes messages that the user has hidden.
+   */
   async searchMessages(userId: string, query: string): Promise<Message[]> {
     const userObjId = new mongoose.Types.ObjectId(userId);
     const docs = await MessageModel.find({

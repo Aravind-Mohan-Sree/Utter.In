@@ -6,13 +6,20 @@ import { PipelineStage } from 'mongoose';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 import { env } from '~config/env';
 import mongoose from 'mongoose';
-import { logger } from '~logger/logger';
 
+/**
+ * Concrete repository for Booking entities using Mongoose.
+ * Handles complex booking queries, history aggregation, and statistical reporting.
+ */
 export class BookingRepository extends BaseRepository<Booking, IBooking> implements IBookingRepository {
   constructor() {
     super(BookingModel);
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   * Handles conversion of string IDs to Mongoose ObjectIds.
+   */
   protected toSchema(entity: Booking | Partial<Booking>): IBooking | Partial<IBooking> {
     const schemaObj: Partial<IBooking> = {};
     if (entity.sessionId) schemaObj.sessionId = new mongoose.Types.ObjectId(entity.sessionId);
@@ -32,6 +39,9 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
     };
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(doc: IBooking | null): Booking | null {
     if (!doc) return null;
     return new Booking(
@@ -51,6 +61,11 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
       doc.updatedAt,
     );
   }
+
+  /**
+   * Fetches bookings with a sophisticated separation of 'Upcoming' and 'History'.
+   * Joins session, tutor, and user data to provide a comprehensive detail view.
+   */
   async fetchBookings(params: IFetchBookingsParams): Promise<IFetchBookingsResponse> {
     const { userId, tutorId, page = 1, limit = 5, search, status, language, sort = 'Newest' } = params;
     const skip = (page - 1) * limit;
@@ -73,6 +88,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
       };
     }
 
+    // Base pipeline for joining related entities (Sessions, Tutors, Users)
     const basePipeline: PipelineStage[] = [
       { $match: matchStage as PipelineStage.Match['$match'] },
       {
@@ -85,6 +101,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
       },
       { $unwind: { path: '$session', preserveNullAndEmptyArrays: true } },
 
+      // If fetching for tutor, join student (user) data
       ...(tutorId ? [
         {
           $lookup: {
@@ -97,6 +114,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
         { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
       ] : []),
 
+      // If fetching for user, join tutor data
       ...(userId ? [
         {
           $lookup: {
@@ -109,6 +127,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
         { $unwind: { path: '$tutor', preserveNullAndEmptyArrays: true } },
       ] : []),
 
+      // Project the unified IBookingDetail format
       {
         $project: {
           id: { $toString: '$_id' },
@@ -137,6 +156,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
     }
 
     const now = new Date();
+    // Bookings within 1 hour are considered "active/upcoming"
     const historyThreshold = new Date(now.getTime() - 60 * 60 * 1000);
 
     const upcomingPipeline = [
@@ -183,18 +203,11 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
     };
   }
 
+  /**
+   * Aggregates system-wide statistics for the admin dashboard.
+   * Calculates total earnings and language popularity.
+   */
   async getDashboardStats(): Promise<{ totalEarnings: number; completedSessions: number; languageStats: { language: string; sessionCount: number }[] }> {
-    const cols = await this.model.db.db?.listCollections().toArray();
-    const samples = await this.model.find({ status: { $regex: /^completed$/i } }).limit(5);
-    
-    logger.info(`DB Collections: ${JSON.stringify(cols?.map(c => c.name))}`);
-    if (samples.length > 0) {
-      for (const sample of samples) {
-        const linkedSession = await mongoose.connection.db?.collection('sessions').findOne({ _id: sample.sessionId });
-        logger.info(`Sample Check - Booking: ${sample._id}, sessionId: ${sample.sessionId}, SessionFound: ${!!linkedSession}`);
-      }
-    }
-
     const results = await this.model.aggregate([
       { $match: { status: { $regex: /^completed$/i } } },
       {
@@ -259,6 +272,9 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
     };
   }
 
+  /**
+   * Retrieves earnings and session counts for a specific time period.
+   */
   async getStatsForPeriod(startDate: Date, endDate: Date): Promise<{ totalEarnings: number; completedSessions: number }> {
     const results = await this.model.aggregate([
       { 
@@ -306,6 +322,9 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
     return results[0] || { totalEarnings: 0, completedSessions: 0 };
   }
 
+  /**
+   * Fetches the most recent booking sessions across the entire system.
+   */
   async getRecentSessions(limit: number): Promise<IBookingDetail[]> {
     const results = await this.model.aggregate([
       { $sort: { createdAt: -1 } },
@@ -322,7 +341,7 @@ export class BookingRepository extends BaseRepository<Booking, IBooking> impleme
         $lookup: {
           from: 'tutors',
           let: { tId: '$tutorId' },
-          pipeline: [{ $match: { $expr: { $or: [{ $eq: ['$_id', '$$tId'] }, { $eq: ['$_id', { $toObjectId: { $toString: '$$tId' } }] }, { $eq: [{ $toString: '$_id' }, { $toString: '$$tId' }] }] } } }],
+          pipeline: [{ $match: { $expr: { $or: [{ $eq: ['$_id', '$$tId'] }, { $eq: ['$_id', { $toObjectId: { $toString: '$$tId' } }] }, { $eq: [{ $toString: '$_id' }, { $toString: '$$sId' }] }] } } }],
           as: 'tutor',
         },
       },

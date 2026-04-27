@@ -30,7 +30,7 @@ interface UserCardProps extends BaseCardProps {
   type: 'user';
   name: string;
   email: string;
-  joinedAt: Date;
+  joinedAt: string | Date;
   status: 'Active' | 'Blocked';
   knownLanguages: string[];
   isOnline?: boolean;
@@ -43,7 +43,7 @@ export interface TutorCardProps extends BaseCardProps {
   type: 'tutor';
   name: string;
   email: string;
-  joinedAt: Date;
+  joinedAt: string | Date;
   knownLanguages: string[];
   yearsOfExperience: string;
   isVerified: boolean;

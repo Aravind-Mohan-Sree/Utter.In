@@ -6,6 +6,10 @@ import { IAbuseReportRepository } from '~repository-interfaces/IAbuseReportRepos
 import { DashboardDataResponseDTO, ActivityDTO } from '~dtos/DashboardDTO';
 import mongoose from 'mongoose';
 
+/**
+ * Use case to retrieve aggregated data for the admin dashboard.
+ * Collects user statistics, tutor verification data, session metrics, and system status.
+ */
 export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
   constructor(
     private _userRepo: IUserRepository,
@@ -14,16 +18,19 @@ export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
     private _reportRepo: IAbuseReportRepository,
   ) {}
 
+  /**
+   * Aggregates and returns dashboard statistics.
+   * @returns A DTO containing stats, recent activities, language popularity, and system status.
+   */
   async execute(): Promise<DashboardDataResponseDTO> {
     const startTime = Date.now();
     const now = new Date();
     
-    // Start of current month
+    // Calculate date ranges for month-over-month growth comparison
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    // Start of last month
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     
+    // Parallelize all repository calls for optimal performance
     const [
       totalUsers,
       thisMonthUsers,
@@ -61,16 +68,21 @@ export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
       this._reportRepo.getRecentReports(2),
     ]);
 
+    /**
+     * Helper to calculate percentage growth between two periods.
+     */
     const calculateGrowth = (current: number, previous: number): number => {
       if (previous === 0) return current > 0 ? 100 : 0;
       return Math.round(((current - previous) / previous) * 100);
     };
 
+    // Calculate growth metrics
     const userGrowth = calculateGrowth(thisMonthUsers, lastMonthUsers);
     const tutorGrowth = calculateGrowth(thisMonthTutors, lastMonthTutors);
     const sessionGrowth = calculateGrowth(currentStats.completedSessions, lastMonthStats.completedSessions);
     const earningsGrowth = calculateGrowth(currentStats.totalEarnings, lastMonthStats.totalEarnings);
 
+    // Merge different activity types into a single feed
     const activities: ActivityDTO[] = [
       ...recentUsers.map(u => ({
         type: 'user_registration' as const,
@@ -94,6 +106,7 @@ export class GetDashboardDataUseCase implements IGetDashboardDataUseCase {
       })),
     ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 5);
 
+    // Measure system health and performance
     const apiResponseTime = Date.now() - startTime;
     const dbStatus = mongoose.connection.readyState === 1 ? 'healthy' : 'unhealthy';
 

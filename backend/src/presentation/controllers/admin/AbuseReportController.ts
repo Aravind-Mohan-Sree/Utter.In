@@ -3,12 +3,19 @@ import { IGetAbuseReportsUseCase, IHandleAbuseReportUseCase } from '~use-case-in
 import { logger } from '~logger/logger';
 import { AbuseReportMapper } from '~mappers/AbuseReportMapper';
 
+/**
+ * Controller for admin-level abuse report management.
+ * Allows admins to view submitted reports and resolve or reject them.
+ */
 export class AdminAbuseReportController {
   constructor(
     private _getAbuseReportsUseCase: IGetAbuseReportsUseCase,
     private _handleAbuseReportUseCase: IHandleAbuseReportUseCase,
   ) { }
 
+  /**
+   * Retrieves a list of abuse reports with pagination and filtering.
+   */
   getReports = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { page, limit, search, status } = req.query;
@@ -30,6 +37,9 @@ export class AdminAbuseReportController {
     }
   };
 
+  /**
+   * Updates the status of an abuse report (Resolving usually leads to a block).
+   */
   handleReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { reportId } = req.params;

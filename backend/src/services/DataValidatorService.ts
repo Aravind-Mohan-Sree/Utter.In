@@ -7,6 +7,9 @@ import * as z from 'zod';
 
 import { errorMessage } from '~constants/errorMessage';
 
+/**
+ * Helper to convert Zod parse results into a standardized ValidatedData format.
+ */
 const toValidatedData = (data: z.ZodSafeParseResult<object>) => {
   return {
     success: data.success,
@@ -14,6 +17,10 @@ const toValidatedData = (data: z.ZodSafeParseResult<object>) => {
   };
 };
 
+/**
+ * Schema for intro video file validation.
+ * Constraints: Required, max 5MB, must be MP4.
+ */
 const IntroVideoSchema = z.any().superRefine((file, ctx) => {
   if (!file || typeof file !== 'object') {
     ctx.addIssue({
@@ -46,6 +53,10 @@ const IntroVideoSchema = z.any().superRefine((file, ctx) => {
   }
 });
 
+/**
+ * Schema for certificate file validation.
+ * Constraints: Required, max 5MB, must be PDF.
+ */
 const CertificateSchema = z.any().superRefine((file, ctx) => {
   if (!file || typeof file !== 'object') {
     ctx.addIssue({
@@ -78,6 +89,10 @@ const CertificateSchema = z.any().superRefine((file, ctx) => {
   }
 });
 
+/**
+ * Schema for profile avatar image validation.
+ * Constraints: Required, max 2MB, must be JPEG/PNG/WebP.
+ */
 const AvatarSchema = z.any().superRefine((file, ctx) => {
   if (!file || typeof file !== 'object') {
     ctx.addIssue({
@@ -111,7 +126,15 @@ const AvatarSchema = z.any().superRefine((file, ctx) => {
   }
 });
 
+/**
+ * Concrete service for data validation using Zod.
+ * Provides granular validation for user profiles, authentication, and content uploads.
+ */
 export class DataValidatorService implements IValidateDataService {
+  /**
+   * Validates display names.
+   * Rules: 3-16 chars, no consecutive spaces, no numbers, no special characters.
+   */
   validateName(name: string): ValidatedData {
     const nameSchema = z.object({
       name: z
@@ -133,6 +156,10 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(nameSchema.safeParse({ name }));
   }
 
+  /**
+   * Validates user bio/descriptions.
+   * Rules: 12-500 chars.
+   */
   validateBio(bio: string): ValidatedData {
     const bioSchema = z.object({
       bio: z
@@ -152,6 +179,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(bioSchema.safeParse({ bio }));
   }
 
+  /**
+   * Validates email addresses using a strict regex.
+   */
   validateEmail(email: string): ValidatedData {
     const emailSchema = z.object({
       email: z
@@ -168,6 +198,10 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(emailSchema.safeParse({ email }));
   }
 
+  /**
+   * Validates language lists.
+   * Rules: 1-3 languages.
+   */
   validateKnownLanguages(knownLanguages: string[]): ValidatedData {
     const languagesSchema = z.object({
       knownLanguages: z
@@ -179,6 +213,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(languagesSchema.safeParse({ knownLanguages }));
   }
 
+  /**
+   * Validates experience range selection.
+   */
   validateExperience(experience: string): ValidatedData {
     const experienceSchema = z.object({
       experience: z.enum(['0-1', '1-2', '2-3', '3-5', '5-10', '10+'], {
@@ -189,6 +226,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(experienceSchema.safeParse({ experience }));
   }
 
+  /**
+   * Validates tutor intro video file metadata.
+   */
   validateIntroVideo(introVideo: FileInput): ValidatedData {
     const introVideoSchema = z.object({
       introVideo: IntroVideoSchema,
@@ -197,6 +237,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(introVideoSchema.safeParse({ introVideo }));
   }
 
+  /**
+   * Validates tutor certification file metadata (PDF).
+   */
   validateCertificate(certificate: FileInput): ValidatedData {
     const certificateSchema = z.object({
       certificate: CertificateSchema,
@@ -205,6 +248,10 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(certificateSchema.safeParse({ certificate }));
   }
 
+  /**
+   * Validates password strength.
+   * Rules: 8-30 chars, no spaces, must include number, special char, uppercase, and lowercase.
+   */
   validatePassword(password: string): ValidatedData {
     const passwordSchema = z.object({
       password: z
@@ -223,6 +270,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(passwordSchema.safeParse({ password }));
   }
 
+  /**
+   * Validates 6-digit numeric OTPs.
+   */
   validateOtp(otp: string): ValidatedData {
     const otpSchema = z.object({
       otp: z
@@ -234,6 +284,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(otpSchema.safeParse({ otp }));
   }
 
+  /**
+   * Validates avatar image file metadata.
+   */
   validateAvatar(avatar: FileInput): ValidatedData {
     const avatarSchema = z.object({
       avatar: AvatarSchema,
@@ -242,6 +295,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(avatarSchema.safeParse({ avatar }));
   }
 
+  /**
+   * Validates numeric ratings (1-5).
+   */
   validateRating(rating: number): ValidatedData {
     const ratingSchema = z.object({
       rating: z
@@ -253,6 +309,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(ratingSchema.safeParse({ rating }));
   }
 
+  /**
+   * Validates review text content.
+   */
   validateReviewNote(note: string): ValidatedData {
     const noteSchema = z.object({
       note: z
@@ -265,6 +324,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(noteSchema.safeParse({ note }));
   }
 
+  /**
+   * Validates chat message text length.
+   */
   validateMessageText(text: string): ValidatedData {
     const chatSchema = z.object({
       text: z
@@ -274,6 +336,9 @@ export class DataValidatorService implements IValidateDataService {
     return toValidatedData(chatSchema.safeParse({ text }));
   }
 
+  /**
+   * Validates chat attachments with different size limits for video and other files.
+   */
   validateAttachment(file: FileInput): ValidatedData {
     const attachmentSchema = z.any().superRefine((file, ctx) => {
       if (!file || typeof file !== 'object') {

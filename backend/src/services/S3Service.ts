@@ -14,6 +14,10 @@ import {
 } from '~service-interfaces/ICloudService';
 import fs from 'fs';
 
+/**
+ * Concrete implementation of ICloudService using Amazon S3.
+ * Handles file uploads, renames (move), copies, and deletions in the specified bucket.
+ */
 export class S3Service implements ICloudService {
   private _s3: S3Client;
   private _bucket: string;
@@ -30,6 +34,11 @@ export class S3Service implements ICloudService {
     });
   }
 
+  /**
+   * Uploads a file from a local file path to S3.
+   * @param filePath Local path to the file.
+   * @param options Upload options (folder, key, content type).
+   */
   async upload(
     filePath: string,
     options: UploadOptions = {},
@@ -37,6 +46,7 @@ export class S3Service implements ICloudService {
     try {
       const fileStream = fs.createReadStream(filePath);
 
+      // Generate key if not provided
       const key =
         options.key ||
         `${options.folder || 'uploads'}/${Date.now()}-${filePath.split('/').pop()}`;
@@ -65,6 +75,9 @@ export class S3Service implements ICloudService {
     }
   }
 
+  /**
+   * Uploads raw buffer data to S3.
+   */
   async uploadBuffer(
     buffer: Buffer,
     options: UploadOptions = {},
@@ -90,6 +103,9 @@ export class S3Service implements ICloudService {
     }
   }
 
+  /**
+   * Updates an object's key by copying it to the new key and deleting the old one.
+   */
   async update(fromKey: string, toKey: string): Promise<UpdateResult> {
     try {
       await this._s3.send(
@@ -123,6 +139,9 @@ export class S3Service implements ICloudService {
     }
   }
 
+  /**
+   * Copies an object from one key to another within the same bucket.
+   */
   async copy(fromKey: string, toKey: string): Promise<UpdateResult> {
     try {
       await this._s3.send(
@@ -149,6 +168,9 @@ export class S3Service implements ICloudService {
     }
   }
 
+  /**
+   * Permanently deletes an object from S3.
+   */
   async delete(key: string): Promise<DeleteResult> {
     try {
       await this._s3.send(

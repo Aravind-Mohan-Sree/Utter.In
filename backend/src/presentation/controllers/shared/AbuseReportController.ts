@@ -5,6 +5,10 @@ import { IValidateDataService } from '~service-interfaces/IValidateDataService';
 import { CreateAbuseReportDTO } from '~dtos/AbuseReportDTO';
 import { AbuseReportMapper } from '~mappers/AbuseReportMapper';
 
+/**
+ * Controller for handling abuse report submissions and retrieval by users.
+ * Allows users to report other participants and track their report history.
+ */
 export class AbuseReportController {
   constructor(
     private _createAbuseReportUseCase: ICreateAbuseReportUseCase,
@@ -12,6 +16,9 @@ export class AbuseReportController {
     private _validator: IValidateDataService,
   ) { }
 
+  /**
+   * Submits a new abuse report with evidence.
+   */
   createReport = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto = new CreateAbuseReportDTO(req.body, this._validator);
@@ -36,6 +43,9 @@ export class AbuseReportController {
     }
   };
 
+  /**
+   * Retrieves all reports submitted by the currently authenticated user.
+   */
   getMyReports = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.id;

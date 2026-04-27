@@ -22,6 +22,7 @@ import { ToggleTutorStatusUseCase } from '~use-cases/admin/tutors/ToggleStatusUs
 import { GetEntityDataUseCase } from '~use-cases/shared/GetEntityDataUseCase';
 import { ApproveUseCase } from '~use-cases/admin/tutors/ApproveUseCase';
 import { RejectUseCase } from '~use-cases/admin/tutors/RejectUseCase';
+import { HandleLanguageVerificationUseCase } from '~use-cases/admin/tutors/HandleLanguageVerificationUseCase';
 import { S3Service } from '~concrete-services/S3Service';
 import { env } from '~config/env';
 import { SignoutController } from '~controllers/shared/SignoutController';
@@ -68,6 +69,11 @@ const approveUseCase = new ApproveUseCase(tutorRepository, mailService);
 const rejectUseCase = new RejectUseCase(tutorRepository, mailService);
 const updateFileUseCase = new UpdateFileUseCase(s3Service);
 const deleteFileUseCase = new DeleteFileUseCase(s3Service);
+const handleLanguageVerificationUseCase = new HandleLanguageVerificationUseCase(
+  tutorRepository,
+  mailService,
+  deleteFileUseCase,
+);
 
 const getAbuseReportsUseCase = new GetAbuseReportsUseCase(abuseReportRepository, userRepository, tutorRepository);
 const handleAbuseReportUseCase = new HandleAbuseReportUseCase(abuseReportRepository, userRepository, tutorRepository, mailService);
@@ -90,6 +96,7 @@ const tutorsController = new TutorsController(
   toggleTutorStatusUseCase,
   approveUseCase,
   rejectUseCase,
+  handleLanguageVerificationUseCase,
   updateFileUseCase,
   deleteFileUseCase,
 );
@@ -123,6 +130,11 @@ router.patch(
 );
 router.patch('/tutors/:id/approve', auth.verify(), tutorsController.approve);
 router.patch('/tutors/:id/reject', auth.verify(), tutorsController.reject);
+router.patch(
+  '/tutors/:id/verify-languages',
+  auth.verify(),
+  tutorsController.handleLanguageVerification,
+);
 
 // abuse reports
 router.get('/reports', auth.verify(), abuseReportController.getReports);

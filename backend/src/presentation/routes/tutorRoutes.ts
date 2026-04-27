@@ -149,7 +149,7 @@ const uploadFileUseCase = new UploadFileUseCase(s3Service);
 const updateFileUseCase = new UpdateFileUseCase(s3Service);
 const getDataUseCase = new GetDataUseCase(tutorRepository);
 const deleteFileUseCase = new DeleteFileUseCase(s3Service);
-const updateProfileUseCase = new UpdateProfileUseCase(tutorRepository);
+const updateProfileUseCase = new UpdateProfileUseCase(tutorRepository, uploadFileUseCase, mailService);
 const changePasswordUseCase = new ChangePasswordUseCase(
   tutorRepository,
   hashService,
@@ -194,12 +194,14 @@ const authController = new AuthController(
   videoMetadataService,
   uploadFileUseCase,
   updateFileUseCase,
+  tutorRepository,
 );
 const otpController = new OtpController(
   verifyOtpUseCase,
   sendOtpUseCase,
   registerTutorFromPendingUseCase,
   updateFileUseCase,
+  tutorRepository,
 );
 const forgotPasswordController = new ForgotPasswordController(
   forgotPasswordUseCase,
@@ -323,7 +325,12 @@ router.post(
   avatarController.uploadAvatar,
 );
 router.delete('/delete-avatar', auth.verify(), avatarController.deleteAvatar);
-router.patch('/update-profile', auth.verify(), profileController.updateProfile);
+router.patch(
+  '/update-profile',
+  auth.verify(),
+  uploadMiddleware,
+  profileController.updateProfile,
+);
 router.patch(
   '/change-password',
   auth.verify(),

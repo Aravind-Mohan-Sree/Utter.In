@@ -10,8 +10,12 @@ export interface ITutor extends Document {
   role: string;
   isBlocked: boolean;
   isVerified: boolean;
-  certificationType: string | null;
+  certificationType: string[];
+  pendingLanguages: string[];
+  pendingCertification: string | null;
+  languageVerificationStatus: 'pending' | 'approved' | 'rejected' | null;
   rejectionReason: string | null;
+  certificates: string[];
   googleId: string | null;
   expiresAt: Date;
   createdAt: Date;
@@ -29,8 +33,16 @@ const tutorSchema = new Schema<ITutor>(
     role: { type: String, required: true },
     isBlocked: { type: Boolean, required: true, default: false },
     isVerified: { type: Boolean, required: true, default: false },
-    certificationType: { type: String, default: null },
+    certificationType: { type: [String], default: [] },
+    pendingLanguages: { type: [String], default: [] },
+    pendingCertification: { type: String, default: null },
+    languageVerificationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', null],
+      default: null,
+    },
     rejectionReason: { type: String, default: null },
+    certificates: { type: [String], default: [] },
     googleId: { type: String, default: null },
     expiresAt: { type: Date, default: null, expires: 604800 },
   },

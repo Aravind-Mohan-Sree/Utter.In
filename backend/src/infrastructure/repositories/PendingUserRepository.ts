@@ -4,6 +4,10 @@ import { IPendingUser, PendingUserModel } from '~models/PendingUserModel';
 import { IPendingUserRepository } from '~repository-interfaces/IPendingUserRepository';
 import { Document } from 'mongoose';
 
+/**
+ * Concrete repository for PendingUser entities using Mongoose.
+ * Temporary storage for student registration data during OTP verification.
+ */
 export class PendingUserRepository
   extends BaseRepository<PendingUser, IPendingUser>
   implements IPendingUserRepository {
@@ -11,6 +15,9 @@ export class PendingUserRepository
     super(PendingUserModel);
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   */
   protected toSchema(
     entity: PendingUser | Partial<PendingUser>,
   ): IPendingUser | Partial<IPendingUser> {
@@ -25,6 +32,9 @@ export class PendingUserRepository
     };
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(
     data: (IPendingUser & Document<unknown>) | null,
   ): PendingUser | null {

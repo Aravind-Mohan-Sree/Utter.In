@@ -8,6 +8,7 @@ import { logger } from '~logger/logger';
 import {
   IApproveUseCase,
   IFetchTutorsUseCase,
+  IHandleLanguageVerificationUseCase,
   IRejectUseCase,
   IToggleStatusUseCase,
 } from '~use-case-interfaces/admin/ITutorsUseCase';
@@ -24,16 +25,24 @@ interface TutorQuery {
   filter: string;
 }
 
+/**
+ * Controller for managing tutors from the admin perspective.
+ * Handles tutor listings, status toggling, and verification (approval/rejection).
+ */
 export class TutorsController {
   constructor(
     private _fetchTutorsUC: IFetchTutorsUseCase,
     private _toggleStatusUC: IToggleStatusUseCase,
     private _approveUC: IApproveUseCase,
     private _rejectUC: IRejectUseCase,
+    private _handleLanguageVerificationUC: IHandleLanguageVerificationUseCase,
     private _updateFileUC: IUpdateFileUseCase,
     private _deleteFileUC: IDeleteFileUseCase,
   ) {}
 
+  /**
+   * Fetches a paginated list of tutors based on filters and search queries.
+   */
   fetchTutors = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { page, limit, query, filter } = new FetchAdminUsersDTO(
@@ -56,6 +65,9 @@ export class TutorsController {
     }
   };
 
+  /**
+   * Toggles the block/active status of a tutor.
+   */
   toggleStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
@@ -70,6 +82,9 @@ export class TutorsController {
     }
   };
 
+  /**
+   * Approves a tutor's account and sets their initial certification type.
+   */
   approve = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id, certificationType } = new ApproveTutorDTO({
@@ -88,6 +103,10 @@ export class TutorsController {
     }
   };
 
+  /**
+   * Rejects a tutor's account with a specific reason.
+   * Handles file movements (e.g., moving documents to 'rejected' folders) based on the reason.
+   */
   reject = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id, rejectionReason } = new RejectTutorDTO({
@@ -98,6 +117,7 @@ export class TutorsController {
 
       const googleId = await this._rejectUC.execute(id, rejectionReason);
 
+      // If tutor registered with Google, handle their avatar
       if (googleId) {
         await this._updateFileUC.execute(
           filePrefixes.TUTOR_AVATAR,
@@ -108,6 +128,7 @@ export class TutorsController {
         );
       }
 
+      // Move the invalid file (video or certificate) to a temporary rejected location
       await this._updateFileUC.execute(
         dueToVideo ? filePrefixes.TUTOR_CERTIFICATE : filePrefixes.TUTOR_VIDEO,
         dueToVideo
@@ -117,6 +138,8 @@ export class TutorsController {
         id,
         dueToVideo ? contentTypes.APPLICATION_PDF : contentTypes.VIDEO_MP4,
       );
+      
+      // Delete the other file (the one that wasn't the cause of rejection)
       await this._deleteFileUC.execute(
         dueToVideo ? filePrefixes.TUTOR_VIDEO : filePrefixes.TUTOR_CERTIFICATE,
         id,
@@ -125,6 +148,36 @@ export class TutorsController {
 
       res.status(httpStatusCode.OK).json({
         message: successMessage.VERIFIED,
+      });
+    } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  };
+
+  /**
+   * Handles verification of newly added languages for an existing tutor.
+   */
+  handleLanguageVerification = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { id } = req.params;
+      const { action, certificationType, rejectionReason } = req.query as {
+        action: 'approve' | 'reject';
+        certificationType?: string;
+        rejectionReason?: string;
+      };
+
+      await this._handleLanguageVerificationUC.execute(id, action, {
+        certificationType,
+        rejectionReason,
+      });
+
+      res.status(httpStatusCode.OK).json({
+        message: `Language verification ${action}d successfully.`,
       });
     } catch (error) {
       logger.error(error);

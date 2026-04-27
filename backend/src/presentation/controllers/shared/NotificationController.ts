@@ -10,6 +10,10 @@ import { logger } from '~logger/logger';
 import { httpStatusCode } from '~constants/httpStatusCode';
 import { successMessage } from '~constants/successMessage';
 
+/**
+ * Controller for handling notification-related operations.
+ * Manages fetching, marking as read, and counting notifications for the authenticated user.
+ */
 export class NotificationController {
   constructor(
     private _getNotificationsUseCase: IGetNotificationsUseCase,
@@ -18,6 +22,9 @@ export class NotificationController {
     private _getNotificationCountUseCase: IGetNotificationCountUseCase,
   ) { }
 
+  /**
+   * Retrieves a paginated list of notifications for the current user.
+   */
   async getNotifications(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
@@ -44,6 +51,9 @@ export class NotificationController {
     }
   }
 
+  /**
+   * Marks a specific notification as read.
+   */
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const id = req.params.id;
@@ -62,6 +72,9 @@ export class NotificationController {
     }
   }
 
+  /**
+   * Marks all notifications as read for the current user.
+   */
   async markAllAsRead(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
@@ -81,6 +94,9 @@ export class NotificationController {
     }
   }
 
+  /**
+   * Retrieves the count of unread notifications for the current user.
+   */
   async getUnreadCount(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;

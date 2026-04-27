@@ -8,7 +8,14 @@ const RESET_EXPIRY = '2m';
 
 export class TokenValidationError extends Error {}
 
+/**
+ * Concrete implementation of ITokenService using JSON Web Tokens (JWT).
+ * Handles generation and verification of access, refresh, and password reset tokens.
+ */
 export class JwtService implements ITokenService {
+  /**
+   * Generates a short-lived access token for session authentication.
+   */
   public generateAuthToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.ACCESS_TOKEN_SECRET, {
       expiresIn: ACCESS_EXPIRY,
@@ -16,6 +23,9 @@ export class JwtService implements ITokenService {
     });
   }
 
+  /**
+   * Generates a long-lived refresh token to obtain new access tokens.
+   */
   public generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.REFRESH_TOKEN_SECRET, {
       expiresIn: REFRESH_EXPIRY,
@@ -23,6 +33,9 @@ export class JwtService implements ITokenService {
     });
   }
 
+  /**
+   * Generates a very short-lived token for secure password reset flows.
+   */
   public generateResetToken(payload: TokenPayload): string {
     return jwt.sign(payload, env.RESET_TOKEN_SECRET, {
       expiresIn: RESET_EXPIRY,
@@ -30,6 +43,9 @@ export class JwtService implements ITokenService {
     });
   }
 
+  /**
+   * Generic internal token verification logic with specific error mapping.
+   */
   private verifyToken(token: string, secret: string): TokenPayload {
     try {
       const decoded = jwt.verify(token, secret) as TokenPayload;
@@ -45,18 +61,31 @@ export class JwtService implements ITokenService {
     }
   }
 
+  /**
+   * Verifies an access token's validity and signature.
+   */
   public verifyAuthToken(token: string): TokenPayload {
     return this.verifyToken(token, env.ACCESS_TOKEN_SECRET);
   }
 
+  /**
+   * Verifies a refresh token.
+   */
   public verifyRefreshToken(token: string): TokenPayload {
     return this.verifyToken(token, env.REFRESH_TOKEN_SECRET);
   }
 
+  /**
+   * Verifies a password reset token.
+   */
   public verifyResetToken(token: string): TokenPayload {
     return this.verifyToken(token, env.RESET_TOKEN_SECRET);
   }
 
+  /**
+   * Decodes a token without verifying its signature. 
+   * Useful for extracting data when the signature is already trusted or not needed.
+   */
   public decode(token: string): TokenPayload {
     const decoded = jwt.decode(token);
 

@@ -11,6 +11,10 @@ import {
   InternalServerError,
 } from '~errors/HttpError';
 
+/**
+ * Use case to initiate tutor registration.
+ * Checks for existing accounts and creates a pending tutor record for verification.
+ */
 export class RegisterTutorUseCase implements IRegisterTutorUseCase {
   constructor(
     private _tutorRepo: ITutorRepository,
@@ -18,12 +22,19 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
     private _hashService: IHashService,
   ) {}
 
+  /**
+   * Registers a tutor in the pending queue.
+   * @param data DTO containing registration details.
+   * @returns The ID and email of the pending tutor.
+   */
   async execute(
     data: RegisterTutorDTO,
   ): Promise<{ id: string; email: string }> {
+    // Prevent duplicate registration if a tutor already exists with this email
     const tutor = await this._tutorRepo.findOneByField({ email: data.email });
 
     if (tutor) {
+      // Special case: if they were rejected, we provide the reason instead of a generic "exists" error
       if (tutor.rejectionReason) {
         throw new BadRequestError(
           `${errorMessage.REJECTED}-${tutor.rejectionReason}/${tutor.email}`,
@@ -33,6 +44,7 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
       throw new ConflictError(errorMessage.ACCOUNT_EXISTS);
     }
 
+    // Clean up any stale pending registration for this email
     let pendingTutor = await this._pendingTutorRepo.findOneByField({
       email: data.email,
     });
@@ -43,8 +55,10 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
       });
     }
 
+    // Hash password for security
     const hashedPassword = await this._hashService.hash(data.password);
 
+    // Create a new pending tutor entity
     pendingTutor = new PendingTutor(
       data.email,
       data.name,
@@ -53,6 +67,7 @@ export class RegisterTutorUseCase implements IRegisterTutorUseCase {
       hashedPassword,
     );
 
+    // Persist to the pending collection (usually expires after verification or a timeout)
     pendingTutor = await this._pendingTutorRepo.create(pendingTutor);
 
     if (!pendingTutor)

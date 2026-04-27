@@ -20,6 +20,10 @@ interface User {
   role: 'user' | 'tutor';
 }
 
+/**
+ * Controller for managing user and tutor avatar images.
+ * Handles uploading new avatars to cloud storage and deleting existing ones.
+ */
 export class AvatarController {
   constructor(
     private _uploadFile: IUploadFileUseCase,
@@ -27,6 +31,10 @@ export class AvatarController {
     private _validator: IValidateDataService,
   ) {}
 
+  /**
+   * Uploads a new avatar image for the authenticated user or tutor.
+   * Cleans up local temporary files after processing.
+   */
   uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as UploadedFiles;
     const avatar = files.avatar ? files.avatar[0] : null;
@@ -37,6 +45,8 @@ export class AvatarController {
         { avatar: avatar as FileInput },
         this._validator,
       );
+      
+      // Determine the storage prefix based on user role
       const prefix =
         role === 'user' ? filePrefixes.USER_AVATAR : filePrefixes.TUTOR_AVATAR;
 
@@ -51,6 +61,7 @@ export class AvatarController {
         .status(httpStatusCode.OK)
         .json({ message: successMessage.AVATAR_UPLOADED });
     } catch (error) {
+      // Cleanup local file if something went wrong during upload to cloud
       if (avatar?.path) {
         await unlink(avatar?.path);
       }
@@ -60,6 +71,9 @@ export class AvatarController {
     }
   };
 
+  /**
+   * Deletes the current user's or tutor's avatar from cloud storage.
+   */
   deleteAvatar = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id, role } = req.user as User;

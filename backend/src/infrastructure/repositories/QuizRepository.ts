@@ -5,6 +5,10 @@ import { IQuizRepository } from '~repository-interfaces/IQuizRepository';
 import { BaseRepository } from './BaseRepository';
 import { UserModel, IUser } from '~models/UserModel';
 
+/**
+ * Concrete repository for Quiz entities using Mongoose.
+ * Manages user quiz attempts and provides leaderboard statistics.
+ */
 export class QuizRepository
   extends BaseRepository<Quiz, IQuiz>
   implements IQuizRepository
@@ -13,6 +17,9 @@ export class QuizRepository
     super(QuizModel);
   }
 
+  /**
+   * Retrieves completed quiz attempts for a specific user with pagination.
+   */
   async getUserAttempts(
     userId: string,
     skip: number,
@@ -27,6 +34,9 @@ export class QuizRepository
     return docs.map((doc) => this.toEntity(doc)) as Quiz[];
   }
 
+  /**
+   * Generates a leaderboard of users based on their streaks and quiz performance.
+   */
   async getLeaderboard(skip: number, limit: number): Promise<IUser[]> {
     const users = await UserModel.find({ role: 'user', isBlocked: false })
       .sort({
@@ -41,6 +51,9 @@ export class QuizRepository
     return users;
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   */
   protected toSchema(entity: Quiz | Partial<Quiz>): IQuiz | Partial<IQuiz> {
     return {
       userId: entity.userId ? new Types.ObjectId(entity.userId) : undefined,
@@ -58,6 +71,9 @@ export class QuizRepository
     };
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(doc: (IQuiz & Document) | null): Quiz | null {
     if (!doc) return null;
 

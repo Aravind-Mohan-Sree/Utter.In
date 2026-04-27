@@ -4,6 +4,10 @@ import { IPendingTutor, PendingTutorModel } from '~models/PendingTutorModel';
 import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
 import { Document } from 'mongoose';
 
+/**
+ * Concrete repository for PendingTutor entities using Mongoose.
+ * Temporary storage for tutor registration data during OTP verification.
+ */
 export class PendingTutorRepository
   extends BaseRepository<PendingTutor, IPendingTutor>
   implements IPendingTutorRepository {
@@ -11,6 +15,9 @@ export class PendingTutorRepository
     super(PendingTutorModel);
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   */
   protected toSchema(
     entity: PendingTutor | Partial<PendingTutor>,
   ): IPendingTutor | Partial<IPendingTutor> {
@@ -26,6 +33,9 @@ export class PendingTutorRepository
     };
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(
     data: (IPendingTutor & Document<unknown>) | null,
   ): PendingTutor | null {

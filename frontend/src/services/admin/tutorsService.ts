@@ -58,3 +58,23 @@ export const reject = async (id: string, rejectionReason: string) => {
     throw error;
   }
 };
+export const verifyLanguages = async (
+  id: string,
+  action: 'approve' | 'reject',
+  certificationType?: string,
+  rejectionReason?: string,
+) => {
+  try {
+    const params = new URLSearchParams({ action });
+    if (certificationType) params.append('certificationType', certificationType);
+    if (rejectionReason) params.append('rejectionReason', rejectionReason);
+
+    const res = await axios.patch(
+      `${API_ROUTES.ADMIN.TUTORS}/${id}/verify-languages?${params.toString()}`,
+    );
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};

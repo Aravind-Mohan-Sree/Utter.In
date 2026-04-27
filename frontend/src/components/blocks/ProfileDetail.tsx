@@ -4,14 +4,14 @@ interface ProfileDetailProps {
   bio?: string;
   languages?: string[];
   experience?: string;
-  certificationType?: string;
+  certificationTypes?: string[];
 }
 
 export default function ProfileDetail({
   bio,
   languages,
   experience,
-  certificationType,
+  certificationTypes,
 }: ProfileDetailProps) {
   return (
     <div className="space-y-6">
@@ -51,22 +51,27 @@ export default function ProfileDetail({
         </div>
       )}
 
-      {certificationType && (
+      {certificationTypes && certificationTypes.length > 0 && (
         <div>
           <h4 className="text-lg font-semibold text-gray-800 mb-2">
-            Certification
+            Certifications
           </h4>
-          <div className="flex items-center space-x-3 p-4 bg-rose-100 rounded-lg border border-rose-200">
-            {/* Icon Container */}
-            <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-rose-400 rounded-lg">
-              <GrCertificate size={30} />
-            </div>
-            {/* Text Content */}
-            <div className="flex-1">
-              <div className="font-semibold text-rose-400 text-sm leading-tight">
-                {certificationType}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {certificationTypes.map((type) => (
+              <div
+                key={type}
+                className="flex items-center space-x-3 p-4 bg-rose-100 rounded-lg border border-rose-200"
+              >
+                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-rose-400 rounded-lg">
+                  <GrCertificate size={20} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-rose-400 text-sm leading-tight">
+                    {type}
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       )}

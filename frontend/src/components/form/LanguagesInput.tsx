@@ -6,6 +6,7 @@ interface LanguagesInputProps {
   onLanguagesChange: (languages: string[]) => void;
   maxLanguages?: number;
   error: string;
+  disabled?: boolean;
 }
 
 export const commonLanguages = [
@@ -31,6 +32,7 @@ export const LanguagesInput: React.FC<LanguagesInputProps> = ({
   onLanguagesChange,
   maxLanguages = 3,
   error,
+  disabled = false,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -101,8 +103,8 @@ export const LanguagesInput: React.FC<LanguagesInputProps> = ({
           onKeyDown={handleInputKeyDown}
           onFocus={() => setShowSuggestions(true)}
           placeholder="Type a language (e.g., English, Spanish, French...)"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-transparent text-gray-700"
-          disabled={languages.length >= maxLanguages}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent bg-transparent text-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          disabled={disabled || languages.length >= maxLanguages}
         />
         {showSuggestions && filteredSuggestions.length > 0 && (
           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -135,9 +137,10 @@ export const LanguagesInput: React.FC<LanguagesInputProps> = ({
               <span className="text-sm font-medium">{language}</span>
               <button
                 type="button"
-                onClick={() => handleRemoveLanguage(language)}
-                className="hover:text-rose-600 ml-1 cursor-pointer"
+                onClick={() => !disabled && handleRemoveLanguage(language)}
+                className={`ml-1 ${disabled ? 'cursor-not-allowed' : 'hover:text-rose-600 cursor-pointer'}`}
                 aria-label={`Remove ${language}`}
+                disabled={disabled}
               >
                 <BiSolidXCircle />
               </button>

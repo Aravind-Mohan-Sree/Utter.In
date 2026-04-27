@@ -4,7 +4,12 @@ import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { NotFoundError } from '~errors/HttpError';
 import { IMailService } from '~service-interfaces/IMailService';
+import { logger } from '~logger/logger';
 
+/**
+ * Use case to handle the resolution or rejection of an abuse report.
+ * If resolved, the reported user/tutor is automatically blocked.
+ */
 export class HandleAbuseReportUseCase implements IHandleAbuseReportUseCase {
   constructor(
     private _abuseReportRepository: IAbuseReportRepository,
@@ -13,6 +18,13 @@ export class HandleAbuseReportUseCase implements IHandleAbuseReportUseCase {
     private _mailService: IMailService,
   ) { }
 
+  /**
+   * Updates a report's status and takes necessary actions (like blocking).
+   * @param reportId The unique ID of the report.
+   * @param status The new status (Resolved or Rejected).
+   * @param rejectionReason Optional reason if rejected.
+   * @returns The updated report details.
+   */
   async execute(reportId: string, status: 'Resolved' | 'Rejected', rejectionReason?: string): Promise<{
     id: string;
     reporter: { id: string; name: string; email: string; role: string };
@@ -34,6 +46,7 @@ export class HandleAbuseReportUseCase implements IHandleAbuseReportUseCase {
     const report = await this._abuseReportRepository.findOneById(reportId);
     if (!report) throw new NotFoundError('Report not found');
 
+    // Only pending reports can be handled
     if (report.status !== 'Pending') {
       throw new Error('Report is already ' + report.status);
     }
@@ -43,12 +56,14 @@ export class HandleAbuseReportUseCase implements IHandleAbuseReportUseCase {
       report.rejectionReason = rejectionReason;
     }
 
+    // Fetch details for both parties
     const [reporter, reportedUser, reportedTutor] = await Promise.all([
       this._userRepository.findOneById(report.reporterId),
       this._userRepository.findOneById(report.reportedId),
       this._tutorRepository.findOneById(report.reportedId),
     ]);
 
+    // If report is resolved (action taken), block the reported account
     if (status === 'Resolved') {
       if (reportedUser) {
         await this._userRepository.updateOneById(report.reportedId, { isBlocked: true });
@@ -57,7 +72,7 @@ export class HandleAbuseReportUseCase implements IHandleAbuseReportUseCase {
       }
     }
 
-    // Send email to reported person
+    // Notify the reported person about the outcome via email
     const reportedPerson = reportedUser || reportedTutor;
     if (reportedPerson) {
       this._mailService.sendReportUpdate(
@@ -65,9 +80,10 @@ export class HandleAbuseReportUseCase implements IHandleAbuseReportUseCase {
         reportedPerson.email,
         status,
         rejectionReason,
-      ).catch(error => console.error('Failed to send report status email:', error));
+      ).catch(error => logger.error('Failed to send report status email:', error));
     }
 
+    // Persist the report status change
     const updated = (await this._abuseReportRepository.updateOneById(reportId, report))!;
     
     return {

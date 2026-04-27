@@ -15,6 +15,10 @@ interface IAuthenticatedRequest extends Request {
   };
 }
 
+/**
+ * Controller for handling session bookings and payments.
+ * Manages order creation, payment verification, and session status tracking (ping).
+ */
 export class BookingController {
   constructor(
     private _createBookingOrderUC: ICreateBookingOrderUseCase,
@@ -24,6 +28,9 @@ export class BookingController {
     private _pingBookingUC: IPingBookingUseCase,
   ) { }
 
+  /**
+   * Initiates a booking by creating a payment order (e.g., Razorpay order).
+   */
   createOrder = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { amount, currency, sessionId } = req.body;
@@ -40,6 +47,9 @@ export class BookingController {
     }
   };
 
+  /**
+   * Verifies the payment signature and completes the booking process.
+   */
   verifyPayment = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
@@ -76,6 +86,9 @@ export class BookingController {
     }
   };
 
+  /**
+   * Fetches a list of bookings for the authenticated user (as student or tutor).
+   */
   getBookings = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as unknown as IAuthenticatedRequest).user;
@@ -102,6 +115,9 @@ export class BookingController {
     }
   };
 
+  /**
+   * Cancels an existing booking.
+   */
   cancelBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
@@ -119,6 +135,9 @@ export class BookingController {
     }
   };
 
+  /**
+   * Pings an active session to track presence and handle auto-completion logic.
+   */
   pingSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;

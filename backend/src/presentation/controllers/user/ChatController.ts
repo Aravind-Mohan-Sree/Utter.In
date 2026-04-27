@@ -18,6 +18,10 @@ import { BadRequestError } from '~errors/HttpError';
 import { filePrefixes } from '~constants/fileConstants';
 import { unlink } from 'fs/promises';
 
+/**
+ * Controller for handling chat-related operations.
+ * Manages conversations, messages, searching, and file attachments.
+ */
 export class ChatController {
   constructor(
     private _getConversationsUseCase: IGetConversationsUseCase,
@@ -30,6 +34,9 @@ export class ChatController {
     private _validator: IValidateDataService,
   ) {}
 
+  /**
+   * Retrieves all conversations for the authenticated user.
+   */
   getConversations = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.id;
@@ -44,6 +51,9 @@ export class ChatController {
     }
   };
 
+  /**
+   * Retrieves messages for a specific conversation with pagination.
+   */
   getMessages = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { conversationId } = req.params;
@@ -69,6 +79,9 @@ export class ChatController {
     }
   };
 
+  /**
+   * Sends a new message in a conversation.
+   */
   sendMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto = new SendMessageDTO(req.body, this._validator);
@@ -91,6 +104,9 @@ export class ChatController {
     }
   };
 
+  /**
+   * Searches for users and messages within the chat context.
+   */
   search = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { q, page, limit, sort, language } = req.query;
@@ -115,6 +131,9 @@ export class ChatController {
     }
   };
 
+  /**
+   * Edits an existing message's text.
+   */
   editMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { messageId } = req.params;
@@ -135,6 +154,9 @@ export class ChatController {
     }
   };
 
+  /**
+   * Deletes a message (optionally for everyone in the conversation).
+   */
   deleteMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { messageId } = req.params;
@@ -155,6 +177,9 @@ export class ChatController {
     }
   };
 
+  /**
+   * Uploads a file attachment for a chat message.
+   */
   uploadAttachment = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as UploadedFiles;
     const attachment = files.attachment ? files.attachment[0] : null;
@@ -164,11 +189,13 @@ export class ChatController {
         throw new BadRequestError('Attachment is required');
       }
 
+      // Validate file type and size
       const validationRes = this._validator.validateAttachment(attachment as FileInput);
       if (!validationRes.success) {
         throw new BadRequestError(validationRes.message);
       }
 
+      // Upload file to cloud storage
       const url = await this._uploadChatAttachmentUseCase.execute(
         filePrefixes.CHAT_ATTACHMENT,
         attachment.originalname,
@@ -183,6 +210,7 @@ export class ChatController {
         fileType: attachment.mimetype,
       });
     } catch (error) {
+      // Clean up temporary local file if upload fails
       if (attachment?.path) {
         await unlink(attachment.path).catch(() => void 0);
       }

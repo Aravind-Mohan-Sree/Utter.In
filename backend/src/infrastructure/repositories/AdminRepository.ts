@@ -4,6 +4,10 @@ import { Admin } from '~entities/Admin';
 import { Document } from 'mongoose';
 import { IAdminRepository } from '~repository-interfaces/IAdminRepository';
 
+/**
+ * Concrete repository for Admin entities using Mongoose.
+ * Handles persistence for administrative users.
+ */
 export class AdminRepository
   extends BaseRepository<Admin, IAdmin>
   implements IAdminRepository
@@ -12,6 +16,9 @@ export class AdminRepository
     super(AdminModel);
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   */
   protected toSchema(entity: Admin | Partial<Admin>): IAdmin | Partial<IAdmin> {
     return {
       name: entity.name,
@@ -23,6 +30,9 @@ export class AdminRepository
     };
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(doc: (IAdmin & Document<unknown>) | null): Admin | null {
     if (!doc) return null;
 

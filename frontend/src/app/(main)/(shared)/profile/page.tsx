@@ -43,11 +43,13 @@ interface ProfileData {
   bio: string;
   knownLanguages: string[];
   yearsOfExperience: string;
-  certificationType: string;
+  certificationType: string[];
+  certificates: string[];
   walletBalance: number;
   currentPassword: string;
   password: string;
   confirmPassword: string;
+  languageVerificationStatus: 'pending' | 'approved' | 'rejected' | null;
   createdAt: string | Date;
 }
 
@@ -89,6 +91,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState<ProfileData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [certificate, setCertificate] = useState<File | null>(null);
 
   const validationSchema =
     user?.role === 'user' ? userProfileUpdateSchema : tutorProfileUpdateSchema;
@@ -293,7 +296,32 @@ export default function ProfilePage() {
     setError(INITIAL_ERROR_STATE);
 
     try {
-      const res = await updateProfile(user!.role, formData as ProfileData);
+      let res;
+      const isTutor = user?.role === 'tutor';
+      const hasNewLanguages = isTutor && formData!.knownLanguages.some(
+        (lang) => !profileData!.knownLanguages.includes(lang)
+      );
+
+      if (isTutor && hasNewLanguages) {
+        if (!certificate) {
+          utterToast.error('A certificate is required when adding new languages.');
+          return;
+        }
+        const data = new FormData();
+        data.append('name', formData!.name);
+        data.append('bio', formData!.bio);
+        data.append('yearsOfExperience', formData!.yearsOfExperience);
+        formData!.knownLanguages.forEach((lang) =>
+          data.append('knownLanguages', lang),
+        );
+        if (certificate) {
+          data.append('certificate', certificate);
+        }
+        res = await updateProfile(user!.role, data);
+      } else {
+        res = await updateProfile(user!.role, formData as ProfileData);
+      }
+
       const updatedData = res.updatedTutor ? res.updatedTutor : res.updatedUser;
 
       setProfileData(updatedData);
@@ -303,6 +331,7 @@ export default function ProfilePage() {
         password: '',
         confirmPassword: '',
       });
+      setCertificate(null);
       utterToast.success(res.message);
     } catch (error) {
       utterToast.error(errorHandler(error));
@@ -391,7 +420,7 @@ export default function ProfilePage() {
               bio={profileData?.bio}
               languages={profileData?.knownLanguages}
               experience={profileData?.yearsOfExperience}
-              certificationType={profileData?.certificationType}
+              certificationTypes={profileData?.certificationType}
             />
 
             <div className="mt-8 pt-6 border-t border-gray-200">
@@ -483,7 +512,36 @@ export default function ProfilePage() {
                     onLanguagesChange={handleLanguagesChange}
                     maxLanguages={3}
                     error={error.languages}
+                    disabled={profileData?.languageVerificationStatus === 'pending'}
                   />
+
+                  {profileData?.languageVerificationStatus === 'pending' && (
+                    <p className="text-xs text-rose-500 font-medium -mt-4">
+                      Language edits are locked during verification.
+                    </p>
+                  )}
+
+                  {user?.role === 'tutor' &&
+                    formData.knownLanguages.some(
+                      (lang) => !profileData?.knownLanguages.includes(lang),
+                    ) && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">
+                          Upload Language Certificate
+                        </label>
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) =>
+                            setCertificate(e.target.files?.[0] || null)
+                          }
+                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100"
+                        />
+                        <p className="text-[10px] text-gray-400">
+                          Adding new languages requires a certificate for verification.
+                        </p>
+                      </div>
+                    )}
 
                   {profileData?.yearsOfExperience && (
                     <ExperienceSelector

@@ -4,6 +4,10 @@ import { IGetAbuseReportsUseCase } from '../../../use-case-interfaces/admin/IAbu
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 
+/**
+ * Use case to retrieve abuse reports for admin review.
+ * Fetches reports with detailed information about the reporter and reported entity.
+ */
 export class GetAbuseReportsUseCase implements IGetAbuseReportsUseCase {
   constructor(
     private _abuseReportRepository: IAbuseReportRepository,
@@ -11,6 +15,14 @@ export class GetAbuseReportsUseCase implements IGetAbuseReportsUseCase {
     private _tutorRepository: ITutorRepository,
   ) { }
 
+  /**
+   * Retrieves a paginated list of abuse reports with reporter/reported details.
+   * @param page Current page number.
+   * @param limit Number of reports per page.
+   * @param search Optional search query.
+   * @param status Optional filter by status (Pending, Resolved, Rejected).
+   * @returns Detailed report objects and total count.
+   */
   async execute(page: number, limit: number, search?: string, status?: string): Promise<{
     reports: {
       id: string;
@@ -32,8 +44,10 @@ export class GetAbuseReportsUseCase implements IGetAbuseReportsUseCase {
     }[];
     total: number;
   }> {
+    // Fetch raw reports from repository
     const result = await this._abuseReportRepository.findAllReports(page, limit, search, status);
 
+    // Enrich reports with user/tutor details for better admin readability
     const reportsWithDetails = await Promise.all(
       result.reports.map(async (report) => {
         const [reporter, reportedUser, reportedTutor] = await Promise.all([
@@ -48,7 +62,7 @@ export class GetAbuseReportsUseCase implements IGetAbuseReportsUseCase {
             id: report.reporterId,
             name: reporter?.name || 'Unknown',
             email: reporter?.email || 'N/A',
-            role: 'user',
+            role: 'user', // Reporters are always regular users in this system
           },
           reported: {
             id: report.reportedId,

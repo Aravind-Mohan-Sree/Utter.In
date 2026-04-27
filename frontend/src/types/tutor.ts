@@ -8,8 +8,12 @@ export interface Tutor {
     role: string;
     isBlocked: boolean;
     isVerified: boolean;
-    certificationType: string;
+    certificationType: string[];
     rejectionReason: string | null;
+    pendingLanguages: string[];
+    pendingCertification: string | null;
+    languageVerificationStatus: 'pending' | 'approved' | 'rejected' | null;
+    certificates: string[];
     createdAt: string;
 }
 

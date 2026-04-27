@@ -14,6 +14,10 @@ export class TutorMapper {
       isVerified: tutor.isVerified,
       certificationType: tutor.certificationType,
       rejectionReason: tutor.rejectionReason,
+      pendingLanguages: tutor.pendingLanguages,
+      pendingCertification: tutor.pendingCertification,
+      languageVerificationStatus: tutor.languageVerificationStatus,
+      certificates: tutor.certificates,
       createdAt: tutor.createdAt,
     };
   }

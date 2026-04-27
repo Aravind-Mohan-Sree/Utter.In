@@ -7,6 +7,10 @@ import { ICreateNotificationUseCase } from '~use-case-interfaces/shared/INotific
 import { IUserRepository } from '~repository-interfaces/IUserRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 
+/**
+ * Use case to handle sending a chat message.
+ * Manages conversation creation, message persistence, unread counts, and notifications.
+ */
 export class SendMessageUseCase implements ISendMessageUseCase {
   constructor(
     private _messageRepository: IMessageRepository,
@@ -16,6 +20,16 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     private _createNotificationUseCase: ICreateNotificationUseCase,
   ) { }
 
+  /**
+   * Sends a message from one user to another.
+   * @param senderId The sender's ID.
+   * @param receiverId The receiver's ID.
+   * @param text The message text (optional if file is present).
+   * @param fileUrl URL of any attached file.
+   * @param fileType MIME type of the attached file.
+   * @param fileName Original name of the attached file.
+   * @returns The created message entity.
+   */
   async execute(
     senderId: string,
     receiverId: string,
@@ -24,6 +38,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     fileType?: string,
     fileName?: string,
   ): Promise<Message> {
+    // Check for an existing conversation or create a new one
     let conversation = await this._conversationRepository.findByParticipants([
       senderId,
       receiverId,
@@ -35,6 +50,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
       );
     }
 
+    // Persist the new message
     const message = await this._messageRepository.create(
       new Message(
         senderId,
@@ -50,6 +66,8 @@ export class SendMessageUseCase implements ISendMessageUseCase {
         fileName,
       ),
     );
+
+    // Update unread count for the receiver and set last message reference
     const unreadCount = conversation.unreadCount || {};
     unreadCount[receiverId] = (unreadCount[receiverId] || 0) + 1;
 
@@ -58,6 +76,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
       unreadCount,
     });
 
+    // Identify the sender to personalize the notification
     const [senderUser, senderTutor, receiverUser] = await Promise.all([
       this._userRepository.findOneById(senderId),
       this._tutorRepository.findOneById(senderId),
@@ -67,6 +86,7 @@ export class SendMessageUseCase implements ISendMessageUseCase {
     const senderName = senderUser?.name || senderTutor?.name || 'Someone';
     const recipientRole = receiverUser ? 'user' : 'tutor';
 
+    // Trigger a notification for the recipient
     await this._createNotificationUseCase.execute({
       recipientId: receiverId,
       recipientRole,

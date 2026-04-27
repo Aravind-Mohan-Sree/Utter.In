@@ -10,6 +10,9 @@ import {
   IUpdateProfileUseCase,
 } from '~use-case-interfaces/user/IUserUseCase';
 
+/**
+ * Controller for managing a user's own profile and security settings.
+ */
 export class ProfileController {
   constructor(
     private _updateProfileUC: IUpdateProfileUseCase,
@@ -17,9 +20,13 @@ export class ProfileController {
     private _validator: IValidateDataService,
   ) {}
 
+  /**
+   * Updates the authenticated user's profile information.
+   */
   updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.user as { id: string };
+      // Map 'languages' from body to 'knownLanguages' for the DTO
       const data = new UserProfileUpdateDTO(
         (({ knownLanguages: languages, ...body }) => ({ ...body, languages }))(
           req.body,
@@ -37,6 +44,9 @@ export class ProfileController {
     }
   };
 
+  /**
+   * Changes the authenticated user's password.
+   */
   changePassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.user as { id: string };

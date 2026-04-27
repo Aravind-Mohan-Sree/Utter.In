@@ -33,10 +33,14 @@ interface TutorModalProps extends BaseModalProps {
     rejectionReason: string | null;
   };
   introVideoUrl: string;
-  certificateUrl: string;
-  certificateType: string | null;
+  certificateTypes: string[];
+  certificates: string[];
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
+  pendingLanguages?: string[];
+  pendingCertificationUrl?: string | null;
+  languageVerificationStatus?: 'pending' | 'approved' | 'rejected' | null;
+  onVerifyLanguages?: (id: string, action: 'approve' | 'reject') => void;
 }
 
 interface ReportModalProps extends BaseModalProps {
@@ -78,20 +82,27 @@ const TutorModalContent = ({
   onClose,
   tutor,
   introVideoUrl,
-  certificateUrl,
-  certificateType,
+  certificateTypes,
+  certificates,
   onApprove,
   onReject,
+  pendingLanguages,
+  pendingCertificationUrl,
+  languageVerificationStatus,
+  onVerifyLanguages,
 }: TutorModalProps) => {
+  const isLanguageVerification = languageVerificationStatus === 'pending';
   return (
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${tutor.verified
-          ? 'Approved Tutor'
-          : tutor.rejectionReason
-            ? 'Rejected Tutor'
-            : 'Tutor Verification'
+      title={`${isLanguageVerification
+          ? 'Language Verification'
+          : tutor.verified
+            ? 'Approved Tutor'
+            : tutor.rejectionReason
+              ? 'Rejected Tutor'
+              : 'Tutor Verification'
         }`}
       maxWidth="lg"
     >
@@ -139,60 +150,133 @@ const TutorModalContent = ({
         {/* Certificate Section */}
         <div>
           <h5 className="text-sm font-semibold text-gray-700 mb-3">
-            Certificate
+            {isLanguageVerification ? 'Certificates (including new)' : 'Certificates'}
           </h5>
-          {certificateUrl && !tutor.rejectionReason ? (
-            <Link
-              href={certificateUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                <GrCertificate className="text-gray-600" size={24} />
+          <div className="space-y-3">
+            {/* Display existing certificates */}
+            {certificates && certificates.length > 0 ? (
+              certificates.map((url, index) => {
+                const type = certificateTypes[index] || 'Other';
+                return (
+                  <Link
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                      <GrCertificate className="text-gray-600" size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        {type}_certificate_{index + 1}.pdf
+                      </p>
+                      <p className="text-xs text-gray-500">Click to view</p>
+                    </div>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-400">No certificates available</p>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {certificateType}
-                </p>
-                <p className="text-xs text-gray-500">Click to view</p>
-              </div>
-            </Link>
-          ) : (
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <p className="text-sm text-gray-400">No certificate available</p>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        {!tutor.verified && !tutor.rejectionReason && (
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            {onReject && (
-              <button
-                onClick={() => {
-                  onReject(tutor.id);
-                  onClose();
-                }}
-                className="px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors cursor-pointer"
-              >
-                Reject
-              </button>
             )}
-            {onApprove && (
-              <button
-                onClick={() => {
-                  onApprove(tutor.id);
-                  onClose();
-                }}
-                className="px-6 py-2.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors cursor-pointer"
+
+            {/* Display pending certificate if in verification mode */}
+            {isLanguageVerification && pendingCertificationUrl && (
+              <Link
+                href={pendingCertificationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors"
               >
-                Approve
-              </button>
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-rose-200">
+                  <GrCertificate className="text-rose-600" size={20} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-rose-900">
+                    New Pending Certification
+                  </p>
+                  <p className="text-xs text-rose-500 font-medium text-rose-400">Action required</p>
+                </div>
+              </Link>
             )}
           </div>
+        </div>
+
+        {/* Pending Languages Section */}
+        {isLanguageVerification && pendingLanguages && (
+          <div>
+            <h5 className="text-sm font-semibold text-gray-700 mb-3">
+              Requested Languages
+            </h5>
+            <div className="flex flex-wrap gap-2">
+              {pendingLanguages.map((lang) => (
+                <span
+                  key={lang}
+                  className="px-3 py-1 bg-rose-50 text-rose-600 border border-rose-100 rounded-full text-xs font-medium"
+                >
+                  {lang}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {isLanguageVerification ? (
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button
+              onClick={() => {
+                onVerifyLanguages?.(tutor.id, 'reject');
+                onClose();
+              }}
+              className="px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors cursor-pointer"
+            >
+              Reject Languages
+            </button>
+            <button
+              onClick={() => {
+                onVerifyLanguages?.(tutor.id, 'approve');
+                onClose();
+              }}
+              className="px-6 py-2.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors cursor-pointer"
+            >
+              Approve Languages
+            </button>
+          </div>
+        ) : (
+          !tutor.verified &&
+          !tutor.rejectionReason && (
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              {onReject && (
+                <button
+                  onClick={() => {
+                    onReject(tutor.id);
+                    onClose();
+                  }}
+                  className="px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors cursor-pointer"
+                >
+                  Reject
+                </button>
+              )}
+              {onApprove && (
+                <button
+                  onClick={() => {
+                    onApprove(tutor.id);
+                    onClose();
+                  }}
+                  className="px-6 py-2.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors cursor-pointer"
+                >
+                  Approve
+                </button>
+              )}
+            </div>
+          )
         )}
       </div>
+
     </BaseModal>
   );
 };

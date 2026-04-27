@@ -17,6 +17,10 @@ interface PopulatedConversation extends Omit<IConversation, 'lastMessage' | 'par
   participants: PopulatedParticipant[];
 }
 
+/**
+ * Concrete repository for Conversation entities using Mongoose.
+ * Manages chat sessions, unread counts, and participant population.
+ */
 export class ConversationRepository
   extends BaseRepository<Conversation, IConversation>
   implements IConversationRepository
@@ -25,6 +29,10 @@ export class ConversationRepository
     super(ConversationModel);
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   * Transforms the unreadCount map and participant IDs.
+   */
   protected toSchema(
     entity: Conversation | Partial<Conversation>,
   ): IConversation | Partial<IConversation> {
@@ -41,6 +49,10 @@ export class ConversationRepository
     } as Partial<IConversation>;
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   * Handles populated participants and formatting the last message preview.
+   */
   protected toEntity(doc: IConversation | null): Conversation | null {
     if (!doc) return null;
 
@@ -82,6 +94,9 @@ export class ConversationRepository
     );
   }
 
+  /**
+   * Finds a conversation involving a specific set of participants.
+   */
   async findByParticipants(participants: string[]): Promise<Conversation | null> {
     const sortedParticipants = [...participants].sort();
     const doc = await ConversationModel.findOne({
@@ -90,6 +105,10 @@ export class ConversationRepository
     return this.toEntity(doc);
   }
 
+  /**
+   * Retrieves all active conversations for a user.
+   * Filters out blocked users and calculates the "real" last message if some messages are hidden.
+   */
   async findUserConversations(userId: string): Promise<Conversation[]> {
     const docs = await ConversationModel.find({
       participants: userId,
@@ -108,6 +127,8 @@ export class ConversationRepository
     const filteredDocs = await Promise.all(
       docs.map(async (doc) => {
         const populatedDoc = doc as unknown as PopulatedConversation;
+        
+        // Skip conversation if the other participant is blocked
         const isAnyOtherBlocked = populatedDoc.participants.some(
           (p) => p && String(p._id) !== userId && p.isBlocked,
         );
@@ -115,6 +136,7 @@ export class ConversationRepository
 
         const lastMsg = populatedDoc.lastMessage;
 
+        // If the last message was hidden by this user, find the previous one that isn't hidden
         if (
           lastMsg &&
           lastMsg.hiddenBy?.some((id) => String(id) === String(userId))
@@ -138,6 +160,9 @@ export class ConversationRepository
     return filteredDocs.filter((conv): conv is NonNullable<typeof conv> => conv !== null);
   }
 
+  /**
+   * Clears the unread count for a specific participant in a conversation.
+   */
   async resetUnreadCount(
     conversationId: string,
     userId: string,

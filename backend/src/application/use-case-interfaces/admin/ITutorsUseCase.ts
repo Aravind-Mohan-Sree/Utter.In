@@ -24,3 +24,11 @@ export interface IApproveUseCase {
 export interface IRejectUseCase {
   execute(id: string, rejectionReason: string): Promise<string | null>;
 }
+
+export interface IHandleLanguageVerificationUseCase {
+  execute(
+    id: string,
+    action: 'approve' | 'reject',
+    data: { certificationType?: string; rejectionReason?: string },
+  ): Promise<void>;
+}

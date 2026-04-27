@@ -14,6 +14,10 @@ interface PopulatedReview extends Omit<IReview, 'userId'> {
   };
 }
 
+/**
+ * Concrete repository for Review entities using Mongoose.
+ * Handles storage and retrieval of tutor reviews, including user population.
+ */
 export class ReviewRepository
   extends BaseRepository<Review, IReview>
   implements IReviewRepository
@@ -22,6 +26,9 @@ export class ReviewRepository
     super(ReviewModel);
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   */
   protected toSchema(
     entity: Review | Partial<Review>,
   ): IReview | Partial<IReview> {
@@ -33,6 +40,10 @@ export class ReviewRepository
     } as Partial<IReview>;
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   * Extracts populated user data (name, avatar) if available.
+   */
   protected toEntity(doc: IReview | null): Review | null {
     if (!doc) return null;
 
@@ -53,6 +64,9 @@ export class ReviewRepository
     );
   }
 
+  /**
+   * Overridden findOneById to include user population.
+   */
   async findOneById(id: string): Promise<Review | null> {
     const doc = await ReviewModel.findById(id).populate(
       'userId',
@@ -61,6 +75,9 @@ export class ReviewRepository
     return this.toEntity(doc);
   }
 
+  /**
+   * Overridden findOneByField to include user population.
+   */
   async findOneByField(filter: FilterQuery<IReview>): Promise<Review | null> {
     const doc = await ReviewModel.findOne(filter).populate(
       'userId',
@@ -69,6 +86,9 @@ export class ReviewRepository
     return this.toEntity(doc);
   }
 
+  /**
+   * Overridden findAllByField to include user population and custom sorting.
+   */
   async findAllByField(
     filter: FilterQuery<IReview>,
     options?: { skip?: number; limit?: number },
@@ -84,10 +104,17 @@ export class ReviewRepository
     return docs.map((doc) => this.toEntity(doc)!);
   }
 
+  /**
+   * Standard document count for reviews.
+   */
   async countDocuments(filter: FilterQuery<IReview>): Promise<number> {
     return ReviewModel.countDocuments(filter);
   }
 
+  /**
+   * Business logic helper to verify if a user has successfully completed a session with a tutor.
+   * This is used to gate review submission.
+   */
   async checkSessionCompletion(
     userId: string,
     tutorId: string,

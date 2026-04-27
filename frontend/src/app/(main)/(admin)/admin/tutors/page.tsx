@@ -15,6 +15,7 @@ import {
   fetchTutors,
   reject,
   toggleStatus,
+  verifyLanguages,
 } from '~services/admin/tutorsService';
 import { RootState } from '~store/rootReducer';
 import { errorHandler } from '~utils/errorHandler';
@@ -26,8 +27,7 @@ interface Tutor {
   name: string;
   email: string;
   introVideoUrl: string;
-  certificateUrl: string;
-  certificationType: string | null;
+  certificationType: string[];
   knownLanguages: string[];
   yearsOfExperience: string;
   rejectionReason: string | null;
@@ -35,7 +35,11 @@ interface Tutor {
   role: string;
   isVerified: boolean;
   isBlocked: boolean;
-  createdAt: Date;
+  pendingLanguages: string[];
+  pendingCertification: string | null;
+  languageVerificationStatus: 'pending' | 'approved' | 'rejected' | null;
+  certificates: string[];
+  createdAt: string;
 }
 
 export default function TutorsPage() {
@@ -81,10 +85,7 @@ export default function TutorsPage() {
 
         const tutors = res.tutorsData.tutors.map((tutor: Tutor) => ({
           ...tutor,
-          introVideoUrl: `${API_ROUTES.TUTOR.FETCH_VIDEO}/${tutor.id
-            }.mp4?v=${Date.now()}`,
-          certificateUrl: `${API_ROUTES.TUTOR.FETCH_CERTIFICATE}/${tutor.id
-            }.pdf?v=${Date.now()}`,
+          introVideoUrl: `${API_ROUTES.TUTOR.FETCH_VIDEO}/${tutor.id}.mp4?v=${Date.now()}`,
         }));
 
         setTotalTutorsCount(res.tutorsData.totalTutorsCount);
@@ -149,7 +150,7 @@ export default function TutorsPage() {
           setTutors((prevTutors) =>
             prevTutors.map((tutor) =>
               tutor.id === id
-                ? { ...tutor, isVerified: true, certificationType }
+                ? { ...tutor, isVerified: true, certificationType: [certificationType] }
                 : tutor,
             ),
           );
@@ -208,6 +209,97 @@ export default function TutorsPage() {
     );
   };
 
+  const handleVerifyLanguages = async (id: string, action: 'approve' | 'reject') => {
+    if (action === 'approve') {
+      const CERTIFICATION_OPTIONS = {
+        TESOL: 'TESOL',
+        CEFR: 'CEFR',
+        'State Licensed': 'State Licensed',
+        Goethe: 'Goethe',
+        PGCHE: 'PGCHE',
+      };
+
+      utterRadioAlert(
+        'Choose Certification Type',
+        CERTIFICATION_OPTIONS,
+        'Confirm',
+        async (certificationType) => {
+          try {
+            setProcessingId(id);
+            const res = await verifyLanguages(id, action, certificationType);
+
+            setTutors((prevTutors) =>
+              prevTutors.map((tutor) =>
+                tutor.id === id
+                  ? {
+                    ...tutor,
+                    knownLanguages: [...tutor.knownLanguages, ...tutor.pendingLanguages],
+                    certificates: tutor.pendingCertification
+                      ? [...tutor.certificates, tutor.pendingCertification]
+                      : tutor.certificates,
+                    certificationType: tutor.certificationType.includes(certificationType)
+                      ? tutor.certificationType
+                      : [...tutor.certificationType, certificationType],
+                    pendingLanguages: [],
+                    pendingCertification: null,
+                    languageVerificationStatus: null,
+                  }
+                  : tutor,
+              ),
+            );
+
+            utterToast.success(res.message);
+          } catch (error) {
+            utterToast.error(errorHandler(error));
+          } finally {
+            setProcessingId(null);
+          }
+        },
+      );
+    } else {
+      const reasonsArray = [
+        'cert/Certification document is blurry or unreadable',
+        'cert/Uploaded certificate is expired or invalid',
+        'cert/Certification does not match the subject expertise claimed',
+      ];
+
+      const REJECTION_OPTIONS = Object.fromEntries(
+        reasonsArray.map((r) => [r, r.split('/')[1]]),
+      );
+
+      utterRadioAlert(
+        'Choose Rejection Reason',
+        REJECTION_OPTIONS,
+        'Confirm',
+        async (reason) => {
+          try {
+            setProcessingId(id);
+            const res = await verifyLanguages(id, action, undefined, reason);
+
+            setTutors((prevTutors) =>
+              prevTutors.map((tutor) =>
+                tutor.id === id
+                  ? {
+                    ...tutor,
+                    pendingLanguages: [],
+                    pendingCertification: null,
+                    languageVerificationStatus: null,
+                  }
+                  : tutor,
+              ),
+            );
+
+            utterToast.info(res.message);
+          } catch (error) {
+            utterToast.error(errorHandler(error));
+          } finally {
+            setProcessingId(null);
+          }
+        },
+      );
+    }
+  };
+
   const selectedTutor = tutors.find((t) => t.id === selectedTutorId);
 
   return (
@@ -221,6 +313,7 @@ export default function TutorsPage() {
           'Pending',
           'Approved',
           'Rejected',
+          'LanguageVerificationPending',
         ]}
         activeFilter={activeFilter}
         onFilterChange={(val) => {
@@ -317,10 +410,14 @@ export default function TutorsPage() {
             rejectionReason: selectedTutor.rejectionReason || null,
           }}
           introVideoUrl={selectedTutor.introVideoUrl}
-          certificateUrl={selectedTutor.certificateUrl}
-          certificateType={selectedTutor.certificationType ?? 'Unverified'}
+          certificateTypes={selectedTutor.certificationType || []}
+          certificates={selectedTutor.certificates || []}
           onApprove={handleApprove}
           onReject={handleReject}
+          pendingLanguages={selectedTutor.pendingLanguages}
+          pendingCertificationUrl={selectedTutor.pendingCertification ? selectedTutor.pendingCertification : null}
+          languageVerificationStatus={selectedTutor.languageVerificationStatus}
+          onVerifyLanguages={handleVerifyLanguages}
         />
       )}
     </div>

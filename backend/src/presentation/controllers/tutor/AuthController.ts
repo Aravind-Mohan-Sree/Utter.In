@@ -26,6 +26,12 @@ import {
 import { resubmitAccountDTO } from '~dtos/resubmitAccountDTO';
 import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
+import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
+
+/**
+ * Controller for tutor authentication and registration flows.
+ * Handles multi-step registration (including file uploads and OTP), account resubmission, and sign-in.
+ */
 export class AuthController {
   constructor(
     private _registerTutor: IRegisterTutorUseCase,
@@ -37,8 +43,13 @@ export class AuthController {
     private _videoMetadataService: IVideoMetadataService,
     private _uploadFile: IUploadFileUseCase,
     private _updateFile: IUpdateFileUseCase,
+    private _tutorRepo: ITutorRepository,
   ) {}
 
+  /**
+   * Initiates the tutor registration process.
+   * Validates video duration, saves temporary files, and sends OTP for email verification.
+   */
   register = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as UploadedFiles;
     const introVideoFile = files.introVideo ? files.introVideo[0] : null;
@@ -50,6 +61,8 @@ export class AuthController {
         { introVideo: introVideoFile, certificate: certificateFile, ...body },
         this._validator,
       );
+
+      // Check video duration (Limit: 30 seconds)
       const duration = await this._videoMetadataService.getDuration(
         introVideoFile!.path,
       );
@@ -58,8 +71,10 @@ export class AuthController {
         throw new BadRequestError(errorMessage.VIDEO);
       }
 
+      // Execute base registration use case
       const { id, email } = await this._registerTutor.execute(data);
 
+      // Upload files to temporary storage (S3)
       await this._uploadFile.execute(
         filePrefixes.TEMP_TUTOR_VIDEO,
         id,
@@ -68,10 +83,12 @@ export class AuthController {
       );
       await this._uploadFile.execute(
         filePrefixes.TEMP_TUTOR_CERTIFICATE,
-        id,
+        `${id}_1`,
         certificateFile!.path,
         contentTypes.APPLICATION_PDF,
       );
+
+      // Trigger OTP verification
       await this._sendOtp.execute(email);
 
       const isProduction = env.NODE_ENV === 'production';
@@ -89,6 +106,7 @@ export class AuthController {
         .status(httpStatusCode.CREATED)
         .json({ message: successMessage.OTP_SENDED });
     } catch (error) {
+      // Cleanup local temporary files on failure
       if (introVideoFile?.path) {
         await unlink(introVideoFile.path);
       }
@@ -102,6 +120,10 @@ export class AuthController {
     }
   };
 
+  /**
+   * Finalizes the tutor registration after email/OTP verification.
+   * Moves files from temporary to permanent storage and creates the final tutor record.
+   */
   finishRegister = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as UploadedFiles;
     const introVideoFile = files.introVideo ? files.introVideo[0] : null;
@@ -113,6 +135,8 @@ export class AuthController {
         { introVideo: introVideoFile, certificate: certificateFile, ...body },
         this._validator,
       );
+
+      // Re-validate video duration
       const duration = await this._videoMetadataService.getDuration(
         introVideoFile!.path,
       );
@@ -121,8 +145,10 @@ export class AuthController {
         throw new BadRequestError(errorMessage.VIDEO);
       }
 
+      // Finalize record creation
       const { oldId, newId } = await this._finishRegisterTutor.execute(data);
 
+      // Move temporary avatar to permanent location
       await this._updateFile.execute(
         filePrefixes.TEMP_TUTOR_AVATAR,
         filePrefixes.TUTOR_AVATAR,
@@ -130,6 +156,8 @@ export class AuthController {
         newId,
         contentTypes.IMAGE_JPEG,
       );
+
+      // Upload final video and certificate
       await this._uploadFile.execute(
         filePrefixes.TUTOR_VIDEO,
         newId,
@@ -138,10 +166,16 @@ export class AuthController {
       );
       await this._uploadFile.execute(
         filePrefixes.TUTOR_CERTIFICATE,
-        newId,
+        `${newId}_1`,
         certificateFile!.path,
         contentTypes.APPLICATION_PDF,
       );
+
+      // Update the tutor record with the generated certificate URL
+      const certUrl = `https://${env.AWS_BUCKET}.s3.amazonaws.com/${filePrefixes.TUTOR_CERTIFICATE}${newId}_1.pdf`;
+      await this._tutorRepo.updateOneById(newId, {
+        certificates: [certUrl],
+      });
 
       res
         .status(httpStatusCode.CREATED)
@@ -160,6 +194,10 @@ export class AuthController {
     }
   };
 
+  /**
+   * Handles resubmission of a rejected tutor application.
+   * Allows tutors to update their intro video or certificates and retry for approval.
+   */
   resubmitAccount = async (req: Request, res: Response, next: NextFunction) => {
     const files = req.files as UploadedFiles;
     const introVideoFile = files.introVideo ? files.introVideo[0] : null;
@@ -182,9 +220,11 @@ export class AuthController {
         }
       }
 
+      // Process resubmission logic
       const { oldId, newId, googleId } =
         await this._resubmitAccountUseCase.execute(data);
 
+      // If they registered via Google, move their temporary avatar
       if (googleId) {
         await this._updateFile.execute(
           filePrefixes.TEMP_REJECTED_TUTOR_AVATAR,
@@ -195,6 +235,7 @@ export class AuthController {
         );
       }
 
+      // Transition existing or new files to permanent storage
       await this._updateFile.execute(
         introVideoFile
           ? filePrefixes.TEMP_REJECTED_TUTOR_CERTIFICATE
@@ -228,6 +269,10 @@ export class AuthController {
     }
   };
 
+  /**
+   * Standard tutor sign-in.
+   * Sets JWT cookies (Access & Refresh) upon successful authentication.
+   */
   signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = new SigninDTO(req.body, this._validator);
@@ -241,6 +286,7 @@ export class AuthController {
         path: '/',
       };
 
+      // Set cookies for secure session management
       res.cookie('accessToken', tutorData.accessToken, {
         ...cookieOptions,
         maxAge: parseInt(env.ACCESS_TOKEN_AGE),

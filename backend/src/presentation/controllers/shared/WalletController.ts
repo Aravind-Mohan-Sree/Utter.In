@@ -10,14 +10,22 @@ interface IAuthenticatedRequest extends Request {
   };
 }
 
+/**
+ * Controller for managing user/tutor wallets.
+ * Provides access to balance and transaction history.
+ */
 export class WalletController {
   constructor(private _getWalletTransactionsUseCase: IGetWalletTransactionsUseCase) { }
 
+  /**
+   * Retrieves the wallet details for the authenticated user.
+   */
   getTransactions = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as unknown as IAuthenticatedRequest).user;
       const userId = user.id;
 
+      // Fetch the wallet data using the use case
       const wallet = await this._getWalletTransactionsUseCase.execute(userId);
 
       res.status(httpStatusCode.OK).json({
@@ -26,6 +34,7 @@ export class WalletController {
           balance: wallet.balance,
           transactions: wallet.transactions,
         } : {
+          // If no wallet exists yet, return a default zeroed-out state
           balance: 0,
           transactions: [],
         },

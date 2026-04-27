@@ -3,12 +3,17 @@ import { IQuestion } from '~entities/Quiz';
 import { IGeminiService } from '../domain/services/IGeminiService';
 import { env } from '../config/env';
 
+/**
+ * Concrete implementation of IGeminiService using Google Generative AI.
+ * Handles AI-powered content generation, specifically language learning quizzes.
+ */
 export class GeminiService implements IGeminiService {
   private _genAI: GoogleGenerativeAI;
   private _model: GenerativeModel;
 
   constructor() {
     this._genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+    // Using a flash model for faster response times in interactive quizzes
     this._model = this._genAI.getGenerativeModel({
       model: 'gemini-3.1-flash-lite-preview',
       generationConfig: {
@@ -17,6 +22,10 @@ export class GeminiService implements IGeminiService {
     });
   }
 
+  /**
+   * Generates a dynamic quiz based on language, difficulty, and question count.
+   * Leverages structured JSON output from Gemini for direct parsing.
+   */
   async generateQuiz(
     language: string,
     difficulty: string,

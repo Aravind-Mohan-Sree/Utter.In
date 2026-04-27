@@ -5,6 +5,10 @@ import { BaseRepository } from './BaseRepository';
 import { Document, Types, PipelineStage } from 'mongoose';
 import { FilterQuery } from '~repository-interfaces/IBaseRepository';
 
+/**
+ * Concrete repository for Abuse Reports using Mongoose.
+ * Handles the storage and retrieval of safety reports, including evidence messages.
+ */
 export class AbuseReportRepository
   extends BaseRepository<AbuseReport, IAbuseReport>
   implements IAbuseReportRepository {
@@ -12,6 +16,10 @@ export class AbuseReportRepository
     super(AbuseReportModel);
   }
 
+  /**
+   * Fetches all reports with search and status filtering for admin overview.
+   * Joins with users and tutors to provide full context on who is reporting whom.
+   */
   async findAllReports(page: number, limit: number, search?: string, status?: string): Promise<{ reports: AbuseReport[]; total: number }> {
     const pipeline: PipelineStage[] = [];
     const matchStage: Record<string, unknown> = {};
@@ -22,7 +30,7 @@ export class AbuseReportRepository
 
     pipeline.push({ $match: matchStage });
 
-    // Join with reporter (users)
+    // Join with reporter (users) to get name/email for search/display
     pipeline.push({
       $lookup: {
         from: 'users',
@@ -52,6 +60,7 @@ export class AbuseReportRepository
       },
     });
 
+    // Apply multi-field search across joined datasets
     if (search) {
       pipeline.push({
         $match: {
@@ -69,6 +78,7 @@ export class AbuseReportRepository
       });
     }
 
+    // Paginate results
     pipeline.push({
       $facet: {
         metadata: [{ $count: 'total' }],
@@ -90,6 +100,9 @@ export class AbuseReportRepository
     };
   }
 
+  /**
+   * Retrieves reports submitted by a specific user.
+   */
   async findByReporter(userId: string, page: number, limit: number, status?: string): Promise<{ reports: AbuseReport[]; total: number }> {
     const reporterId = new Types.ObjectId(userId);
     const query: FilterQuery<IAbuseReport> = { reporterId };
@@ -108,6 +121,9 @@ export class AbuseReportRepository
     };
   }
 
+  /**
+   * Internal mapper to convert domain entity to Mongoose schema object.
+   */
   protected toSchema(entity: AbuseReport | Partial<AbuseReport>): IAbuseReport | Partial<IAbuseReport> {
     return {
       reporterId: entity.reporterId ? new Types.ObjectId(entity.reporterId) : undefined,
@@ -128,6 +144,9 @@ export class AbuseReportRepository
     } as Partial<IAbuseReport>;
   }
 
+  /**
+   * Internal mapper to convert Mongoose document to domain entity.
+   */
   protected toEntity(doc: (IAbuseReport & { _id?: Types.ObjectId; id?: string }) | null): AbuseReport | null {
     if (!doc) return null;
 
@@ -160,6 +179,9 @@ export class AbuseReportRepository
     );
   }
 
+  /**
+   * Helper to get most recent reports system-wide.
+   */
   getRecentReports = async (limit: number): Promise<AbuseReport[]> => {
     const docs = await this.model.find()
       .sort({ createdAt: -1 })
