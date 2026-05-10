@@ -8,10 +8,10 @@ interface BaseModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl';
   className?: string;
+  noPadding?: boolean;
 }
-
 export const BaseModal = ({
   isOpen,
   onClose,
@@ -19,6 +19,7 @@ export const BaseModal = ({
   children,
   maxWidth = 'lg',
   className = '',
+  noPadding = false,
 }: BaseModalProps) => {
   if (!isOpen) return null;
 
@@ -28,6 +29,10 @@ export const BaseModal = ({
     lg: 'max-w-lg',
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
+    '6xl': 'max-w-6xl',
   };
 
   return (
@@ -51,7 +56,7 @@ export const BaseModal = ({
         </div>
 
         {/* Body */}
-        <div className="p-6">{children}</div>
+        <div className={noPadding ? '' : 'p-6'}>{children}</div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useState } from 'react';
 import { GrCertificate } from 'react-icons/gr';
 import { HiArrowRight } from 'react-icons/hi';
 
@@ -8,6 +8,7 @@ import Avatar from '~components/ui/Avatar';
 
 import { UserInfo } from '../ui/card-components';
 import { BaseModal } from './BaseModal';
+import { PDFPreviewModal } from './PDFPreviewModal';
 
 export type ModalType = 'tutor' | 'report';
 
@@ -92,118 +93,123 @@ const TutorModalContent = ({
   onVerifyLanguages,
 }: TutorModalProps) => {
   const isLanguageVerification = languageVerificationStatus === 'pending';
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const handlePreview = (url: string) => {
+    setPreviewUrl(url);
+    setIsPreviewOpen(true);
+  };
+
   return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`${isLanguageVerification
+    <>
+      <BaseModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={`${isLanguageVerification
           ? 'Language Verification'
           : tutor.verified
             ? 'Approved Tutor'
             : tutor.rejectionReason
               ? 'Rejected Tutor'
               : 'Tutor Verification'
-        }`}
-      maxWidth="lg"
-    >
-      <div className="space-y-6">
-        {/* Tutor Information */}
-        <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
-          <Avatar
-            user={{
-              id: tutor.id,
-              name: tutor.name,
-              role: 'tutor',
-            }}
-            size="md"
-          />
-          <UserInfo
-            name={tutor.name}
-            email={tutor.email}
-            additionalInfo={tutor.experience}
-          />
-        </div>
+          }`}
+        maxWidth="lg"
+      >
+        <div className="space-y-6">
+          {/* Tutor Information */}
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
+            <Avatar
+              user={{
+                id: tutor.id,
+                name: tutor.name,
+                role: 'tutor',
+              }}
+              size="md"
+            />
+            <UserInfo
+              name={tutor.name}
+              email={tutor.email}
+              additionalInfo={tutor.experience}
+            />
+          </div>
 
-        {/* Intro Video Section */}
-        <div>
-          <h5 className="text-sm font-semibold text-gray-700 mb-3">
-            Intro Video
-          </h5>
-          {introVideoUrl && !tutor.rejectionReason ? (
-            <div className="w-full bg-black rounded-lg overflow-hidden">
-              <video
-                src={introVideoUrl}
-                controls
-                className="w-full h-auto"
-                controlsList="nodownload"
-              >
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          ) : (
-            <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-              <p className="text-gray-400 text-sm">No video available</p>
-            </div>
-          )}
-        </div>
-
-        {/* Certificate Section */}
-        <div>
-          <h5 className="text-sm font-semibold text-gray-700 mb-3">
-            {isLanguageVerification ? 'Certificates (including new)' : 'Certificates'}
-          </h5>
-          <div className="space-y-3">
-            {/* Display existing certificates */}
-            {certificates && certificates.length > 0 ? (
-              certificates.map((url, index) => {
-                const type = certificateTypes[index] || 'Other';
-                return (
-                  <Link
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                      <GrCertificate className="text-gray-600" size={20} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {type}_certificate_{index + 1}.pdf
-                      </p>
-                      <p className="text-xs text-gray-500">Click to view</p>
-                    </div>
-                  </Link>
-                );
-              })
+          {/* Intro Video Section */}
+          <div>
+            <h5 className="text-sm font-semibold text-gray-700 mb-3">
+              Intro Video
+            </h5>
+            {introVideoUrl && !tutor.rejectionReason ? (
+              <div className="w-full bg-black rounded-lg overflow-hidden">
+                <video
+                  src={introVideoUrl}
+                  controls
+                  className="w-full h-auto"
+                  controlsList="nodownload"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              </div>
             ) : (
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <p className="text-sm text-gray-400">No certificates available</p>
+              <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                <p className="text-gray-400 text-sm">No video available</p>
               </div>
             )}
-
-            {/* Display pending certificate if in verification mode */}
-            {isLanguageVerification && pendingCertificationUrl && (
-              <Link
-                href={pendingCertificationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors"
-              >
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-rose-200">
-                  <GrCertificate className="text-rose-600" size={20} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-rose-900">
-                    New Pending Certification
-                  </p>
-                  <p className="text-xs text-rose-500 font-medium text-rose-400">Action required</p>
-                </div>
-              </Link>
-            )}
           </div>
-        </div>
+
+          {/* Certificate Section */}
+          <div>
+            <h5 className="text-sm font-semibold text-gray-700 mb-3">
+              {isLanguageVerification ? 'Certificates (including new)' : 'Certificates'}
+            </h5>
+            <div className="space-y-3">
+              {/* Display existing certificates */}
+              {certificates && certificates.length > 0 ? (
+                certificates.map((url, index) => {
+                  const type = certificateTypes[index] || 'Other';
+                  return (
+                    <div
+                      key={url}
+                      onClick={() => handlePreview(url)}
+                      className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                        <GrCertificate className="text-gray-600" size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          {type}_certificate_{index + 1}.pdf
+                        </p>
+                        <p className="text-xs text-gray-500">Click to preview within app</p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-sm text-gray-400">No certificates available</p>
+                </div>
+              )}
+
+              {/* Display pending certificate if in verification mode */}
+              {isLanguageVerification && pendingCertificationUrl && (
+                <div
+                  onClick={() => handlePreview(pendingCertificationUrl)}
+                  className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-rose-200">
+                    <GrCertificate className="text-rose-600" size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-rose-900">
+                      New Pending Certification
+                    </p>
+                    <p className="text-xs text-rose-500 font-medium text-rose-400">Action required - Click to preview</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
         {/* Pending Languages Section */}
         {isLanguageVerification && pendingLanguages && (
@@ -278,6 +284,16 @@ const TutorModalContent = ({
       </div>
 
     </BaseModal>
+
+      {previewUrl && (
+        <PDFPreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          pdfUrl={previewUrl}
+          title="Certificate Preview"
+        />
+      )}
+    </>
   );
 };
 

@@ -5,6 +5,12 @@ import { BadRequestError } from '~errors/HttpError';
 import { IPendingTutorRepository } from '~repository-interfaces/IPendingTutorRepository';
 import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { IFinishRegisterTutorUseCase } from '~use-case-interfaces/tutor/ITutorUseCase';
+import {
+  IUpdateFileUseCase,
+  IUploadFileUseCase,
+} from '~use-case-interfaces/shared/IFileUseCase';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
+import { env } from '~config/env';
 
 /**
  * Use case to finalize the tutor registration process.
@@ -14,6 +20,8 @@ export class FinishRegisterTutorUseCase implements IFinishRegisterTutorUseCase {
   constructor(
     private _pendingTutorRepo: IPendingTutorRepository,
     private _tutorRepo: ITutorRepository,
+    private _updateFile: IUpdateFileUseCase,
+    private _uploadFile: IUploadFileUseCase,
   ) {}
 
   /**
@@ -24,8 +32,9 @@ export class FinishRegisterTutorUseCase implements IFinishRegisterTutorUseCase {
   async execute(
     data: FinishRegisterTutorDTO,
   ): Promise<{ oldId: string; newId: string }> {
-    const { email, knownLanguages, yearsOfExperience } = data;
-    
+    const { email, knownLanguages, yearsOfExperience, introVideo, certificate } =
+      data;
+
     // Verify that the tutor still exists in the pending registration queue
     const pendingTutor = await this._pendingTutorRepo.findOneByField({ email });
 
@@ -41,8 +50,8 @@ export class FinishRegisterTutorUseCase implements IFinishRegisterTutorUseCase {
       ' ', // placeholder for profile image if not yet set
       pendingTutor.googleId!,
       'tutor',
-      false, // isVerified (requires admin approval)
       false, // isBlocked
+      false, // isVerified
       [], // initial certificationType
       null, // rejectionReason
     );
@@ -50,6 +59,38 @@ export class FinishRegisterTutorUseCase implements IFinishRegisterTutorUseCase {
     // Persist the tutor to the primary database
     tutor = await this._tutorRepo.create(tutor);
 
-    return { oldId: pendingTutor.id!, newId: tutor.id! };
+    const oldId = pendingTutor.id!;
+    const newId = tutor.id!;
+
+    // Move temporary avatar to permanent location
+    await this._updateFile.execute(
+      filePrefixes.TEMP_TUTOR_AVATAR,
+      filePrefixes.TUTOR_AVATAR,
+      oldId,
+      newId,
+      contentTypes.IMAGE_JPEG,
+    );
+
+    // Upload final video and certificate
+    await this._uploadFile.execute(
+      filePrefixes.TUTOR_VIDEO,
+      newId,
+      introVideo.path!,
+      contentTypes.VIDEO_MP4,
+    );
+    await this._uploadFile.execute(
+      filePrefixes.TUTOR_CERTIFICATE,
+      `${newId}_1`,
+      certificate.path!,
+      contentTypes.APPLICATION_PDF,
+    );
+
+    // Update the tutor record with the generated certificate URL
+    const certUrl = `https://${env.AWS_BUCKET}.s3.amazonaws.com/${filePrefixes.TUTOR_CERTIFICATE}${newId}_1.pdf`;
+    await this._tutorRepo.updateOneById(newId, {
+      certificates: [certUrl],
+    });
+
+    return { oldId, newId };
   }
 }

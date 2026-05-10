@@ -26,8 +26,6 @@ import {
 import { resubmitAccountDTO } from '~dtos/resubmitAccountDTO';
 import { contentTypes, filePrefixes } from '~constants/fileConstants';
 
-import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
-
 /**
  * Controller for tutor authentication and registration flows.
  * Handles multi-step registration (including file uploads and OTP), account resubmission, and sign-in.
@@ -43,7 +41,6 @@ export class AuthController {
     private _videoMetadataService: IVideoMetadataService,
     private _uploadFile: IUploadFileUseCase,
     private _updateFile: IUpdateFileUseCase,
-    private _tutorRepo: ITutorRepository,
   ) {}
 
   /**
@@ -145,37 +142,8 @@ export class AuthController {
         throw new BadRequestError(errorMessage.VIDEO);
       }
 
-      // Finalize record creation
-      const { oldId, newId } = await this._finishRegisterTutor.execute(data);
-
-      // Move temporary avatar to permanent location
-      await this._updateFile.execute(
-        filePrefixes.TEMP_TUTOR_AVATAR,
-        filePrefixes.TUTOR_AVATAR,
-        oldId,
-        newId,
-        contentTypes.IMAGE_JPEG,
-      );
-
-      // Upload final video and certificate
-      await this._uploadFile.execute(
-        filePrefixes.TUTOR_VIDEO,
-        newId,
-        introVideoFile!.path,
-        contentTypes.VIDEO_MP4,
-      );
-      await this._uploadFile.execute(
-        filePrefixes.TUTOR_CERTIFICATE,
-        `${newId}_1`,
-        certificateFile!.path,
-        contentTypes.APPLICATION_PDF,
-      );
-
-      // Update the tutor record with the generated certificate URL
-      const certUrl = `https://${env.AWS_BUCKET}.s3.amazonaws.com/${filePrefixes.TUTOR_CERTIFICATE}${newId}_1.pdf`;
-      await this._tutorRepo.updateOneById(newId, {
-        certificates: [certUrl],
-      });
+      // Finalize record creation (handles file operations and DB updates)
+      await this._finishRegisterTutor.execute(data);
 
       res
         .status(httpStatusCode.CREATED)

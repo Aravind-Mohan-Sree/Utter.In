@@ -98,6 +98,9 @@ const razorpayService = new RazorpayService();
 const redisService = new RedisService();
 
 // use-cases
+const uploadFileUseCase = new UploadFileUseCase(s3Service);
+const updateFileUseCase = new UpdateFileUseCase(s3Service);
+const deleteFileUseCase = new DeleteFileUseCase(s3Service);
 const registerTutorUseCase = new RegisterTutorUseCase(
   tutorRepository,
   pendingTutorRepository,
@@ -106,6 +109,8 @@ const registerTutorUseCase = new RegisterTutorUseCase(
 const finishRegisterTutorUseCase = new FinishRegisterTutorUseCase(
   pendingTutorRepository,
   tutorRepository,
+  updateFileUseCase,
+  uploadFileUseCase,
 );
 const resubmitAccountUseCase = new ResubmitAccountUseCase(tutorRepository);
 const sendOtpUseCase = new SendOtpUseCase(mailService, pendingTutorRepository, redisService);
@@ -116,6 +121,7 @@ const verifyOtpUseCase = new VerifyOtpUseCase(
 const registerTutorFromPendingUseCase = new RegisterTutorFromPendingUseCase(
   pendingTutorRepository,
   tutorRepository,
+  updateFileUseCase,
 );
 const forgotPasswordUseCase = new ForgotPasswordUseCase(
   tutorRepository,
@@ -145,10 +151,7 @@ const signinTutorUseCase = new SigninTutorUseCase(
   hashService,
   jwtService,
 );
-const uploadFileUseCase = new UploadFileUseCase(s3Service);
-const updateFileUseCase = new UpdateFileUseCase(s3Service);
 const getDataUseCase = new GetDataUseCase(tutorRepository);
-const deleteFileUseCase = new DeleteFileUseCase(s3Service);
 const updateProfileUseCase = new UpdateProfileUseCase(tutorRepository, uploadFileUseCase, mailService);
 const changePasswordUseCase = new ChangePasswordUseCase(
   tutorRepository,
@@ -194,14 +197,11 @@ const authController = new AuthController(
   videoMetadataService,
   uploadFileUseCase,
   updateFileUseCase,
-  tutorRepository,
 );
 const otpController = new OtpController(
   verifyOtpUseCase,
   sendOtpUseCase,
   registerTutorFromPendingUseCase,
-  updateFileUseCase,
-  tutorRepository,
 );
 const forgotPasswordController = new ForgotPasswordController(
   forgotPasswordUseCase,

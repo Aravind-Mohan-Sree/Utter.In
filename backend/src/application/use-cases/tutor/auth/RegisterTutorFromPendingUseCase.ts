@@ -5,15 +5,21 @@ import { ITutorRepository } from '~repository-interfaces/ITutorRepository';
 import { Tutor } from '~entities/Tutor';
 import { InternalServerError, NotFoundError } from '~errors/HttpError';
 import { errorMessage } from '~constants/errorMessage';
+import { IUpdateFileUseCase } from '~use-case-interfaces/shared/IFileUseCase';
+import { contentTypes, filePrefixes } from '~constants/fileConstants';
+import { env } from '~config/env';
 
 /**
  * Use case to convert a pending tutor registration into a permanent tutor record.
  * Similar to FinishRegisterTutor but typically triggered via email verification or direct admin action.
  */
-export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendingUseCase {
+export class RegisterTutorFromPendingUseCase
+implements IRegisterTutorFromPendingUseCase
+{
   constructor(
     private _pendingTutorRepo: IPendingTutorRepository,
     private _tutorRepo: ITutorRepository,
+    private _updateFile: IUpdateFileUseCase,
   ) {}
 
   /**
@@ -41,8 +47,8 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
       pendingTutor.password!,
       null, // No Google ID for manual registration
       'tutor',
-      false, // Verification required
       false, // Block status
+      false, // Verification required
       [], // No certifications yet
       null, // No rejection reason
     );
@@ -52,10 +58,34 @@ export class RegisterTutorFromPendingUseCase implements IRegisterTutorFromPendin
 
     if (!newTutor) throw new InternalServerError(errorMessage.SOMETHING_WRONG);
 
+    const pendingTutorId = pendingTutor.id!;
+    const newTutorId = newTutor.id!;
+
+    await this._updateFile.execute(
+      filePrefixes.TEMP_TUTOR_VIDEO,
+      filePrefixes.TUTOR_VIDEO,
+      pendingTutorId,
+      newTutorId,
+      contentTypes.VIDEO_MP4,
+    );
+    await this._updateFile.execute(
+      filePrefixes.TEMP_TUTOR_CERTIFICATE,
+      filePrefixes.TUTOR_CERTIFICATE,
+      `${pendingTutorId}_1`,
+      `${newTutorId}_1`,
+      contentTypes.APPLICATION_PDF,
+    );
+
+    // Update tutor with certificates array
+    const certUrl = `https://${env.AWS_BUCKET}.s3.amazonaws.com/${filePrefixes.TUTOR_CERTIFICATE}${newTutorId}_1.pdf`;
+    const updatedTutor = await this._tutorRepo.updateOneById(newTutorId, {
+      certificates: [certUrl],
+    });
+
     return {
-      pendingTutorId: pendingTutor.id!,
-      newTutorId: newTutor.id!,
-      tutor: TutorMapper.toResponse(newTutor),
+      pendingTutorId,
+      newTutorId,
+      tutor: TutorMapper.toResponse(updatedTutor!),
     };
   }
 }
